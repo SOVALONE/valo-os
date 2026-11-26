@@ -86,6 +86,9 @@
   .media .mb b { font-weight: 400; color: var(--pink); width: calc(var(--ic) + 6px); text-align: center; border-radius: 4px; font-size: var(--ic); }
   .media .mb b:hover { background: var(--chip-hi); }
   .media.paused i { color: var(--muted); }
+  .wx[hidden], .pomo[hidden] { display: none; }
+  .pomo b { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pomo.brk i { color: var(--accent2); }
 </style>
 </head>
 <body>
@@ -97,6 +100,8 @@
     </div>
     <div class="clock" id="clock">--:--</div>
     <div class="right">
+      <div class="chip pomo" id="pomo" hidden title="Фокус: клік — зупинити"><i>&#xF0517;</i><b id="pomoT"></b></div>
+      <div class="chip wx" id="wx" hidden><i id="wxI"></i><span id="wxT"></span></div>
       <div class="chip media" id="media" hidden title="Клік — пауза / відтворення, ПКМ — центр керування"><i id="mIc"></i><span class="mt" id="mText"></span><span class="mb"><b id="mPrev">&#xF04AE;</b><b id="mNext">&#xF04AD;</b></span></div>
       <div class="tray" id="tray" title="Приховані піктограми">
         <div class="icons" id="icons"></div>
@@ -111,7 +116,9 @@
 
   <script type="module">
     import * as zebar from './zebar.js';
+    import './i18n.js';
     import './themes.js';
+    import { refresh as weatherRefresh, cached as weatherCached, describe } from './weather.js';
 
     const $ = id => document.getElementById(id);
     const days = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
@@ -306,6 +313,60 @@
 
     providers.onOutput(render);
     render();
+
+    // ---------- weather chip (the bar is the one that refreshes it; the control center shows the forecast)
+    function showWeather(w) {
+      if (!w || !w.cur) { $('wx').hidden = true; return; }
+      const d = describe(w.cur.weather_code, !!w.cur.is_day);
+      $('wx').hidden = false; $('wxI').textContent = d.glyph; $('wxT').textContent = Math.round(w.cur.temperature_2m) + '°';
+      $('wx').title = `${w.place || ''}: ${d.text}, ${Math.round(w.cur.temperature_2m)}° (відчувається ${Math.round(w.cur.apparent_temperature)}°)\nклік — прогноз`;
+    }
+    showWeather(weatherCached());
+    const wxTick = async () => showWeather(await weatherRefresh());
+    wxTick(); setInterval(wxTick, 5 * 60e3);
+    $('wx').onclick = toggleCC;
+
+    // ---------- focus timer (pomodoro): state in valo.pomo = { phase: 'work' | 'break', endAt, work, brk }
+    const pomo = () => { try { return JSON.parse(localStorage.getItem('valo.pomo') || 'null'); } catch { return null; } };
+    const toast = (t, x) => zebar.shellExec('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', dir + '\\valo-toast.ps1', '-Title', t, '-Text', x]).catch(() => {});
+    const dnd = on => zebar.shellExec('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', dir + '\\valo-game.ps1', '-Dnd', on ? '1' : '0']).catch(() => {});
+    const dir = zebar.currentWidget().htmlPath.replace(/[\\/][^\\/]+$/, '');
+    let pomoPhase = null;
+    function pomoTick() {
+      const p = pomo();
+      if (!p) { $('pomo').hidden = true; if (pomoPhase) { pomoPhase = null; dnd(false); } return; }
+      let left = p.endAt - Date.now();
+      if (left <= 0) {     // phase finished -> next one
+        const next = p.phase === 'work' ? 'break' : 'work';
+        const mins = next === 'work' ? (p.work || 25) : (p.brk || 5);
+        localStorage.setItem('valo.pomo', JSON.stringify({ ...p, phase: next, endAt: Date.now() + mins * 60e3 }));
+        toast('valo.os · фокус', next === 'break' ? `Час перерви — ${mins} хв` : `Перерва закінчилась — фокус ${mins} хв`);
+        return pomoTick();
+      }
+      if (p.phase !== pomoPhase) { pomoPhase = p.phase; dnd(p.phase === 'work'); }
+      const m = Math.floor(left / 60e3), sec = Math.floor(left / 1000) % 60;
+      $('pomo').hidden = false; $('pomo').classList.toggle('brk', p.phase === 'break');
+      $('pomoT').textContent = (p.phase === 'break' ? 'перерва ' : '') + m + ':' + String(sec).padStart(2, '0');
+    }
+    setInterval(pomoTick, 1000); pomoTick();
+    $('pomo').onclick = () => { localStorage.removeItem('valo.pomo'); pomoTick(); };
+
+    // ---------- game mode: hide the bar while a fullscreen app is in front
+    const barWin = zebar.currentWidget().tauriWindow;
+    window.addEventListener('storage', e => {
+      if (e.key === 'valo.ev.game' && e.newValue) {
+        try { const on = JSON.parse(e.newValue).on; on ? barWin?.hide() : barWin?.show(); } catch { }
+      }
+      if (e.key === 'valo.weather' && e.newValue) { try { showWeather(JSON.parse(e.newValue)); } catch { } }
+      if (e.key === 'valo.prefs') wxTickForce();
+      if (e.key === 'valo.pomo') pomoTick();
+    });
+    let lastWxPrefs = JSON.stringify((JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}).weather || {});
+    async function wxTickForce() {
+      const now = JSON.stringify((JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}).weather || {});
+      if (now === lastWxPrefs) return;
+      lastWxPrefs = now; showWeather(await weatherRefresh(true));
+    }
   </script>
 </body>
 </html>

@@ -26,7 +26,7 @@
   .sticky .cc { border-radius: 0; box-shadow: none; }
 
   /* quick toggles */
-  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .tile { position: relative; cursor: pointer; border-radius: calc(var(--chipRadius) + 2px); background: var(--chip); padding: 10px 10px 9px;
     display: flex; flex-direction: column; gap: 6px; min-width: 0; transition: background .15s, color .15s; }
   .tile:hover { background: var(--hi); }
@@ -79,6 +79,57 @@
     color: var(--text); font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
   .ctl button:hover { background: var(--hi); color: var(--accent); }
   .ctl button.main { color: var(--accent); font-size: 18px; }
+
+  /* mixer */
+  .mix { display: flex; flex-direction: column; gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .mix[hidden] { display: none; }
+  .mix .app { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .mix .app span { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mix .app i { cursor: pointer; color: var(--accent); width: 16px; text-align: center; }
+  .mix .app i.off { color: var(--muted); }
+  .mix .app input { flex: 1; }
+  .mix .dev { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .mix .dev:hover { background: var(--hi); }
+  .mix .dev i { color: var(--muted); }
+  .mix .dev.on { color: var(--accent); font-weight: 600; }
+  .mix .dev.on i { color: var(--accent); }
+  .mix h5 { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+  /* weather */
+  .wxc { display: flex; flex-direction: column; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 12px; }
+  .wxc[hidden] { display: none; }
+  .wxc .now { display: flex; align-items: center; gap: 12px; }
+  .wxc .now i { font-size: 34px; color: var(--accent); }
+  .wxc .now b { font-size: 26px; font-weight: 300; }
+  .wxc .now div { display: flex; flex-direction: column; min-width: 0; }
+  .wxc .now span { font-size: 11px; color: var(--muted); }
+  .wxc .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; }
+  .wxc .days div { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); }
+  .wxc .days i { font-size: 17px; color: var(--accent); }
+  .wxc .days b { color: var(--text); font-weight: 600; font-size: 12px; }
+
+  /* calendar */
+  .cal { background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cal .hd { display: flex; align-items: center; font-weight: 600; }
+  .cal .hd span { flex: 1; text-transform: capitalize; }
+  .cal .hd i { cursor: pointer; color: var(--muted); padding: 0 6px; }
+  .cal .hd i:hover { color: var(--accent); }
+  .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 11px; }
+  .cal .grid .dw { color: var(--muted); font-size: 10px; padding-bottom: 2px; }
+  .cal .grid .d { position: relative; padding: 4px 0; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .cal .grid .d.out { color: var(--muted); opacity: .45; }
+  .cal .grid .d.today { background: var(--accent); color: var(--ink); font-weight: 700; }
+  .cal .grid .d.ev::after { content: ''; position: absolute; left: 50%; bottom: 1px; width: 4px; height: 4px; margin-left: -2px; border-radius: 2px; background: var(--accent2); }
+  .cal .ev { display: flex; gap: 8px; font-size: 12px; }
+  .cal .ev b { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .cal .ev span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal .hint { font-size: 11px; color: var(--muted); }
+
+  /* system monitor */
+  .mon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .mon div { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); }
+  .mon b { color: var(--text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .mon canvas { width: 100%; height: 26px; }
 
   /* world clocks */
   .clocks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 8px; }
@@ -138,16 +189,26 @@
     <div class="tiles">
       <div class="tile" id="tWifi"><i class="nf">&#xF05A9;</i><b>Wi‑Fi</b><span id="tWifiSub">…</span><div class="more nf" id="wifiMore" title="Мережі">&#xF0140;</div></div>
       <div class="tile" id="tBt"><i class="nf">&#xF00AF;</i><b>Bluetooth</b><span id="tBtSub">…</span></div>
-      <div class="tile" id="tMute"><i class="nf" id="tMuteIc">&#xF057E;</i><b>Звук</b><span id="tMuteSub"></span></div>
+      <div class="tile" id="tMute"><i class="nf" id="tMuteIc">&#xF057E;</i><b>Звук</b><span id="tMuteSub"></span><div class="more nf" id="mixMore" title="Мікшер і пристрої">&#xF0140;</div></div>
       <div class="tile" id="tTravel" title="Економія живлення, пауза живих шпалер, приглушений екран, док ховається"><i class="nf">&#xF001D;</i><b>В дорозі</b><span id="tTravelSub">вимкнено</span></div>
+      <div class="tile" id="tFocus" title="Фокус 25 хв / перерва 5 хв, сповіщення вимкнені під час фокусу"><i class="nf">&#xF0517;</i><b>Фокус</b><span id="tFocusSub">25 / 5 хв</span></div>
+      <div class="tile" id="tWarm" title="Теплий екран (менше синього світла)"><i class="nf">&#xF06E8;</i><b>Теплий екран</b><span id="tWarmSub">вимкнено</span></div>
     </div>
 
     <div class="nets" id="nets" hidden></div>
+    <div class="mix" id="mix" hidden></div>
 
     <div class="slider" id="sVol"><i class="nf" id="volIc">&#xF057E;</i><input type="range" id="vol" min="0" max="100" /><b id="volV"></b></div>
+    <div class="slider" id="sWarm" hidden><i class="nf">&#xF06E8;</i><input type="range" id="warm" min="10" max="100" /><b id="warmV"></b></div>
     <div class="slider" id="sBri" hidden><i class="nf">&#xF00DF;</i><input type="range" id="bri" min="0" max="100" /><b id="briV"></b></div>
 
+    <div class="wxc" id="wxCard" hidden><div class="now"><i class="nf" id="wxI"></i><b id="wxT"></b><div><span id="wxD"></span><span id="wxP"></span></div></div><div class="days" id="wxDays"></div></div>
+
     <div class="clocks" id="clocks" title="Світовий час"></div>
+
+    <div class="cal" id="cal"><div class="hd"><i class="nf" id="calPrev">&#xF0141;</i><span id="calM"></span><i class="nf" id="calNext">&#xF0142;</i></div><div class="grid" id="calG"></div><div id="calEv"></div></div>
+
+    <div class="mon" id="mon"><div>Процесор<b id="monCpu">–</b><canvas id="monCpuC" width="100" height="26"></canvas></div><div>Пам'ять<b id="monRam">–</b><canvas id="monRamC" width="100" height="26"></canvas></div><div>Температура<b id="monTemp">–</b><span id="monBt"></span></div></div>
 
     <div class="box">
       <h4><i class="nf">&#xF009A;</i>Нагадування</h4>
@@ -173,7 +234,9 @@
 
   <script type="module">
     import * as zebar from './zebar.js';
+    import './i18n.js';
     import { getTheme, saveTheme } from './themes.js';
+    import { describe as wxDescribe, cached as wxCached } from './weather.js';
 
     const $ = id => document.getElementById(id);
     const G = c => String.fromCodePoint(c);
@@ -208,6 +271,7 @@
       if (!visible) return;
       visible = false;
       localStorage.setItem('valo.ccClosed', String(Date.now()));
+      helperCmd('sysmon off');
       $('cc').classList.remove('show');
       setTimeout(hideWin, 150);
     }
@@ -216,6 +280,8 @@
       visible = true;
       render();
       refreshState();
+      helperCmd('sysmon on'); helperCmd('bt'); if (!$('mix').hidden) helperCmd('audio list');
+      renderWeather(); loadCalendar(); renderCal();
       await showWin();
       requestAnimationFrame(() => $('cc').classList.add('show'));
     }
@@ -435,6 +501,208 @@
       tile.classList.remove('busy'); renderTravel(); refreshState();
     };
     renderTravel();
+
+    // ---------- bridge to the dock's helper process (mixer, monitor, warm screen, Bluetooth batteries)
+    function helperCmd(cmd) { localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd, ts: Date.now() + Math.random() })); }
+    const evOf = k => { try { return JSON.parse(localStorage.getItem('valo.ev.' + k) || 'null'); } catch { return null; } };
+    window.addEventListener('storage', e => {
+      if (!e.newValue) return;
+      if (e.key === 'valo.ev.audio') renderMix(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.sys') renderMon(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.bt') renderBt(JSON.parse(e.newValue));
+      else if (e.key === 'valo.weather') renderWeather();
+      else if (e.key === 'valo.prefs') { renderWarm(); loadCalendar(true); }
+      else if (e.key === 'valo.pomo') renderFocus();
+    });
+
+    // ---------- mixer: per-app volume + output device
+    $('mixMore').onclick = e => {
+      e.stopPropagation();
+      $('mix').hidden = !$('mix').hidden; $('mixMore').textContent = G($('mix').hidden ? 0xF0140 : 0xF0143);
+      if (!$('mix').hidden) helperCmd('audio list');
+    };
+    let mixDrag = false;
+    function renderMix(m) {
+      if (mixDrag || !m) return;
+      const box = $('mix'); box.innerHTML = '';
+      const h1 = document.createElement('h5'); h1.textContent = 'Програми'; box.append(h1);
+      if (!(m.apps || []).length) { const e = document.createElement('div'); e.className = 'hint'; e.textContent = 'Зараз нічого не відтворює звук'; box.append(e); }
+      for (const a of m.apps || []) {
+        const row = document.createElement('div'); row.className = 'app';
+        const ic = document.createElement('i'); ic.className = 'nf' + (a.mute ? ' off' : ''); ic.textContent = G(a.mute ? 0xF0581 : 0xF057E);
+        ic.onclick = () => helperCmd(`audio mute ${a.pid} ${a.mute ? 0 : 1}`);
+        const nm = document.createElement('span'); nm.textContent = a.name;
+        const r = document.createElement('input'); r.type = 'range'; r.min = 0; r.max = 100; setRange(r, a.vol);
+        let t = null;
+        r.oninput = () => { mixDrag = true; setRange(r, +r.value); clearTimeout(t); t = setTimeout(() => helperCmd(`audio vol ${a.pid} ${r.value}`), 60); };
+        r.onchange = () => { setTimeout(() => { mixDrag = false; }, 400); };
+        row.append(ic, nm, r); box.append(row);
+      }
+      const h2 = document.createElement('h5'); h2.textContent = 'Вихід звуку'; box.append(h2);
+      for (const d of m.devices || []) {
+        const row = document.createElement('div'); row.className = 'dev' + (d.def ? ' on' : '');
+        row.innerHTML = '<i class="nf"></i><span></span>';
+        row.querySelector('i').textContent = G(d.def ? 0xF0134 : 0xF0130); row.querySelector('span').textContent = d.name;
+        row.onclick = () => { if (!d.def) helperCmd('audio default ' + d.id); };
+        box.append(row);
+      }
+    }
+
+    // ---------- system monitor
+    const hist = { cpu: [], ram: [] };
+    function spark(id, arr) {
+      const c = $(id), g = c.getContext('2d'), w = c.width, h = c.height, cs = getComputedStyle(document.documentElement);
+      g.clearRect(0, 0, w, h);
+      if (arr.length < 2) return;
+      g.beginPath();
+      arr.forEach((v, i) => { const x = i / 39 * w, y = h - 2 - v / 100 * (h - 4); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+      g.strokeStyle = cs.getPropertyValue('--accent'); g.lineWidth = 1.5; g.stroke();
+      g.lineTo((arr.length - 1) / 39 * w, h); g.lineTo(0, h); g.closePath();
+      g.globalAlpha = .15; g.fillStyle = cs.getPropertyValue('--accent'); g.fill(); g.globalAlpha = 1;
+    }
+    function renderMon(m) {
+      if (!m) return;
+      hist.cpu = [...hist.cpu, m.cpu].slice(-40); hist.ram = [...hist.ram, m.ram].slice(-40);
+      $('monCpu').textContent = m.cpu + '%'; $('monRam').textContent = `${m.ramUsed} / ${m.ramTotal} ГБ`;
+      $('monTemp').textContent = m.temp != null ? m.temp + '°' : '—';
+      spark('monCpuC', hist.cpu); spark('monRamC', hist.ram);
+    }
+    function renderBt(m) {
+      const l = (m && m.list) || [];
+      $('monBt').textContent = l.map(d => `${d.name}: ${d.pct}%`).join(' · ');
+      if (l.length) $('tBtSub').textContent = l.map(d => d.pct + '%').join(' · ');
+    }
+
+    // ---------- focus timer (the bar counts it down and switches phases)
+    const pomo = () => { try { return JSON.parse(localStorage.getItem('valo.pomo') || 'null'); } catch { return null; } };
+    function renderFocus() {
+      const p = pomo();
+      $('tFocus').classList.toggle('on', !!p);
+      $('tFocusSub').textContent = !p ? '25 / 5 хв' : p.phase === 'work' ? 'фокус до ' + new Date(p.endAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) : 'перерва';
+    }
+    $('tFocus').onclick = () => {
+      if (pomo()) localStorage.removeItem('valo.pomo');
+      else localStorage.setItem('valo.pomo', JSON.stringify({ phase: 'work', endAt: Date.now() + 25 * 60e3, work: 25, brk: 5 }));
+      renderFocus();
+    };
+    renderFocus();
+
+    // ---------- warm screen (the dock applies it; schedule lives in valo.prefs.warm)
+    const cprefs = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const savePrefs = patch => localStorage.setItem('valo.prefs', JSON.stringify({ ...cprefs(), ...patch }));
+    function renderWarm() {
+      const w = { mode: 'off', value: 40, ...(cprefs().warm || {}) };
+      $('tWarm').classList.toggle('on', w.mode !== 'off');
+      $('tWarmSub').textContent = w.mode === 'on' ? 'увімкнено' : w.mode === 'schedule' ? `з ${w.from || '21:00'} до ${w.to || '07:00'}` : 'вимкнено';
+      $('sWarm').hidden = w.mode === 'off';
+      if (!warmDrag) setRange($('warm'), w.value, $('warmV'));
+    }
+    let warmDrag = false;
+    $('tWarm').onclick = () => { const w = { mode: 'off', value: 40, ...(cprefs().warm || {}) }; savePrefs({ warm: { ...w, mode: w.mode === 'off' ? 'on' : 'off' } }); renderWarm(); };
+    $('warm').oninput = () => { warmDrag = true; setRange($('warm'), +$('warm').value, $('warmV')); };
+    $('warm').onchange = () => { warmDrag = false; const w = { mode: 'on', ...(cprefs().warm || {}) }; savePrefs({ warm: { ...w, value: +$('warm').value } }); };
+    renderWarm();
+
+    // ---------- weather (the bar refreshes it)
+    const wd = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    function renderWeather() {
+      const w = wxCached();
+      $('wxCard').hidden = !w || !w.cur;
+      if (!w || !w.cur) return;
+      const d = wxDescribe(w.cur.weather_code, !!w.cur.is_day);
+      $('wxI').textContent = d.glyph; $('wxT').textContent = Math.round(w.cur.temperature_2m) + '°';
+      $('wxD').textContent = `${w.place || ''} · ${d.text}`;
+      $('wxP').textContent = `відчувається ${Math.round(w.cur.apparent_temperature)}° · вітер ${Math.round(w.cur.wind_speed_10m)} км/год · вологість ${w.cur.relative_humidity_2m}%`;
+      const box = $('wxDays'); box.innerHTML = '';
+      (w.daily?.time || []).forEach((t, i) => {
+        const dd = wxDescribe(w.daily.weather_code[i], true), el = document.createElement('div');
+        el.innerHTML = '<span></span><i class="nf"></i><b></b><span></span>';
+        const sp = el.querySelectorAll('span');
+        sp[0].textContent = i === 0 ? 'сьогодні' : wd[new Date(t).getDay()];
+        el.querySelector('i').textContent = dd.glyph; el.querySelector('i').title = dd.text;
+        el.querySelector('b').textContent = Math.round(w.daily.temperature_2m_max[i]) + '° ' + Math.round(w.daily.temperature_2m_min[i]) + '°';
+        sp[1].textContent = (w.daily.precipitation_probability_max?.[i] ?? 0) + '%';
+        box.append(el);
+      });
+    }
+    renderWeather();
+
+    // ---------- calendar: month grid + events from an .ics link (valo.prefs.ics)
+    let calMonth = new Date(); calMonth.setDate(1);
+    const calCache = () => { try { return JSON.parse(localStorage.getItem('valo.ics') || 'null'); } catch { return null; } };
+    function icsDate(v) {
+      const m = String(v).match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);
+      if (!m) return null;
+      if (!m[4]) return { t: new Date(+m[1], m[2] - 1, +m[3]).getTime(), allDay: true };
+      return { t: m[7] ? Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(), allDay: false };
+    }
+    function parseIcs(text) {
+      const lines = text.replace(/\r?\n[ \t]/g, '').split(/\r?\n/), out = [];
+      let ev = null;
+      for (const l of lines) {
+        if (l === 'BEGIN:VEVENT') ev = {};
+        else if (l === 'END:VEVENT') { if (ev && ev.s) out.push(ev); ev = null; }
+        else if (ev) {
+          const i = l.indexOf(':'), key = l.slice(0, i).split(';')[0], val = l.slice(i + 1);
+          if (key === 'DTSTART') { const d = icsDate(val); if (d) { ev.s = d.t; ev.allDay = d.allDay; } }
+          else if (key === 'SUMMARY') ev.t = val.replace(/\\,/g, ',').replace(/\\n/g, ' ').replace(/\\;/g, ';');
+          else if (key === 'RRULE') ev.r = val;
+        }
+      }
+      // weekly / yearly repeats: put the next occurrences into the coming 60 days
+      const now = Date.now(), until = now + 60 * 864e5, res = [];
+      for (const e of out) {
+        if (!e.r) { if (e.s > now - 864e5 * 40 && e.s < until) res.push(e); continue; }
+        const step = /FREQ=WEEKLY/.test(e.r) ? 7 * 864e5 : /FREQ=DAILY/.test(e.r) ? 864e5 : /FREQ=YEARLY/.test(e.r) ? 0 : -1;
+        if (step > 0) { for (let t = e.s; t < until; t += step) if (t > now - 864e5 * 40) res.push({ ...e, s: t }); }
+        else if (step === 0) { const d = new Date(e.s); for (let y = new Date().getFullYear(); y <= new Date().getFullYear() + 1; y++) { d.setFullYear(y); if (d.getTime() < until) res.push({ ...e, s: d.getTime() }); } }
+      }
+      return res.sort((a, b) => a.s - b.s).slice(0, 400);
+    }
+    async function loadCalendar(force) {
+      const url = cprefs().ics;
+      if (!url) return;
+      const c = calCache();
+      if (!force && c && c.url === url && Date.now() - c.at < 30 * 60e3) return;
+      try {
+        const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-ics.ps1', '-Url', url]);
+        const text = r.stdout || '';
+        if (text.startsWith('ERROR')) throw new Error(text);
+        localStorage.setItem('valo.ics', JSON.stringify({ at: Date.now(), url, events: parseIcs(text) }));
+      } catch (e) { log('ics ' + e); }
+      renderCal();
+    }
+    function renderCal() {
+      const y = calMonth.getFullYear(), m = calMonth.getMonth();
+      $('calM').textContent = calMonth.toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' });
+      const g = $('calG'); g.innerHTML = '';
+      for (const d of ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд']) { const e = document.createElement('div'); e.className = 'dw'; e.textContent = d; g.append(e); }
+      const evs = (calCache()?.events) || [];
+      const evDays = new Set(evs.map(e => new Date(e.s).toDateString()));
+      const first = new Date(y, m, 1), start = new Date(y, m, 1 - ((first.getDay() + 6) % 7));
+      const today = new Date().toDateString();
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        if (i >= 35 && d.getMonth() !== m) break;
+        const e = document.createElement('div');
+        e.className = 'd' + (d.getMonth() !== m ? ' out' : '') + (d.toDateString() === today ? ' today' : '') + (evDays.has(d.toDateString()) ? ' ev' : '');
+        e.textContent = d.getDate(); g.append(e);
+      }
+      const box = $('calEv'); box.innerHTML = '';
+      if (!cprefs().ics) { const h = document.createElement('div'); h.className = 'hint'; h.textContent = 'Події з Google Calendar: додайте посилання .ics у «Налаштуваннях панелі» → «Календар».'; box.append(h); return; }
+      const now = Date.now() - 3600e3;
+      for (const e of evs.filter(e => e.s >= now).slice(0, 4)) {
+        const d = new Date(e.s), row = document.createElement('div'); row.className = 'ev';
+        row.innerHTML = '<b></b><span></span>';
+        const same = d.toDateString() === new Date().toDateString();
+        row.querySelector('b').textContent = (same ? 'сьогодні' : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })) + (e.allDay ? '' : ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
+        row.querySelector('span').textContent = e.t || 'Подія';
+        box.append(row);
+      }
+    }
+    $('calPrev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
+    $('calNext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
+    renderCal();
     for (const btn of document.querySelectorAll('[data-open]')) btn.onclick = () => { open(btn.dataset.open); close(); };
 
     providers.onOutput(render);

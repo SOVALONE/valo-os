@@ -391,6 +391,120 @@
                                                            }
                                         }
                                     ]
+                    },
+                    {
+                        "name":  "emoji",
+                        "htmlPath":  "./emoji.html",
+                        "zOrder":  "top_most",
+                        "shownInTaskbar":  false,
+                        "focused":  true,
+                        "resizable":  false,
+                        "transparent":  true,
+                        "includeFiles":  [
+                                             "*.html",
+                                             "*.js"
+                                         ],
+                        "caching":  {
+                                        "rules":  [
+
+                                                  ],
+                                        "defaultDuration":  604800
+                                    },
+                        "privileges":  {
+                                           "shellCommands":  [
+                                                                 {
+                                                                     "program":  "powershell",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "explorer",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "rundll32",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "shutdown",
+                                                                     "argsRegex":  ".*"
+                                                                 }
+                                                             ]
+                                       },
+                        "presets":  [
+                                        {
+                                            "name":  "default",
+                                            "anchor":  "bottom_center",
+                                            "offsetX":  "0px",
+                                            "offsetY":  "-90px",
+                                            "width":  "420px",
+                                            "height":  "420px",
+                                            "monitorSelection":  {
+                                                                     "type":  "primary"
+                                                                 },
+                                            "dockToEdge":  {
+                                                               "edge":  null,
+                                                               "windowMargin":  "0px",
+                                                               "enabled":  false
+                                                           }
+                                        }
+                                    ]
+                    },
+                    {
+                        "name":  "saver",
+                        "htmlPath":  "./saver.html",
+                        "zOrder":  "top_most",
+                        "shownInTaskbar":  false,
+                        "focused":  false,
+                        "resizable":  false,
+                        "transparent":  true,
+                        "includeFiles":  [
+                                             "*.html",
+                                             "*.js"
+                                         ],
+                        "caching":  {
+                                        "rules":  [
+
+                                                  ],
+                                        "defaultDuration":  604800
+                                    },
+                        "privileges":  {
+                                           "shellCommands":  [
+                                                                 {
+                                                                     "program":  "powershell",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "explorer",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "rundll32",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "shutdown",
+                                                                     "argsRegex":  ".*"
+                                                                 }
+                                                             ]
+                                       },
+                        "presets":  [
+                                        {
+                                            "name":  "default",
+                                            "anchor":  "top_left",
+                                            "offsetX":  "0px",
+                                            "offsetY":  "0px",
+                                            "width":  "100%",
+                                            "height":  "100%",
+                                            "monitorSelection":  {
+                                                                     "type":  "primary"
+                                                                 },
+                                            "dockToEdge":  {
+                                                               "edge":  null,
+                                                               "windowMargin":  "0px",
+                                                               "enabled":  false
+                                                           }
+                                        }
+                                    ]
                     }
                 ]
 }

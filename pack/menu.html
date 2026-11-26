@@ -138,6 +138,29 @@
   .light .auto select, .light .auto input[type=time] { color-scheme: light; }
   .auto select { flex: 1; }
   .seg.multi button.on { background: var(--pink); }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--chip); border-radius: var(--chipRadius); padding: 4px; flex: none; }
+  .tabs button { all: unset; cursor: pointer; text-align: center; padding: 7px 4px; border-radius: calc(var(--chipRadius) - 2px); color: var(--muted); font-weight: 600; font-size: 12px; }
+  .tabs button.on { background: var(--hi); color: var(--pink); }
+  #settings [data-tab-hidden] { display: none !important; }
+  .slist { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; min-height: 0; }
+  .slist .cat { color: var(--pink); font-weight: 700; font-size: 12px; padding: 8px 4px 2px; }
+  .slist .it { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 9px; }
+  .slist .it:hover { background: var(--chip); }
+  .slist .it .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .slist .it .tx small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slist .it button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 7px; background: var(--pink); color: var(--ink); font-size: 12px; font-weight: 600; }
+  .slist .it button.done { background: var(--chip); color: var(--muted); pointer-events: none; }
+  .slist .it button.busy { opacity: .6; pointer-events: none; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .row2 label, .rowf label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
+  .row2 select, .rowf select, .rowf input, .row2 input { background: var(--chip); color: var(--text); border: none; border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; color-scheme: dark; }
+  .light .row2 select, .light .rowf select, .light .rowf input, .light .row2 input { color-scheme: light; }
+  .rowf { display: flex; gap: 6px; align-items: flex-end; }
+  .rowf input[type=text], .rowf input[type=url] { flex: 1; user-select: text; }
+  .cities { display: flex; flex-direction: column; gap: 2px; }
+  .cities div { padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .cities div:hover { background: var(--chip); color: var(--pink); }
+  .cities small { color: var(--muted); }
   .btn.badge::after { content: ''; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); }
 </style>
 </head>
@@ -160,8 +183,15 @@
     <div class="list" id="list"><div class="empty">Завантаження…</div></div>
     </div>
 
+    <div class="page" id="store" hidden>
+      <div class="back"><button id="storeBack" class="nf">&#xF0141;</button><b>Магазин valo</b></div>
+      <div class="hint">Добірка перевірених програм. Встановлення через winget; деякі програми попросять дозвіл Windows.</div>
+      <div id="storeList" class="slist"></div>
+    </div>
+
     <div class="page" id="settings" hidden>
       <div class="back"><button id="backBtn" class="nf">&#xF0141;</button><b>Налаштування панелі</b></div>
+      <div class="tabs" id="setTabs"><button data-tab="look">Вигляд</button><button data-tab="sys">Система</button><button data-tab="data">Дані</button></div>
       <h3>Тема</h3>
       <div class="themes" id="themes"></div>
       <div class="cust" id="customWrap" hidden>
@@ -195,14 +225,42 @@
       <h3>Панель задач Windows</h3>
       <div class="seg" id="tbSeg"><button data-tb="1">Сховати (док valo.os)</button><button data-tb="0">Показати</button></div>
       <h3>Інструменти</h3>
-      <div class="seg three multi" id="featSeg"><button data-f="alttab">Alt+Tab</button><button data-f="clip">Буфер Win+V</button><button data-f="shot">Знімки PrtSc</button></div>
+      <div class="seg multi" id="featSeg"><button data-f="alttab">Alt+Tab</button><button data-f="clip">Буфер Win+V</button><button data-f="shot">Знімки PrtSc</button><button data-f="emoji">Емодзі Win+.</button></div>
       <div class="hint">Свій перемикач вікон, історія буфера обміну й знімок області екрана. Натисніть, щоб увімкнути або вимкнути.</div>
+      <h3>Гарячі кути</h3>
+      <div class="row2" id="corners"></div>
+      <h3>Зони вікон</h3>
+      <div class="seg" id="zoneSeg"><button data-z="off">Вимк.</button><button data-z="halves">½</button><button data-z="thirds">⅓</button><button data-z="grid">2×2</button><button data-z="main">Головне</button></div>
+      <div class="hint">Тримайте Shift, коли перетягуєте вікно, і відпустіть над зоною.</div>
+      <h3>Ігровий режим</h3>
+      <div class="seg" id="gameSeg"><button data-v="1">Автоматично</button><button data-v="0">Вимкнено</button></div>
+      <div class="hint">Коли гра чи відео на весь екран: панель і док ховаються, сповіщення вимкнені, живлення на максимум.</div>
+      <h3>Заставка</h3>
+      <div class="rowf"><label style="flex:1">Через скільки хвилин бездіяльності<select id="saverSel"><option value="0">Вимкнено</option><option value="3">3 хв</option><option value="5">5 хв</option><option value="10">10 хв</option><option value="15">15 хв</option><option value="30">30 хв</option></select></label></div>
+      <h3>Теплий екран</h3>
+      <div class="seg three" id="warmSeg"><button data-v="off">Вимкнено</button><button data-v="on">Увімкнено</button><button data-v="schedule">За розкладом</button></div>
+      <div class="row2" id="warmSched"><label>З<input type="time" id="warmFrom" /></label><label>До<input type="time" id="warmTo" /></label></div>
+      <label class="rng"><span>Теплота</span><input type="range" id="warmVal" min="10" max="100" /></label>
+      <h3>Робочі столи в доці</h3>
+      <div class="seg" id="deskSeg"><button data-v="1">Показувати</button><button data-v="0">Сховати</button></div>
       <h3>Звуки системи</h3>
       <div class="seg" id="sndSeg"><button data-snd="1">Звуки valo.os</button><button data-snd="0">Звуки Windows</button></div>
       <h3>Живі шпалери</h3>
       <div class="seg" id="wpSeg"><button data-wp="1">Змінювати з темою</button><button data-wp="0">Не чіпати</button></div>
       <div class="hint" id="wpHint">Потрібен Lively Wallpaper. Кожна тема має свої анімовані шпалери, що реагують на музику.</div>
       <div class="seg" id="lockSeg"><button data-lock="1">Екран блокування під тему</button><button data-lock="0">Не чіпати</button></div>
+      <h3>Погода</h3>
+      <div class="seg" id="wxSeg"><button data-v="auto">Де я зараз (за IP)</button><button data-v="city">Обране місто</button></div>
+      <div class="rowf" id="wxCityRow"><input type="text" id="wxCity" placeholder="Місто, напр. Бухарест" /></div>
+      <div class="cities" id="wxCities"></div>
+      <h3>Календар</h3>
+      <div class="rowf"><input type="url" id="icsUrl" placeholder="Посилання .ics (Google Calendar → Налаштування → Секретна адреса iCal)" /></div>
+      <div class="cbtns"><button id="icsSave">Зберегти календар</button></div>
+      <h3>Мова</h3>
+      <div class="seg three" id="langSeg"><button data-v="uk">Українська</button><button data-v="en">English</button><button data-v="ro">Română</button></div>
+      <h3>Синхронізація через GitHub</h3>
+      <div class="cbtns"><button id="syncPush">Надіслати на GitHub</button><button id="syncPull">Отримати з GitHub</button></div>
+      <div class="hint" id="syncHint">Налаштування в секретному Gist вашого акаунта — однакові на всіх ПК. Потрібен GitHub CLI.</div>
       <h3>Резервна копія налаштувань</h3>
       <div class="cbtns"><button id="bkSave">Зберегти у файл</button><button id="bkLoad">Відновити з файлу</button></div>
       <div class="hint" id="bkHint">Тема, панель, док, закріплені програми та інструменти — одним файлом у «Документах».</div>
@@ -213,6 +271,7 @@
 
     <footer>
       <div class="user"><div class="av" id="av">?</div><span id="user"></span></div>
+      <button class="btn nf" data-act="store" data-tip="Магазин програм">&#xF0110;</button>
       <button class="btn nf" data-act="panel" data-tip="Панель і теми">&#xF03D8;</button>
       <button class="btn nf" data-act="settings" data-tip="Налаштування Windows">&#xF0493;</button>
       <button class="btn nf" data-act="lock" data-tip="Заблокувати">&#xF033E;</button>
@@ -226,8 +285,10 @@
 
   <script type="module">
     import * as zebar from './zebar.js';
+    import { translate, locale, source } from './i18n.js';
     import { THEMES, getTheme, saveTheme, applyTheme, customVars, CUSTOM_DEFAULT } from './themes.js';
-    import { calc, currencyQuery, rates, convert, matchSettings, fmt } from './search.js';
+    import { calc, currencyQuery, rates, convert, matchSettings, fmt, convertUnits, command } from './search.js';
+    import { findCity } from './weather.js';
     // panel height changes need a Zebar restart with another preset (and a GlazeWM gap update)
     let applyTimer = null;
     function applyBarSize() {
@@ -284,6 +345,7 @@
       page = p;
       $('main').hidden = p !== 'main';
       $('settings').hidden = p !== 'settings';
+      $('store').hidden = p !== 'store';
       if (p === 'settings') renderSettings(); else setTimeout(() => $('q').focus(), 30);
     }
     async function open(p = 'main') {
@@ -406,6 +468,151 @@
         : 'Плаваюча: панель з відступами від країв і заокругленими кутами.';
     }
     $('backBtn').onclick = () => showPage('main');
+
+    // ---------- settings tabs: sections are grouped by their headings
+    const TAB_OF = { 'Тема': 'look', 'Тема за часом доби': 'look', 'Стиль панелі': 'look', 'Док': 'look', 'Живі шпалери': 'look', 'Мова': 'look', 'Робочі столи в доці': 'look',
+      'Панель задач Windows': 'sys', 'Інструменти': 'sys', 'Гарячі кути': 'sys', 'Зони вікон': 'sys', 'Ігровий режим': 'sys', 'Заставка': 'sys', 'Теплий екран': 'sys', 'Звуки системи': 'sys',
+      'Погода': 'data', 'Календар': 'data', 'Синхронізація через GitHub': 'data', 'Резервна копія налаштувань': 'data', 'Оновлення valo.os': 'data' };
+    let tab = 'look';
+    (function tagSettings() {
+      let cur = 'look';
+      for (const el of $('settings').children) {
+        if (el.classList.contains('back') || el.id === 'setTabs') continue;
+        if (el.tagName === 'H3') cur = TAB_OF[source(el)] || cur;
+        el.dataset.tab = cur;
+      }
+    })();
+    function showTab(t) {
+      tab = t;
+      for (const b of $('setTabs').querySelectorAll('button')) { b.classList.toggle('on', b.dataset.tab === t); b.onclick = () => showTab(b.dataset.tab); }
+      for (const el of $('settings').children) if (el.dataset.tab) el.toggleAttribute('data-tab-hidden', el.dataset.tab !== t);
+      $('settings').scrollTop = 0;
+    }
+    showTab('look');
+
+    // ---------- preferences shared with the dock helper (valo.prefs)
+    const P = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const setP = patch => { localStorage.setItem('valo.prefs', JSON.stringify({ ...P(), ...patch })); renderPrefs(); };
+    const CORNER_OPTS = [['none', 'Нічого'], ['menu', 'Меню valo.os'], ['cc', 'Центр керування'], ['desktop', 'Робочий стіл'], ['taskview', 'Усі вікна']];
+    function segP(id, cur, on) { for (const b of $(id).querySelectorAll('button')) { b.classList.toggle('on', b.dataset.v === String(cur) || b.dataset.z === String(cur)); b.onclick = () => on(b.dataset.v ?? b.dataset.z); } }
+    function renderPrefs() {
+      const p = P();
+      const c = p.corners || ['menu', 'none', 'none', 'desktop'];
+      const box = $('corners');
+      if (!box.children.length) ['Лівий верхній', 'Правий верхній', 'Лівий нижній', 'Правий нижній'].forEach((n, i) => {
+        const l = document.createElement('label'); l.textContent = n; const sel = document.createElement('select');
+        for (const [v, t] of CORNER_OPTS) { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.append(o); }
+        sel.onchange = () => { const cc = [...(P().corners || ['menu', 'none', 'none', 'desktop'])]; cc[i] = sel.value; setP({ corners: cc }); };
+        l.append(sel); box.append(l);
+      });
+      [...box.querySelectorAll('select')].forEach((sel, i) => sel.value = c[i]);
+      segP('zoneSeg', p.zones || 'halves', v => setP({ zones: v }));
+      segP('gameSeg', p.gameAuto === false ? 0 : 1, v => setP({ gameAuto: v === '1' }));
+      $('saverSel').value = String(+p.saverMin || 0); $('saverSel').onchange = () => setP({ saverMin: +$('saverSel').value });
+      const w = { mode: 'off', value: 40, from: '21:00', to: '07:00', ...(p.warm || {}) };
+      segP('warmSeg', w.mode, v => setP({ warm: { ...w, mode: v } }));
+      $('warmSched').style.display = w.mode === 'schedule' ? '' : 'none';
+      $('warmFrom').value = w.from; $('warmTo').value = w.to; $('warmVal').value = w.value;
+      $('warmFrom').onchange = () => setP({ warm: { ...w, from: $('warmFrom').value || '21:00' } });
+      $('warmTo').onchange = () => setP({ warm: { ...w, to: $('warmTo').value || '07:00' } });
+      $('warmVal').onchange = () => setP({ warm: { ...w, value: +$('warmVal').value } });
+      segP('deskSeg', p.desks === false ? 0 : 1, v => setP({ desks: v === '1' }));
+      const wx = p.weather || { mode: 'auto' };
+      segP('wxSeg', wx.mode, v => setP({ weather: { ...wx, mode: v } }));
+      $('wxCityRow').style.display = wx.mode === 'city' ? '' : 'none';
+      if (wx.mode === 'city' && document.activeElement !== $('wxCity')) $('wxCity').value = wx.name || '';
+      if (document.activeElement !== $('icsUrl')) $('icsUrl').value = p.ics || '';
+      segP('langSeg', localStorage.getItem('valo.lang') || 'uk', v => { localStorage.setItem('valo.lang', v); renderPrefs(); translate(); tick?.(); });
+    }
+    let cityTimer = null;
+    $('wxCity').addEventListener('input', () => {
+      clearTimeout(cityTimer);
+      const q = $('wxCity').value.trim();
+      cityTimer = setTimeout(async () => {
+        const box = $('wxCities'); box.innerHTML = '';
+        if (q.length < 2) return;
+        for (const c of await findCity(q)) {
+          const d = document.createElement('div'); d.innerHTML = '<span></span> <small></small>';
+          d.querySelector('span').textContent = c.name; d.querySelector('small').textContent = c.sub;
+          d.onclick = () => { setP({ weather: { mode: 'city', name: c.name, lat: c.lat, lon: c.lon } }); box.innerHTML = ''; };
+          box.append(d);
+        }
+      }, 350);
+    });
+    $('icsSave').onclick = () => { const u = $('icsUrl').value.trim(); if (u && !/^(https|webcal):\/\//.test(u)) { $('icsUrl').value = ''; return; } setP({ ics: u }); $('icsSave').textContent = 'Збережено ✓'; setTimeout(() => $('icsSave').textContent = 'Зберегти календар', 1500); };
+    renderPrefs();
+
+    // ---------- GitHub sync (secret gist)
+    function settingsJson() {
+      const data = { app: 'valo.os', savedAt: new Date().toISOString(), keys: {} };
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('valo.') && !/Toggle|Ack|Closed|focus|rates|upd|appsAt|autoPeriod|^valo\.ev\.|helperCmd|weather|ics$|valo\.ics/.test(k)) data.keys[k] = localStorage.getItem(k); }
+      return data;
+    }
+    function applySettings(o) {
+      let n = 0;
+      for (const [k, v] of Object.entries(o.keys || {})) if (k.startsWith('valo.') && typeof v === 'string') { localStorage.setItem(k, v); n++; }
+      pins = JSON.parse(localStorage.getItem('valo.pins') || 'null');
+      applyTheme(); renderSettings(); renderPrefs(); syncWallpaper();
+      return n;
+    }
+    $('syncPush').onclick = async () => {
+      $('syncHint').textContent = 'Надсилаю…';
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(settingsJson()))));
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-sync.ps1', '-Push', b64]).catch(() => null);
+      let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+      $('syncHint').textContent = o?.ok ? 'Збережено в GitHub (секретний Gist).' : (o?.error || 'Не вдалося надіслати');
+    };
+    $('syncPull').onclick = async () => {
+      $('syncHint').textContent = 'Отримую…';
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-sync.ps1', '-Pull']).catch(() => null);
+      let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+      if (!o || o.error || !o.keys) { $('syncHint').textContent = o?.error || 'Не вдалося отримати'; return; }
+      $('syncHint').textContent = `Отримано (${applySettings(o)} параметрів).`;
+    };
+
+    // ---------- store (winget)
+    const STORE = [
+      ['Браузери', [['Firefox', 'Mozilla.Firefox', 'вільний браузер'], ['Google Chrome', 'Google.Chrome', 'браузер Google'], ['Brave', 'Brave.Brave', 'браузер без реклами']]],
+      ['Спілкування', [['Telegram', 'Telegram.TelegramDesktop', 'месенджер'], ['Discord', 'Discord.Discord', 'голос і чати'], ['Signal', 'OpenWhisperSystems.Signal', 'приватний месенджер'], ['Zoom', 'Zoom.Zoom', 'відеозустрічі']]],
+      ['Медіа й творчість', [['Spotify', 'Spotify.Spotify', 'музика'], ['VLC', 'VideoLAN.VLC', 'усі відео й аудіо'], ['OBS Studio', 'OBSProject.OBSStudio', 'запис і стріми'], ['GIMP', 'GIMP.GIMP', 'редактор фото'], ['Krita', 'KDE.Krita', 'малювання']]],
+      ['Робота', [['Obsidian', 'Obsidian.Obsidian', 'нотатки й знання'], ['LibreOffice', 'TheDocumentFoundation.LibreOffice', 'офісний пакет'], ['Notion', 'Notion.Notion', 'нотатки й проєкти']]],
+      ['Розробка', [['VS Code', 'Microsoft.VisualStudioCode', 'редактор коду'], ['Git', 'Git.Git', 'контроль версій'], ['GitHub CLI', 'GitHub.cli', 'потрібен для синхронізації'], ['Node.js LTS', 'OpenJS.NodeJS.LTS', 'JavaScript'], ['Python 3.12', 'Python.Python.3.12', 'Python']]],
+      ['Утиліти', [['7-Zip', '7zip.7zip', 'архіви'], ['PowerToys', 'Microsoft.PowerToys', 'корисні інструменти Microsoft'], ['Everything', 'voidtools.Everything', 'миттєвий пошук файлів'], ['ShareX', 'ShareX.ShareX', 'знімки й запис екрана'], ['QuickLook', 'QL-Win.QuickLook', 'перегляд файлів пробілом'], ['Lively Wallpaper', 'rocksdanister.LivelyWallpaper', 'живі шпалери valo']]],
+      ['Ігри', [['Steam', 'Valve.Steam', 'ігри'], ['Epic Games', 'EpicGames.EpicGamesLauncher', 'ігри'], ['GOG Galaxy', 'GOG.Galaxy', 'ігри без DRM']]],
+    ];
+    let storeHave = null;
+    function renderStore() {
+      const box = $('storeList'); box.innerHTML = '';
+      for (const [cat, items] of STORE) {
+        const h = document.createElement('div'); h.className = 'cat'; h.textContent = cat; box.append(h);
+        for (const [n, id, d] of items) {
+          const it = document.createElement('div'); it.className = 'it';
+          it.innerHTML = '<div class="tx"><span></span><small></small></div><button></button>';
+          it.querySelector('span').textContent = n; it.querySelector('small').textContent = d;
+          const b = it.querySelector('button');
+          const have = storeHave?.includes(id);
+          b.textContent = have ? 'Встановлено' : storeHave ? 'Встановити' : '…';
+          b.className = have ? 'done' : '';
+          b.onclick = async () => {
+            b.className = 'busy'; b.textContent = 'Встановлюю…';
+            const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-store.ps1', '-Install', id]).catch(() => null);
+            let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+            if (o?.ok) { storeHave = [...(storeHave || []), id]; b.className = 'done'; b.textContent = 'Встановлено'; localStorage.setItem('valo.appsAt', '0'); }
+            else { b.className = ''; b.textContent = 'Помилка — ще раз'; }
+          };
+          box.append(it);
+        }
+      }
+    }
+    async function openStore() {
+      showPage('store'); renderStore();
+      if (storeHave) return;
+      const ids = STORE.flatMap(([, it]) => it.map(x => x[1])).join(',');
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-store.ps1', '-List', ids]).catch(() => null);
+      try { storeHave = JSON.parse((r?.stdout || '').trim()).installed || []; } catch { storeHave = []; }
+      renderStore();
+    }
+    $('storeBack').onclick = () => showPage('main');
 
     // ---------- custom theme editor
     function features() { try { return JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { return {}; } }
@@ -556,7 +763,7 @@
     function tick() {
       const d = new Date();
       $('time').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-      $('date').textContent = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+      $('date').textContent = d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
     }
     tick(); setInterval(tick, 5000);
 
@@ -624,6 +831,10 @@
       const items = [];
       const c = calc(raw);
       if (c) items.push({ sec: 'Калькулятор', big: true, n: '= ' + c.text, sub: 'Enter — скопіювати', glyph: 0xF00EC, run: () => copy(String(+c.value.toFixed(10)).replace('.', ',')) });
+      const un = convertUnits(raw);
+      if (un) items.push({ sec: 'Одиниці', big: true, n: un.text, sub: 'Enter — скопіювати', glyph: 0xF0E25, run: () => copy(fmt(un.value)) });
+      const cmd = command(raw);
+      if (cmd) items.push({ sec: 'Команда', big: true, n: cmd.n, sub: cmdSub(cmd), glyph: cmd.glyph, run: () => runCommand(cmd) });
       const cq = currencyQuery(raw);
       if (cq) {
         if (rateCache) for (const r of convert(cq, rateCache))
@@ -664,6 +875,26 @@
         list.appendChild(r);
       }
       list._shown = runnable;
+    }
+
+    function cmdSub(c) {
+      return c.kind === 'timer' ? `«${c.text}» · сповіщення в центрі керування` : c.kind === 'shutdown' ? 'Enter — запланувати (скасувати: «скасуй вимкнення»)'
+        : c.kind === 'close' ? 'закриє вікна цієї програми' : c.kind === 'theme' ? 'Enter — змінити тему' : 'Enter — виконати';
+    }
+    async function runCommand(c) {
+      if (c.kind === 'timer') {
+        let r = []; try { r = JSON.parse(localStorage.getItem('valo.reminders') || '[]') || []; } catch { }
+        r.push({ id: Date.now(), text: c.text || 'Таймер', at: Date.now() + c.ms });
+        localStorage.setItem('valo.reminders', JSON.stringify(r.sort((a, b) => a.at - b.at)));
+      } else if (c.kind === 'shutdown') zebar.shellExec('shutdown', ['/s', '/t', String(c.sec)]).catch(() => {});
+      else if (c.kind === 'abort') zebar.shellExec('shutdown', ['/a']).catch(() => {});
+      else if (c.kind === 'close') zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-cmd.ps1', '-Close', c.name]).catch(() => {});
+      else if (c.kind === 'theme') {
+        const want = c.name.toLowerCase();
+        const hit = Object.entries(THEMES).find(([id, t]) => t.name.toLowerCase().startsWith(want) || id.startsWith(want)) || (/^сво/.test(want) ? ['custom'] : null);
+        if (hit) { saveTheme({ id: hit[0] }); syncWallpaper(); }
+      }
+      close();
     }
 
     function appRow(a, selected) {
@@ -762,6 +993,7 @@
       b.onmouseleave = () => { tip.classList.remove('on'); b.classList.remove('arm'); };
       b.onclick = () => {
         if (b.dataset.act === 'panel') { showPage(page === 'settings' ? 'main' : 'settings'); return; }
+        if (b.dataset.act === 'store') { if (page === 'store') showPage('main'); else openStore(); return; }
         if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; return; }
         ACT[b.dataset.act]()?.catch?.(() => {});
         close();

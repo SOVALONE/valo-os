@@ -16,12 +16,11 @@ function Bright { try { [int](Get-CimInstance -Namespace root/wmi -ClassName Wmi
 function SetBright([int]$v) { $m = Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1; if ($m) { Invoke-CimMethod -InputObject $m -MethodName WmiSetBrightness -Arguments @{ Timeout = [uint32]1; Brightness = [byte]$v } | Out-Null } }
 
 if ($On) {
-    $prevOverlay = ((powercfg /getactiveoverlayscheme) -join ' ' | Select-String -Pattern '[0-9a-f]{8}-[0-9a-f-]{27}' -AllMatches).Matches.Value | Select-Object -First 1
+    $prevOverlay = & (Join-Path $PSScriptRoot 'valo-power.ps1') -Get
     $prev = [ordered]@{ overlay = $prevOverlay; bright = (Bright) }
     New-Item -ItemType Directory -Force (Split-Path $state) | Out-Null
     [IO.File]::WriteAllText($state, ($prev | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
-    powercfg /overlaysetactive $efficiency | Out-Null
-    $power = $LASTEXITCODE -eq 0
+    $power = (& (Join-Path $PSScriptRoot 'valo-power.ps1') -Set $efficiency) -eq 'True'
     if ($prev.bright -ne $null -and $prev.bright -gt 60) { SetBright 60 }
     $lively = Lively @('app', '--play', 'false')
     Out-Json @{ ok = $true; on = $true; power = $power; lively = $lively }
@@ -29,7 +28,7 @@ if ($On) {
 elseif ($Off) {
     $prev = $null; if (Test-Path $state) { $prev = Get-Content $state -Raw | ConvertFrom-Json }
     $overlay = if ($prev -and $prev.overlay) { $prev.overlay } else { '00000000-0000-0000-0000-000000000000' }   # balanced
-    powercfg /overlaysetactive $overlay | Out-Null
+    $null = & (Join-Path $PSScriptRoot 'valo-power.ps1') -Set $overlay
     if ($prev -and $prev.bright -ne $null) { SetBright ([int]$prev.bright) }
     $null = Lively @('app', '--play', 'true')
     Remove-Item $state -EA SilentlyContinue

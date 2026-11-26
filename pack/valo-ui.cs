@@ -7,7 +7,7 @@
 public static class ValoUi {
     public static SD.Color Bg = SD.Color.FromArgb(30, 26, 31), Fg = SD.Color.FromArgb(245, 230, 234),
         Accent = SD.Color.FromArgb(242, 167, 187), Muted = SD.Color.FromArgb(156, 138, 147);
-    public static volatile bool AltTabOn = true, ClipOn = true, ShotOn = true;
+    public static volatile bool AltTabOn = true, ClipOn = true, ShotOn = true, EmojiOn = true;
 
     [DllImport("dwmapi.dll")] public static extern int DwmSetWindowAttribute(IntPtr h, int a, ref int v, int s);
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);

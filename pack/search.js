@@ -113,3 +113,62 @@ export function matchSettings(q) {
   q = q.toLowerCase();
   return SETTINGS.filter(([n, , k]) => n.toLowerCase().includes(q) || k.split(' ').some(w => w.startsWith(q))).slice(0, 5);
 }
+
+// ---------- unit conversion: "5 миль у км", "70 f в c", "2 gb в mb"
+const UNITS = [
+  // [group, factor to base, names]
+  ['len', 0.001, 'мм mm міліметр міліметрів'], ['len', 0.01, 'см cm сантиметр сантиметрів'], ['len', 1, 'м m метр метрів метри'],
+  ['len', 1000, 'км km кілометр кілометрів кілометри'], ['len', 0.0254, 'дюйм дюймів дюйми in inch inches "'], ['len', 0.3048, 'фут футів фути ft foot feet'],
+  ['len', 0.9144, 'ярд ярдів yd yard yards'], ['len', 1609.344, 'миля миль милі mi mile miles'],
+  ['mass', 0.001, 'г g грам грамів'], ['mass', 1, 'кг kg кілограм кілограмів'], ['mass', 1000, 'т t тонна тонн'],
+  ['mass', 0.45359237, 'фунт фунтів lb lbs pound pounds'], ['mass', 0.028349523, 'унція унцій oz ounce ounces'],
+  ['vol', 0.001, 'мл ml мілілітр'], ['vol', 1, 'л l літр літрів літри'], ['vol', 3.785411784, 'галон галонів gal gallon gallons'],
+  ['speed', 1, 'км/год kmh km/h кмгод'], ['speed', 3.6, 'м/с m/s мс'], ['speed', 1.609344, 'миль/год mph'], ['speed', 1.852, 'вузол вузлів kn knot knots'],
+  ['data', 1, 'б b байт байтів'], ['data', 1024, 'кб kb кілобайт'], ['data', 1048576, 'мб mb мегабайт мегабайтів'],
+  ['data', 1073741824, 'гб gb гігабайт гігабайтів'], ['data', 1099511627776, 'тб tb терабайт'],
+  ['area', 1, 'м2 m2 м² кв.м'], ['area', 10000, 'га ha гектар гектарів'], ['area', 4046.8564224, 'акр акрів acre acres'], ['area', 1e6, 'км2 km2 км²'],
+  ['temp', 'c', '°c c цельсій цельсія градусів °'], ['temp', 'f', '°f f фаренгейт фаренгейта'], ['temp', 'k', 'k кельвін кельвіна'],
+];
+function unit(w) { w = w.trim().toLowerCase(); return UNITS.find(u => u[2].split(' ').includes(w)) || null; }
+export function convertUnits(q) {
+  const m = q.trim().toLowerCase().replace(',', '.').match(/^(-?\d+(?:\.\d+)?)\s*(.+?)\s+(?:в|у|to|in|->|=)\s+(.+)$/);
+  if (!m) return null;
+  const v = parseFloat(m[1]), a = unit(m[2]), b = unit(m[3]);
+  if (!a || !b || a[0] !== b[0]) return null;
+  let r;
+  if (a[0] === 'temp') {
+    const c = a[1] === 'c' ? v : a[1] === 'f' ? (v - 32) * 5 / 9 : v - 273.15;
+    r = b[1] === 'c' ? c : b[1] === 'f' ? c * 9 / 5 + 32 : c + 273.15;
+  } else r = v * a[1] / b[1];
+  const nm = s => s[2].split(' ')[0];
+  return { value: r, text: `${fmt(v)} ${nm(a)} = ${fmt(r)} ${nm(b)}` };
+}
+
+// ---------- commands: timer, scheduled shutdown, close an app, theme
+export function command(q) {
+  const s = q.trim().toLowerCase();
+  let m = s.match(/^(?:таймер|timer|нагадай|нагадування)\s+(?:через\s+)?(\d+(?:[.,]\d+)?)\s*(с|сек|секунд|s|хв|хвилин|хвилини|min|m|год|годин|години|h)?\s*(.*)$/);
+  if (m) {
+    const n = parseFloat(m[1].replace(',', '.')), u = m[2] || 'хв';
+    const ms = /^(с|сек|секунд|s)$/.test(u) ? n * 1e3 : /^(год|годин|години|h)$/.test(u) ? n * 3600e3 : n * 60e3;
+    const label = /^(с|сек|секунд|s)$/.test(u) ? 'с' : /^(год|годин|години|h)$/.test(u) ? 'год' : 'хв';
+    return { kind: 'timer', ms, text: m[3] ? q.trim().slice(q.trim().length - m[3].length) : 'Таймер', n: `Таймер на ${fmt(n)} ${label}`, glyph: 0xF13AB };
+  }
+  m = s.match(/^(?:вимкни|вимкнути|вимкнення|shutdown)\s+(?:о|об|в|at)\s+(\d{1,2})(?:[:.](\d{2}))?$/);
+  if (m) {
+    const d = new Date(); d.setHours(+m[1], +(m[2] || 0), 0, 0); if (d <= new Date()) d.setDate(d.getDate() + 1);
+    const sec = Math.round((d - Date.now()) / 1000);
+    return { kind: 'shutdown', sec, n: `Вимкнути комп'ютер о ${d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`, glyph: 0xF0425 };
+  }
+  m = s.match(/^(?:вимкни|вимкнути|shutdown)\s+через\s+(\d+)\s*(хв|хвилин|min|год|годин|h)?$/);
+  if (m) {
+    const sec = +m[1] * (/^(год|годин|h)$/.test(m[2] || '') ? 3600 : 60);
+    return { kind: 'shutdown', sec, n: `Вимкнути комп'ютер через ${m[1]} ${/^(год|годин|h)$/.test(m[2] || '') ? 'год' : 'хв'}`, glyph: 0xF0425 };
+  }
+  if (/^(скасуй|скасувати|відміни)\s+(вимкнення|shutdown)/.test(s) || s === 'shutdown -a') return { kind: 'abort', n: 'Скасувати заплановане вимкнення', glyph: 0xF0156 };
+  m = s.match(/^(?:закрий|закрити|close|kill)\s+(.{2,})$/);
+  if (m) return { kind: 'close', name: m[1].trim(), n: `Закрити «${m[1].trim()}»`, glyph: 0xF0156 };
+  m = s.match(/^(?:тема|theme)\s+(.+)$/);
+  if (m) return { kind: 'theme', name: m[1].trim(), n: `Тема «${m[1].trim()}»`, glyph: 0xF03D8 };
+  return null;
+}

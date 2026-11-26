@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="uk" data-widget="dock">
 <head>
 <meta charset="utf-8" />
@@ -40,6 +40,13 @@
   .item .tile.nf { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-weight: 400; font-size: 24px; background: transparent; }
   .item.armed { background: color-mix(in srgb, var(--accent2) 35%, transparent); }
   .item.armed .tile { color: var(--accent2); }
+  .desks { display: flex; align-items: center; gap: 5px; padding: 0 6px; height: 42px; }
+  .desks i { width: 8px; height: 8px; border-radius: 4px; background: var(--hi); cursor: pointer; transition: width .2s, background .2s; }
+  .desks i.on { width: 18px; background: var(--accent); }
+  .desks i:hover { background: var(--muted); }
+  .desks b { cursor: pointer; color: var(--muted); font: 600 15px 'Segoe UI', sans-serif; margin-left: 2px; padding: 0 3px; border-radius: 4px; }
+  .desks b:hover { color: var(--accent); background: var(--hi); }
+  .gamehide .dock { transform: translateY(calc(100% + 14px)); opacity: 0; pointer-events: none; }
   .sep { width: 1px; height: 26px; background: var(--border); margin: 0 4px; flex: none; }
 </style>
 </head>
@@ -48,6 +55,7 @@
 
   <script type="module">
     import * as zebar from './zebar.js';
+    import './i18n.js';
     import { getTheme } from './themes.js';
 
     const $ = id => document.getElementById(id);
@@ -107,11 +115,70 @@
         else if (m.type === 'win') toggleMenu();
         else if (m.type === 'dockvis') setVisible(m.show);
         else if (m.type === 'trash') { trashN = m.n; render(); }
+        else if (m.type === 'cc') toggleWidget('cc', 'control');
+        else if (m.type === 'emoji') toggleWidget('emoji', 'emoji');
+        else if (m.type === 'game') onGame(m.on);
+        else if (m.type === 'desks') { desks = m; render(); }
+        // results other widgets asked for (mixer, monitor, warm screen, idle) go through localStorage
+        if (['audio', 'sys', 'warm', 'idle', 'game', 'desks', 'bt'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
       });
       helper.onStderr(l => log('stderr: ' + l));
       helper.onExit(s => { log('helper exit ' + JSON.stringify(s)); helper = null; setTimeout(startHelper, 2000); });
       send('taskbar ' + (localStorage.getItem('valo.taskbarHide') === '0' ? 'show' : 'hide'));
-      lastMode = ''; lastBar = ''; lastCol = ''; lastFeat = ''; syncDock();
+      lastMode = ''; lastBar = ''; lastCol = ''; lastFeat = ''; lastPrefs = ''; lastWarm = -1; syncDock(); syncPrefs();
+    }
+
+    // generic toggle for the persistent widgets (control center, emoji picker...)
+    function toggleWidget(key, widgetName) {
+      const ls = localStorage, token = String(Date.now());
+      ls.setItem('valo.' + key + 'Toggle', token);
+      setTimeout(() => { if (ls.getItem('valo.' + key + 'Ack') !== token) zebar.startWidgetPreset(widgetName, 'default').catch(() => {}); }, 600);
+    }
+
+    // ---------- game mode: a fullscreen app is in front -> dock and bar step aside, performance + quiet
+    let gameOn = false;
+    function onGame(on) {
+      if (on === gameOn) return;
+      gameOn = on;
+      document.documentElement.classList.toggle('gamehide', on);
+      try { tauriWin?.setIgnoreCursorEvents(on || !shown)?.catch?.(() => {}); } catch { }
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-game.ps1', on ? '-On' : '-Off']).catch(() => {});
+      log('game ' + on);
+    }
+
+    // ---------- preferences for the helper (hot corners, game mode, screensaver, zones, warm screen)
+    let lastPrefs = '', lastWarm = -1;
+    function prefs() { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } }
+    function syncPrefs() {
+      const p = prefs(), c = p.corners || ['menu', 'none', 'none', 'desktop'];
+      const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves')];
+      const sig = lines.join('|');
+      if (sig !== lastPrefs && helper) { lastPrefs = sig; lines.forEach(send); }
+      syncWarm();
+    }
+    function warmNow() {
+      const w = prefs().warm || {};
+      if (w.mode === 'on') return +w.value || 40;
+      if (w.mode !== 'schedule') return 0;
+      const toM = s => { const [h, m] = String(s || '').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+      const d = new Date(), m = d.getHours() * 60 + d.getMinutes(), a = toM(w.from || '21:00'), b = toM(w.to || '07:00');
+      const inside = a < b ? (m >= a && m < b) : (m >= a || m < b);
+      return inside ? (+w.value || 40) : 0;
+    }
+    function syncWarm() { const v = warmNow(); if (v !== lastWarm && helper) { lastWarm = v; send('warm ' + v); } }
+    setInterval(syncWarm, 60000);
+
+    // ---------- virtual desktops (dots at the start of the dock)
+    let desks = { n: 1, cur: 0 };
+    function desksEl() {
+      const box = document.createElement('div'); box.className = 'desks';
+      for (let i = 0; i < desks.n; i++) {
+        const d = document.createElement('i'); d.className = i === desks.cur ? 'on' : '';
+        d.title = 'Робочий стіл ' + (i + 1); d.onclick = () => send('desk ' + i); box.append(d);
+      }
+      const plus = document.createElement('b'); plus.textContent = '+'; plus.title = 'Новий робочий стіл'; plus.onclick = () => send('desknew');
+      box.append(plus);
+      return box;
     }
 
     function toggleMenu() {
@@ -165,7 +232,7 @@
       const col = ['colors', cssVar('solid'), cssVar('text'), cssVar('accent'), cssVar('muted')].join(' ');
       if (col !== lastCol && helper) { lastCol = col; send(col); }
       let f = {}; try { f = JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { }
-      const fs = `features alttab=${f.alttab === false ? 0 : 1} clip=${f.clip === false ? 0 : 1} shot=${f.shot === false ? 0 : 1}`;
+      const fs = `features alttab=${f.alttab === false ? 0 : 1} clip=${f.clip === false ? 0 : 1} shot=${f.shot === false ? 0 : 1} emoji=${f.emoji === false ? 0 : 1}`;
       if (fs !== lastFeat && helper) { lastFeat = fs; send(fs); }
       const bs = 'barstyle ' + (t.sticky ? 1 : 0);
       if (bs !== lastBar) { lastBar = bs; send(bs); }
@@ -181,7 +248,7 @@
       shown = v;
       document.documentElement.classList.toggle('autohidden', !v);
       if (!v) send('preview hide');
-      try { tauriWin?.setIgnoreCursorEvents(!v)?.catch?.(e => log('ignore-cursor failed: ' + e)); } catch (e) { log('ignore-cursor threw: ' + e); }
+      try { tauriWin?.setIgnoreCursorEvents(!v || gameOn)?.catch?.(e => log('ignore-cursor failed: ' + e)); } catch (e) { log('ignore-cursor threw: ' + e); }
     }
 
     // ---------- hover preview (DWM thumbnails in a small window drawn by the helper)
@@ -263,11 +330,12 @@
     let lastSig = '';
     function render() {
       const { pinned, running } = groups();
-      const showTrash = getTheme().dockTrash !== false;
-      const sig = JSON.stringify([showTrash, trashN, trashArmed]) + JSON.stringify([pinned, running].map(l => l.map(g => [g.key, g.wins.map(w => [w.h, w.fg, w.t]), !!(g.app?.ic || exeIcons.has((g.exe || '').toLowerCase()))])));
+      const showTrash = getTheme().dockTrash !== false, showDesks = prefs().desks !== false;
+      const sig = JSON.stringify([showTrash, trashN, trashArmed, showDesks, desks.n, desks.cur]) + JSON.stringify([pinned, running].map(l => l.map(g => [g.key, g.wins.map(w => [w.h, w.fg, w.t]), !!(g.app?.ic || exeIcons.has((g.exe || '').toLowerCase()))])));
       if (sig === lastSig) return;
       lastSig = sig;
       const d = $('dock'); d.innerHTML = '';
+      if (showDesks) { d.append(desksEl()); const s0 = document.createElement('div'); s0.className = 'sep'; d.append(s0); }
       for (const g of pinned) d.append(item(g));
       if (pinned.length && running.length) { const s = document.createElement('div'); s.className = 'sep'; d.append(s); }
       for (const g of running) d.append(item(g));
@@ -286,6 +354,8 @@
       else if (e.key === 'valo.focusWin' && e.newValue) send('activatetitle ' + e.newValue.split('|')[0]);
       else if (e.key === 'valo.theme') { lastSig = ''; render(); setTimeout(syncDock, 350); }
       else if (e.key === 'valo.features') syncDock();
+      else if (e.key === 'valo.prefs') { syncPrefs(); lastSig = ''; render(); }
+      else if (e.key === 'valo.helperCmd' && e.newValue) { try { send(JSON.parse(e.newValue).cmd); } catch { } }
     });
 
     log('dock start');

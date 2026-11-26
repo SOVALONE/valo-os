@@ -7,7 +7,7 @@ $cfg = Get-Content $settings -Raw | ConvertFrom-Json
 $list = [Collections.Generic.List[object]]::new(); foreach ($c in @($cfg.startupConfigs)) { if ($c) { $list.Add($c) } }
 $bar = $list | Where-Object { $_.pack -eq 'quill' -and $_.widget -eq 'bar' } | Select-Object -First 1
 $host_ = $bar -and $bar.preset -like 'host*'
-$want = [ordered]@{ menu = 'default'; dock = $(if ($host_) { 'host' } else { 'default' }); control = 'default'; welcome = 'default' }
+$want = [ordered]@{ menu = 'default'; dock = $(if ($host_) { 'host' } else { 'default' }); control = 'default'; welcome = 'default'; emoji = 'default'; saver = 'default' }
 $changed = $false
 foreach ($w in $want.Keys) {
     if (-not ($list | Where-Object { $_.pack -eq 'quill' -and $_.widget -eq $w })) {

@@ -169,6 +169,7 @@ public static class ValoShell {
     public static volatile bool CaptureWin = true;
     static HookProc hookProc;
     static bool winDown, otherKey, altTabbing, vSwallow;
+    static uint dotSwallow;
     [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
     // also: Alt+Tab -> valo switcher, Win+V -> clipboard history, PrintScreen -> area screenshot
     static IntPtr Hook(int code, IntPtr w, IntPtr l) {
@@ -199,6 +200,7 @@ public static class ValoShell {
                     return new IntPtr(1);
                 }
                 if (vk == 0x56 && !down && vSwallow) { vSwallow = false; return new IntPtr(1); }
+                if (!down && dotSwallow != 0 && vk == dotSwallow) { dotSwallow = 0; return new IntPtr(1); }
             }
             if (CaptureWin) {
                 bool isWin = vk == 0x5B || vk == 0x5C;
@@ -208,6 +210,7 @@ public static class ValoShell {
                 } else if (down && winDown && !injected) {
                     otherKey = true;
                     if (vk == 0x56 && ValoUi.ClipOn && ClipForm.Inst != null) { vSwallow = true; ValoUi.Post(delegate { ClipForm.Inst.Toggle(); }); return new IntPtr(1); }
+                    if ((vk == 0xBE || vk == 0xBA) && ValoUi.EmojiOn) { dotSwallow = vk; Typer.Remember(); Emit.Line("{\"type\":\"emoji\"}"); return new IntPtr(1); }
                 }
             }
         }
@@ -358,6 +361,10 @@ public static class ValoShell {
 
     // ---- stdin commands on their own thread (Console.In.ReadLineAsync blocks in Windows PowerShell)
     public static ConcurrentQueue<string> Commands = new ConcurrentQueue<string>();
+    public static void StartSysMon() {
+        Thread t = new Thread(delegate () { while (true) { Thread.Sleep(1500); if (SysMon.On) Emit.Line(SysMon.Sample()); } });
+        t.IsBackground = true; t.Start();
+    }
     public static void StartStdinReader() {
         Thread t = new Thread(delegate () {
             try {
@@ -374,9 +381,28 @@ public static class ValoShell {
                         if (c.StartsWith("colors ")) { string[] a = c.Split(' '); if (a.Length >= 5) ValoUi.SetColors(a[1], a[2], a[3], a[4]); continue; }
                         if (c.StartsWith("features ")) {
                             string f = c.Substring(9);
-                            ValoUi.AltTabOn = !f.Contains("alttab=0"); ValoUi.ClipOn = !f.Contains("clip=0"); ValoUi.ShotOn = !f.Contains("shot=0");
+                            ValoUi.AltTabOn = !f.Contains("alttab=0"); ValoUi.ClipOn = !f.Contains("clip=0"); ValoUi.ShotOn = !f.Contains("shot=0"); ValoUi.EmojiOn = !f.Contains("emoji=0");
                             continue;
                         }
+                        // part 2: mixer, monitor, warm screen, typing, corners, game mode, screensaver, zones, desktops
+                        if (c.StartsWith("audio ")) {
+                            string[] a = c.Split(new char[] { ' ' }, 4);
+                            if (a[1] == "vol" && a.Length > 3) AudioMix.SetVol(uint.Parse(a[2]), int.Parse(a[3]));
+                            else if (a[1] == "mute" && a.Length > 3) AudioMix.SetMute(uint.Parse(a[2]), a[3] == "1");
+                            else if (a[1] == "default" && a.Length > 2) AudioMix.SetDefault(c.Substring(14));
+                            Emit.Line(AudioMix.List());
+                            continue;
+                        }
+                        if (c.StartsWith("sysmon ")) { SysMon.On = c.EndsWith("on"); continue; }
+                        if (c.StartsWith("warm ")) { bool ok = Gamma.Apply(int.Parse(c.Substring(5))); Emit.Line("{\"type\":\"warm\",\"ok\":" + (ok ? "true" : "false") + ",\"value\":" + Gamma.Warm + "}"); continue; }
+                        if (c.StartsWith("type ")) { Typer.Type(c.Substring(5)); continue; }
+                        if (c.StartsWith("corners ")) { string[] a = c.Split(' '); if (a.Length >= 5) ValoWatch.Corners = new string[] { a[1], a[2], a[3], a[4] }; continue; }
+                        if (c.StartsWith("gameauto ")) { ValoWatch.GameAuto = c.EndsWith("1"); continue; }
+                        if (c.StartsWith("saver ")) { int m; if (int.TryParse(c.Substring(6), out m)) ValoWatch.SaverMin = m; continue; }
+                        if (c.StartsWith("zones ")) { ZoneForm.ZoneLayout = c.Substring(6).Trim(); continue; }
+                        if (c.StartsWith("desk ")) { int d; if (int.TryParse(c.Substring(5), out d)) ValoWatch.GoDesk(d); continue; }
+                        if (c == "desknew") { ValoWatch.NewDesk(); continue; }
+                        if (c == "bt") { Emit.Line(BtBattery.List()); continue; }
                         if (c.StartsWith("barstyle ")) { BarSticky = c.EndsWith("1"); Commands.Enqueue("popups"); continue; }
                         if (c.StartsWith("dock ")) {
                             string[] a = c.Split(' ');
@@ -442,6 +468,7 @@ public class PreviewForm : WF.Form {
             try { AltTabForm.Inst = new AltTabForm(); force = AltTabForm.Inst.Handle; } catch { }
             try { ClipForm.Inst = new ClipForm(); force = ClipForm.Inst.Handle; } catch { }   // starts listening to the clipboard
             try { ShotForm.Inst = new ShotForm(); force = ShotForm.Inst.Handle; } catch { }
+            try { ZoneForm.Inst = new ZoneForm(); force = ZoneForm.Inst.Handle; } catch { }
             ready.Set();
             WF.Application.Run();
         });
@@ -614,7 +641,7 @@ public class PreviewForm : WF.Form {
 
 '@
 # UI parts (Alt+Tab, clipboard history, screenshots) live in valo-ui.cs next to this script
-$valoCs += "`n" + [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'valo-ui.cs'))
+foreach ($ui in Get-ChildItem (Join-Path $PSScriptRoot 'valo-ui*.cs') | Sort-Object Name) { $valoCs += "`n" + [IO.File]::ReadAllText($ui.FullName) }
 Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition $valoCs
 
 if ($RestoreTaskbar) { [ValoShell]::ShowTaskbar(); return }
@@ -639,6 +666,7 @@ Log 'hook...'; [ValoShell]::StartKeyHook(); Log 'hook ok'
 [PreviewForm]::Start(); Log 'preview ok'
 [ValoShell]::StartStdinReader()
 [ValoShell]::StartDockWatch()
+[ValoWatch]::Start(); [ValoShell]::StartSysMon()
 $last = ''
 $iconsSent = @{}
 $tick = 0
@@ -681,6 +709,7 @@ while ($true) {
     if ($hideTaskbar -and ($tick % 10 -eq 0) -and [ValoShell]::EnsureAutoHide()) { Log 'auto-hide re-enabled' }
     if ($tick % 3 -eq 0) { $ab = [ValoShell]::EnsureDock(); if ($ab) { Log ('dock ' + $ab) } }
     if ($tick % 3 -eq 1) { $pp = [ValoShell]::EnsurePopups(); if ($pp) { Log ('popups ' + $pp) } }
+    if ($tick % 25 -eq 0 -and [Gamma]::Warm -gt 0) { [void][Gamma]::Apply([Gamma]::Warm) }   # displays reset the ramp after sleep
     if ($false -and $hideTaskbar -and ($tick % 4 -eq 0)) { $wa = [ValoShell]::EnsureWorkArea(); if ($wa) { Log ('work area ' + $wa) } }
 
     if ($tick % 6 -eq 0) { $tn = [ValoShell]::TrashCount(); if ($tn -ne $lastTrash) { $lastTrash = $tn; Send @{ type = 'trash'; n = $tn } } }

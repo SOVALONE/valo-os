@@ -1,34 +1,57 @@
 {
-    "version":  "1.2.0",
+    "version":  "1.3.0",
     "date":  "2026-11-26",
     "notes":  [
-                  "Розумний пошук у меню: файли, налаштування Windows, калькулятор, курси валют, пошук в інтернеті",
-                  "Свій Alt+Tab з мініатюрами, історія буфера Win+V, знімки області PrtSc",
-                  "Своя тема: власні кольори, кольори з шпалер чи картинки; тема за часом доби",
-                  "Центр керування: світовий час, нагадування, нотатки, режим «В дорозі»",
-                  "Живі шпалери реагують на музику; екран блокування під тему",
-                  "Звуки системи valo.os, резервна копія налаштувань, майстер першого запуску"
+                  "Погода на панелі й прогноз у центрі керування",
+                  "Мікшер звуку по програмах і перемикання виходу звуку",
+                  "Календар з подіями Google Calendar (.ics)",
+                  "Монітор системи: процесор, пам\u0027ять, температура, заряд Bluetooth-навушників",
+                  "Теплий екран з розкладом, таймер фокусу (помодоро)",
+                  "Команди в пошуку: таймер, вимкнення за часом, закрити програму, одиниці, тема",
+                  "Емодзі Win+., гарячі кути, ігровий режим, зони вікон з Shift, робочі столи в доці",
+                  "Мови інтерфейсу: українська, English, Română",
+                  "Синхронізація налаштувань через GitHub, Магазин valo, заставка"
               ],
     "files":  [
                   {
                       "path":  "pack/bar.html",
-                      "sha256":  "78816719341d5c843d06c9322f6b0528d9c77e57edf741b0c21e844159a285fa"
+                      "sha256":  "76091d71f58cf7d516a882b9a2f566fce56bec53a7321987b23881c94fda79f7"
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "98c18bd24addebd2018f4a83534197dd3e2594b248e1b18462feed96b7bcfca9"
+                      "sha256":  "99bfbf9a3ccba1535e80ce0ee084c327846dff992fc9b3e79440e43c916d49ea"
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "a916b80117395b1c3c13c0cff9b9315a5779a54520138ebe3fcbffdfb96c41a7"
+                      "sha256":  "6141c99a30bf01e2db7486c1bca7643481e2606855ed1e9e319033ba112cf264"
+                  },
+                  {
+                      "path":  "pack/emoji.html",
+                      "sha256":  "23b74f32bb40412efb53c4cfb047c8a72af8f4a3d427856a5cb80f78437631df"
+                  },
+                  {
+                      "path":  "pack/emoji.js",
+                      "sha256":  "1d42be5d9f6a2b8c8bee6ff714cec020ecb29d03c4827753754d214fb07a1847"
+                  },
+                  {
+                      "path":  "pack/i18n.js",
+                      "sha256":  "48d11d1a9e3f1d719966fa14076916ef8fb5ce40650a9f6ff74221fdf7d1d972"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "f5176490582ec8fbfa78259b66f6831c28e0f062fb25123c9c2f73d93dc70656"
+                      "sha256":  "4e90eecc7c1e997324b97ea10e0d33cc451c277556bb9893555e4b57e356375c"
+                  },
+                  {
+                      "path":  "pack/saver.html",
+                      "sha256":  "a265f625c71d78c23d765600aade71e519821d4cb9ee1c6f995d9a37a31949cd"
+                  },
+                  {
+                      "path":  "pack/saver-scene.js",
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "pack/search.js",
-                      "sha256":  "f659538e37a683d5789531898ee11ee5a5b6a9fc915940242251663c2462c4ef"
+                      "sha256":  "631984d6f7531a2f720b28c53f0f4999122a1919abe4601a39e796387346c8c7"
                   },
                   {
                       "path":  "pack/themes.js",
@@ -51,12 +74,28 @@
                       "sha256":  "ccbc0bf00b056e45405d68bacea8a71ffec8a0011a363bbea837b4c4474139a1"
                   },
                   {
+                      "path":  "pack/valo-cmd.ps1",
+                      "sha256":  "5c3689651e8763484259ba0375e37254c2b9e1bba75411fb9bad3daeaf2441bb"
+                  },
+                  {
+                      "path":  "pack/valo-game.ps1",
+                      "sha256":  "ccd930ff171b7dc12ef6cf65fa7eeadce7e3991a7f589582544e8390e8b28987"
+                  },
+                  {
+                      "path":  "pack/valo-ics.ps1",
+                      "sha256":  "f789f2f67377ca9a8dea6650cfe0adc387bdfe347662d40696a3328b404f296b"
+                  },
+                  {
                       "path":  "pack/valo-palette.ps1",
                       "sha256":  "eca67b98d42668486ef537848ea5650d6b1e31cde980a8a1b7e4c0251abb4125"
                   },
                   {
                       "path":  "pack/valo-postupdate.ps1",
-                      "sha256":  "509d45914be7676ba5c8d8bc08c8411ee99f699cacac7da7ac507cc97b1fd14e"
+                      "sha256":  "3ec60313b5e7170fc27f9cf1326fc52f3d5fea7637a9a39ec299477cff7efd5a"
+                  },
+                  {
+                      "path":  "pack/valo-power.ps1",
+                      "sha256":  "2159ad7d4a1f3064c3badffdc74e468add998f2a50c494954db385806a7301ee"
                   },
                   {
                       "path":  "pack/valo-search.ps1",
@@ -64,7 +103,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "4652959cd036fe9f7bbe0bbea5a0a85591807517ccf07b1b2ffa69763adcbc4d"
+                      "sha256":  "1bcb39525a42b6ebd4442f7722c89b5963e9d154b336bf68af1269df1ca69405"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -103,16 +142,28 @@
                       "sha256":  "7f8646c457562b340d8ec9bf40e8a747c1f855226fc931ed2cae6d919940b7a6"
                   },
                   {
+                      "path":  "pack/valo-store.ps1",
+                      "sha256":  "bcd9e4fff72bec6911e1f2ec54766bb80d50f70a5e3c0f650e8d9449eb22d4bc"
+                  },
+                  {
+                      "path":  "pack/valo-sync.ps1",
+                      "sha256":  "c6555e06d4d0899999701018259fada28043978e25a01287a67864b279c1199f"
+                  },
+                  {
                       "path":  "pack/valo-toast.ps1",
                       "sha256":  "e8e7aaedd573a46a21404db550601e5ec1059fb075695dde92fa4cb13a3ac8ec"
                   },
                   {
                       "path":  "pack/valo-travel.ps1",
-                      "sha256":  "57244f583fc1abb511648a9c22ec1cc83cf035a47b8e1ada27f6590df2de7859"
+                      "sha256":  "2caf54e5953cc55f97bd8abaa5cf1767350c007f541255ac717a401250bc44ab"
                   },
                   {
                       "path":  "pack/valo-ui.cs",
-                      "sha256":  "9b0a4c007e9bd804cc2d5e8140e207f89cd81cd901b31c60b41c435b8e311656"
+                      "sha256":  "05a82d1e0934f98ce8dc8f94f951b118d564a4122643e48d696cdba246925c7d"
+                  },
+                  {
+                      "path":  "pack/valo-ui2.cs",
+                      "sha256":  "d8a06032172d97c598b05c685c70202fa867d3401b760b02b3c7f0fd2b0245e3"
                   },
                   {
                       "path":  "pack/valo-update.ps1",
@@ -123,8 +174,12 @@
                       "sha256":  "de68794adeeb77c8c545b9e66af406e1c401ef4453cb82e6ec2890d26100d8c2"
                   },
                   {
+                      "path":  "pack/weather.js",
+                      "sha256":  "a143b85adb3bded94c5895573cc8585cf4ad43e9721901f9588e6bba9bdf4c3c"
+                  },
+                  {
                       "path":  "pack/welcome.html",
-                      "sha256":  "cd6a96edaed797a887d8eb5323213fd3dd23dc8da19f458acbec8b6c6588f388"
+                      "sha256":  "3d8f022f70d162e8ec6e75f67b8476776eb6e3fa63a8e8fbb3f7b5939d71239f"
                   },
                   {
                       "path":  "pack/zebar.js",
@@ -132,7 +187,7 @@
                   },
                   {
                       "path":  "pack/zpack.json",
-                      "sha256":  "d446423337e05816819bc46a3809e679250547b14c9c0940b81c2b4d237c3452"
+                      "sha256":  "25aed452de22679016c3f8c860ecf0330230f8785f2632bf3026c1d82a30f60c"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/index.html",
