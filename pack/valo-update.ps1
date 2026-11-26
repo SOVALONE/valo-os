@@ -36,9 +36,9 @@ function Restart-Zebar {
 }
 $installedFile = Join-Path $pack 'version.json'
 $installed = $null; try { $installed = Get-Content $installedFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { }
-$current = if ($installed) { "$($installed.version)" } else { '0.0.0' }
+$curVer = if ($installed) { "$($installed.version)" } else { '0.0.0' }
 
-if ($Current) { Out-Json @{ current = $current; notes = @($installed.notes); date = $installed.date; channel = $Channel }; return }
+if ($Current) { Out-Json @{ current = $curVer; notes = @($installed.notes); date = $installed.date; channel = $Channel }; return }
 
 # ---- rollback to the newest backup
 if ($Rollback) {
@@ -46,7 +46,7 @@ if ($Rollback) {
     if (-not $bk) { Out-Json @{ ok = $false; error = 'Немає резервних копій для відкату' }; return }
     $ver = '?'; try { $ver = (Get-Content (Join-Path $bk.FullName 'version.json') -Raw -Encoding UTF8 | ConvertFrom-Json).version } catch { }
     Copy-Item (Join-Path $bk.FullName '*') $pack -Recurse -Force
-    Log "rollback $current -> $ver from $($bk.FullName)"
+    Log "rollback $curVer -> $ver from $($bk.FullName)"
     Remove-Item $bk.FullName -Recurse -Force        # the next rollback goes one step further back
     Out-Json @{ ok = $true; version = $ver }
     Restart-Zebar
@@ -69,24 +69,24 @@ function Get-Manifest($name) {
 $stable = Get-Manifest 'stable'
 $beta = if ($Channel -eq 'beta') { Get-Manifest 'beta' } else { $null }
 if (($stable -is [hashtable] -and $stable.bad) -or ($beta -is [hashtable] -and $beta.bad)) {
-    Out-Json @{ current = $current; error = 'Підпис оновлення не збігається — оновлення відхилено.' }; return
+    Out-Json @{ current = $curVer; error = 'Підпис оновлення не збігається — оновлення відхилено.' }; return
 }
 $remote = $stable
 if ($beta -and (-not $stable -or (VerKey $beta.version) -gt (VerKey $stable.version))) { $remote = $beta }
-if (-not $remote) { Out-Json @{ current = $current; error = 'Не вдалося перевірити оновлення (немає інтернету або репозиторію).' }; return }
-$available = (VerKey $remote.version) -gt (VerKey $current)
+if (-not $remote) { Out-Json @{ current = $curVer; error = 'Не вдалося перевірити оновлення (немає інтернету або репозиторію).' }; return }
+$available = (VerKey $remote.version) -gt (VerKey $curVer)
 
 if (-not $Apply) {
-    Out-Json @{ current = $current; latest = $remote.version; available = $available; notes = @($remote.notes); date = $remote.date; channel = $Channel; beta = ("$($remote.version)" -like '*beta*') }
+    Out-Json @{ current = $curVer; latest = $remote.version; available = $available; notes = @($remote.notes); date = $remote.date; channel = $Channel; beta = ("$($remote.version)" -like '*beta*') }
     return
 }
-if (-not $available) { Out-Json @{ ok = $true; current = $current; msg = 'Уже остання версія.' }; return }
+if (-not $available) { Out-Json @{ ok = $true; current = $curVer; msg = 'Уже остання версія.' }; return }
 
 # ---- download + verify everything first, install only if all files are good
 $stage = Join-Path $valo "update-$($remote.version)"
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force $stage | Out-Null
-Log "update $current -> $($remote.version) ($Channel)"
+Log "update $curVer -> $($remote.version) ($Channel)"
 $prefix = "$($remote.base)/"
 foreach ($f in $remote.files) {
     $p = [string]$f.path
@@ -100,7 +100,7 @@ foreach ($f in $remote.files) {
     if ((Get-FileHash $dst -Algorithm SHA256).Hash -ne ([string]$f.sha256).ToUpper()) { Log "hash mismatch $p"; Out-Json @{ ok = $false; error = "Файл $rel пошкоджений (не збігається SHA-256)" }; return }
 }
 
-$bk = Join-Path $valo "backup\$current-$(Get-Date -f yyyyMMdd-HHmmss)"
+$bk = Join-Path $valo "backup\$curVer-$(Get-Date -f yyyyMMdd-HHmmss)"
 New-Item -ItemType Directory -Force $bk | Out-Null
 Copy-Item (Join-Path $pack '*') $bk -Recurse -Force
 # keep the 5 newest backups
