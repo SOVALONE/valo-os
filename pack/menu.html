@@ -599,7 +599,6 @@
       ['dlClean', false, 'Старі інсталятори в кошик', 'з «Завантаження\\Інсталятори», старші за 30 днів'],
       ['deskWidgets', false, 'Віджети на робочому столі', 'годинник, погода, нотатка й календар поверх шпалер'],
       ['modesOn', true, 'Режими (Робота, Ігри, Відпочинок, В дорозі)', 'рядок у центрі керування, авто за Wi‑Fi'],
-      ['link', true, 'valo Link (телефон)', 'сервер для телефона у треї; вимкнення зупиняє його'],
     ];
     function swRow(key, def, title, sub, onChange) {
       const el = document.createElement('div'); el.className = 'sw' + ((P()[key] ?? def) ? ' on' : '');
@@ -613,11 +612,7 @@
       const box = $('featList'); box.innerHTML = '';
       const p = P();
       for (const [k, def, t, sub] of FEATS) {
-        box.append(swRow(k, def, t, sub, v => {
-          if (k === 'link') zebar.shellExec('powershell', [...PS, '-Command', v
-            ? `Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name valo-link -Value ('"' + $env:SystemRoot + '\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -File "${dir}\\valo-link.ps1" --hidden'); Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-STA','-ExecutionPolicy','Bypass','-File','${dir}\\valo-link.ps1','--hidden'`
-            : "Remove-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run' -Name valo-link -EA SilentlyContinue; Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like '*valo-link.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"]).catch(() => {});
-        }));
+        box.append(swRow(k, def, t, sub));
         if (k === 'translate' && (p.translate ?? true)) {
           const s = document.createElement('div'); s.className = 'sub';
           s.innerHTML = '<label>українську перекладати на <select id="trSel"><option value="en">англійську</option><option value="ro">румунську</option><option value="de">німецьку</option><option value="pl">польську</option><option value="cs">чеську</option></select></label>';
@@ -820,14 +815,16 @@
 
     // ---------- store (winget)
     const STORE = [
-      ['Рекомендує valo.os', [['Files', 'FilesCommunity.Files', 'провідник з вкладками й двома панелями'], ['QuickLook', 'QL-Win.QuickLook', 'перегляд файлу пробілом'], ['NanaZip', 'M2Team.NanaZip', 'архіви, сучасний 7-Zip'], ['Windhawk', 'RamenSoftware.Windhawk', 'доробки Windows: меню, анімації, панелі']]],
+      ['Рекомендує valo.os', [['valo Link', 'valo.Link', 'телефон разом з ПК: файли, буфер, сповіщення, пошук телефона'], ['Files', 'FilesCommunity.Files', 'провідник з вкладками й двома панелями'], ['QuickLook', 'QL-Win.QuickLook', 'перегляд файлу пробілом'], ['NanaZip', 'M2Team.NanaZip', 'архіви, сучасний 7-Zip'], ['Windhawk', 'RamenSoftware.Windhawk', 'доробки Windows: меню, анімації, панелі']]],
       ['Браузери', [['Firefox', 'Mozilla.Firefox', 'вільний браузер'], ['Google Chrome', 'Google.Chrome', 'браузер Google'], ['Brave', 'Brave.Brave', 'браузер без реклами']]],
       ['Спілкування', [['Telegram', 'Telegram.TelegramDesktop', 'месенджер'], ['Discord', 'Discord.Discord', 'голос і чати'], ['Signal', 'OpenWhisperSystems.Signal', 'приватний месенджер'], ['Zoom', 'Zoom.Zoom', 'відеозустрічі']]],
       ['Медіа й творчість', [['Spotify', 'Spotify.Spotify', 'музика'], ['VLC', 'VideoLAN.VLC', 'усі відео й аудіо'], ['OBS Studio', 'OBSProject.OBSStudio', 'запис і стріми'], ['GIMP', 'GIMP.GIMP', 'редактор фото'], ['Krita', 'KDE.Krita', 'малювання']]],
       ['Робота', [['Obsidian', 'Obsidian.Obsidian', 'нотатки й знання'], ['LibreOffice', 'TheDocumentFoundation.LibreOffice', 'офісний пакет'], ['Notion', 'Notion.Notion', 'нотатки й проєкти']]],
       ['Розробка', [['VS Code', 'Microsoft.VisualStudioCode', 'редактор коду'], ['Git', 'Git.Git', 'контроль версій'], ['GitHub CLI', 'GitHub.cli', 'потрібен для синхронізації'], ['Node.js LTS', 'OpenJS.NodeJS.LTS', 'JavaScript'], ['Python 3.12', 'Python.Python.3.12', 'Python']]],
       ['Утиліти', [['PowerToys', 'Microsoft.PowerToys', 'корисні інструменти Microsoft'], ['Everything', 'voidtools.Everything', 'миттєвий пошук файлів'], ['ShareX', 'ShareX.ShareX', 'знімки й запис екрана'], ['7-Zip', '7zip.7zip', 'архіви'], ['FFmpeg', 'Gyan.FFmpeg', 'потрібен для запису екрана'], ['Lively Wallpaper', 'rocksdanister.LivelyWallpaper', 'живі шпалери valo']]],
-      ['Ігри', [['Steam', 'Valve.Steam', 'ігри'], ['Epic Games', 'EpicGames.EpicGamesLauncher', 'ігри'], ['GOG Galaxy', 'GOG.Galaxy', 'ігри без DRM']]],
+      ['Ігри', [['Steam', 'Valve.Steam', 'ігри'], ['Epic Games', 'EpicGames.EpicGamesLauncher', 'ігри'], ['GOG Galaxy', 'GOG.Galaxy', 'ігри без DRM'], ['EA app', 'ElectronicArts.EADesktop', 'ігри EA'], ['Ubisoft Connect', 'Ubisoft.Connect', 'ігри Ubisoft'], ['Battle.net', 'Blizzard.BattleNet', 'ігри Blizzard'], ['Playnite', 'Playnite.Playnite', 'усі ігри з усіх магазинів в одному місці']]],
+      ['Гра з друзями', [['Radmin VPN', 'Famatech.RadminVPN', 'спільна локальна мережа для гри з друзями'], ['ZeroTier', 'ZeroTier.ZeroTierOne', 'віртуальна мережа, як Radmin VPN'], ['Parsec', 'Parsec.Parsec', 'гра на чужому ПК через інтернет']]],
+      ['Для геймера', [['MSI Afterburner', 'Guru3D.Afterburner', 'FPS, температура й розгін відеокарти']]],
     ];
     let storeHave = null;
     function renderStore() {
@@ -842,6 +839,18 @@
           const have = storeHave?.includes(id);
           b.textContent = have ? 'Встановлено' : storeHave ? 'Встановити' : '…';
           b.className = have ? 'done' : '';
+          if (have && id === 'valo.Link') {   // valo's own component: can be removed here
+            b.textContent = 'Видалити'; b.className = '';
+            b.onclick = async () => {
+              b.className = 'busy'; b.textContent = 'Видаляю…';
+              const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-store.ps1', '-Remove', id]).catch(() => null);
+              let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+              if (o?.ok) storeHave = storeHave.filter(x => x !== id);
+              renderStore();
+            };
+            box.append(it); continue;
+          }
+          if (have) { box.append(it); continue; }
           b.onclick = async () => {
             b.className = 'busy'; b.textContent = 'Встановлюю…';
             const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-store.ps1', '-Install', id]).catch(() => null);

@@ -196,6 +196,7 @@
   .links button { all: unset; flex: 1; cursor: pointer; text-align: center; padding: 8px 4px; border-radius: var(--chipRadius); background: var(--chip);
     font-size: 11px; color: var(--muted); transition: background .15s, color .15s; }
   .links button:hover { background: var(--hi); color: var(--text); }
+  .links button[hidden] { display: none; }
   .links button i { display: block; font-size: 16px; color: var(--accent); margin-bottom: 3px; }
 </style>
 </head>
@@ -797,6 +798,9 @@
     $('calPrev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
     $('calNext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
     renderCal();
+    // valo Link is optional (valo Store): the button shows only where it is installed
+    $('linkBtn').hidden = true;
+    zebar.shellExec('powershell', [...PS, '-Command', "Test-Path (Join-Path $env:LOCALAPPDATA 'valo\\link\\installed')"]).then(r => { $('linkBtn').hidden = !/True/.test(r?.stdout || ''); }).catch(() => {});
     $('linkBtn').onclick = () => { zebar.shellExec('powershell', [...PS, '-Command', `Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-STA','-ExecutionPolicy','Bypass','-File','${dir}\\valo-link.ps1'`]).catch(() => {}); close(); };
     for (const btn of document.querySelectorAll('[data-open]')) btn.onclick = () => { open(btn.dataset.open); close(); };
 

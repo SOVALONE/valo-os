@@ -16,7 +16,7 @@ irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/install.ps1 | iex
 
 ## valo Link — телефон разом з ПК
 
-Входить у valo.os (значок у треї). На телефоні — сторінка в браузері або застосунок для Android: https://sovalone.github.io/valo-os/valo-link.apk (фонові сповіщення на ПК, «Поділитися → valo Link», гучний пошук телефона).
+Необов'язковий: на ПК встановлюється з меню → «Магазин valo» → valo Link (значок у треї). На телефоні — сторінка в браузері або застосунок для Android: https://sovalone.github.io/valo-os/valo-link.apk (фонові сповіщення на ПК, «Поділитися → valo Link», гучний пошук телефона).
 
 ## Видалити
 

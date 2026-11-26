@@ -136,6 +136,8 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Встановити|Install|Instalează
 Встановлено|Installed|Instalat
 Встановлюю…|Installing…|Instalez…
+Видалити|Remove|Elimină
+Видаляю…|Removing…|Elimin…
 Браузери|Browsers|Browsere
 Спілкування|Chat|Comunicare
 Медіа й творчість|Media & creative|Media și creație
@@ -144,6 +146,8 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Утиліти|Utilities|Utilitare
 Рекомендує valo.os|Recommended by valo.os|Recomandat de valo.os
 Ігри|Games|Jocuri
+Гра з друзями|Play with friends|Joacă cu prietenii
+Для геймера|For gamers|Pentru gameri
 Wi‑Fi|Wi‑Fi|Wi‑Fi
 Bluetooth|Bluetooth|Bluetooth
 Звук|Sound|Sunet

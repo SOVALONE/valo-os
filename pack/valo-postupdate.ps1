@@ -19,6 +19,6 @@ if ($changed) {
     [IO.File]::WriteAllText($settings, ($cfg | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
 }
 
-# valo Link (phone companion): build / refresh the app, shortcut and autostart
+# valo Link (phone companion, optional — the valo Store installs it): refresh it only where it is installed
 $lb = Join-Path $PSScriptRoot 'valo-link-build.ps1'
-if (Test-Path $lb) { & $lb }
+if (Test-Path $lb) { & $lb -Refresh }

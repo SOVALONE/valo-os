@@ -1,8 +1,30 @@
-﻿# valo Link setup: icon, Start menu shortcut, autostart (hidden in the tray), and (re)start.
+﻿# valo Link setup: icon, Start menu shortcut, "Send to", autostart (hidden in the tray), and (re)start.
 # valo Link runs inside Windows PowerShell (valo-link.ps1) — a self-built .exe would be blocked by Smart App Control.
-# Run by valo-postupdate.ps1 and by the installer.
+# valo Link is optional (not set up by default): the valo Store installs it (no switch) and removes it (-Remove).
+#   -Refresh  (valo-postupdate.ps1): only if it is installed — rebuild and restart with the new version.
+param([switch]$Remove, [switch]$Refresh)
 $ErrorActionPreference = 'SilentlyContinue'
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$mark = Join-Path $env:LOCALAPPDATA 'valo\link\installed'
+$run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'valo Link.lnk'
+$st = [Environment]::GetFolderPath('SendTo')
+$sendTo = @(@('valo Link — на телефон через QR', '--qr'), @('valo Link — на підключений телефон', '--send'))
+function Stop-Link { Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -like '*valo-link.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }
+
+if ($Remove) {
+    # pairings and settings in %LOCALAPPDATA%alo\link stay, so installing it again keeps the paired phones
+    Stop-Link
+    Remove-ItemProperty $run -Name 'valo-link'
+    Remove-Item $lnk, $mark -Force
+    foreach ($x in $sendTo) { Remove-Item (Join-Path $st ($x[0] + '.lnk')) -Force }
+    return
+}
+if ($Refresh) {
+    # builds before 1.8 set it up on every PC: those count as installed
+    $was = (Test-Path $mark) -or (Test-Path $lnk) -or ($null -ne (Get-ItemProperty $run -Name 'valo-link').'valo-link')
+    if (-not $was) { return }
+}
 $ico = Join-Path $dir 'valo-link.ico'
 $ps = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $psArgs = "-NoProfile -STA -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$dir\valo-link.ps1`""
@@ -34,19 +56,18 @@ if (-not (Test-Path $ico)) {
 # old builds left an .exe that Smart App Control blocks — remove it
 Remove-Item (Join-Path $dir 'valo-link.exe'), (Join-Path $dir 'valo-link.hash') -Force
 
-$lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'valo Link.lnk'
 $sh = New-Object -ComObject WScript.Shell
 $s = $sh.CreateShortcut($lnk); $s.TargetPath = $ps; $s.Arguments = $psArgs; $s.WorkingDirectory = $dir
 $s.Description = 'valo Link — телефон і ПК разом'; $s.IconLocation = "$ico,0"; $s.WindowStyle = 7; $s.Save()
 # Explorer "Send to": QR quick share (no pairing) and to paired phones
-$st = [Environment]::GetFolderPath('SendTo')
-foreach ($x in @(@('valo Link — на телефон через QR', '--qr'), @('valo Link — на підключений телефон', '--send'))) {
+foreach ($x in $sendTo) {
     $s2 = $sh.CreateShortcut((Join-Path $st ($x[0] + '.lnk'))); $s2.TargetPath = $ps; $s2.Arguments = "$psArgs $($x[1])"; $s2.WorkingDirectory = $dir
     $s2.IconLocation = "$ico,0"; $s2.WindowStyle = 7; $s2.Save()
 }
-Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'valo-link' -Value "`"$ps`" $psArgs --hidden"
+Set-ItemProperty $run -Name 'valo-link' -Value "`"$ps`" $psArgs --hidden"
 
 # restart so a new version is used
-Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -like '*valo-link.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+New-Item -ItemType Directory -Force (Split-Path $mark) | Out-Null; Set-Content $mark (Get-Date -f s)
+Stop-Link
 Start-Sleep -Milliseconds 400
 Start-Process $ps -ArgumentList "$psArgs --hidden" -WindowStyle Hidden

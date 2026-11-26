@@ -1,0 +1,9 @@
+{
+    "version":  "1.8.0",
+    "date":  "2026-11-27",
+    "notes":  [
+                  "valo Link тепер необов\u0027язковий: встановлюється й видаляється в Магазині valo (на нових ПК не ставиться сам)",
+                  "Магазин: Radmin VPN, ZeroTier і Parsec (розділ «Гра з друзями»), EA app, Ubisoft Connect, Battle.net, Playnite, MSI Afterburner"
+              ],
+    "channel":  "stable"
+}

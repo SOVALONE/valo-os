@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="uk" data-widget="dock">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { display: flex; align-items: flex-end; justify-content: center; padding: 0 0 8px; font-family: 'Segoe UI', sans-serif; }
+
+  .dock {
+    display: flex; align-items: center; gap: 4px; padding: 5px 7px; height: 52px; max-width: calc(100vw - 36px);
+    background: var(--bg); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); box-shadow: var(--shadow);
+    transition: border-radius .3s, background .3s; flex: none;
+  }
+  .overlap:not(.sticky) .dock { max-width: none; }
+  .dock { transition: border-radius .3s, background .3s, transform .28s cubic-bezier(.2,.8,.2,1), opacity .2s; }
+  .autohidden .dock { transform: translateY(calc(100% + 14px)); opacity: 0; pointer-events: none; }
+  .sticky body { padding: 0; }
+  .sticky .dock { width: 100%; max-width: none; height: 100%; justify-content: center; border-radius: 0; border-width: 1px 0 0 0; box-shadow: none; }
+
+  .item { position: relative; width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: var(--chipRadius);
+    cursor: pointer; transition: background .15s, transform .15s; }
+  .item:hover { background: var(--hi); transform: translateY(-2px); }
+  .item:active { transform: translateY(0) scale(.95); }
+  .item img, .item .tile { width: 28px; height: 28px; border-radius: 6px; object-fit: contain; pointer-events: none; }
+  .item .tile { display: grid; place-items: center; background: var(--hi); color: var(--accent); font-weight: 700; font-size: 14px; }
+  .item .dot { position: absolute; bottom: 1px; left: 50%; height: 3px; width: 5px; border-radius: 3px; background: var(--muted);
+    transform: translateX(-50%); transition: width .2s, background .2s; }
+  .item.run .dot { background: var(--muted); }
+  .item.fg .dot { width: 16px; background: var(--accent); }
+  .item.fg { background: color-mix(in srgb, var(--hi) 70%, transparent); }
+  .item:not(.run) .dot { display: none; }
+  .item .count { position: absolute; top: 2px; right: 2px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px;
+    background: var(--accent); color: var(--ink); font-size: 9px; font-weight: 700; display: grid; place-items: center; }
+  .item .tile.nf { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-weight: 400; font-size: 24px; background: transparent; }
+  .item.armed { background: color-mix(in srgb, var(--accent2) 35%, transparent); }
+  .item.armed .tile { color: var(--accent2); }
+  .desks { display: flex; align-items: center; gap: 5px; padding: 0 6px; height: 42px; }
+  .desks i { width: 8px; height: 8px; border-radius: 4px; background: var(--hi); cursor: pointer; transition: width .2s, background .2s; }
+  .desks i.on { width: 18px; background: var(--accent); }
+  .desks i:hover { background: var(--muted); }
+  .desks b { cursor: pointer; color: var(--muted); font: 600 15px 'Segoe UI', sans-serif; margin-left: 2px; padding: 0 3px; border-radius: 4px; }
+  .desks b:hover { color: var(--accent); background: var(--hi); }
+  .gamehide .dock { transform: translateY(calc(100% + 14px)); opacity: 0; pointer-events: none; }
+  .sep { width: 1px; height: 26px; background: var(--border); margin: 0 4px; flex: none; }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
+</style>
+</head>
+<body>
+  <div class="dock" id="dock"></div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import { getTheme } from './themes.js';
+
+    const $ = id => document.getElementById(id);
+    const widget = zebar.currentWidget();
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+
+    let apps = [], byId = new Map(), byExe = new Map(), byBase = new Map();
+    let wins = [];
+    const exeIcons = new Map();
+    const runOrder = [];          // stable order of running, unpinned groups
+    let helper = null;
+    const log = msg => zebar.shellExec('powershell', [...PS, '-Command',
+      `Add-Content -LiteralPath "$env:TEMP\\valo-dock.log" -Value ('${new Date().toISOString()} ' + '${String(msg).replace(/'/g, '')}')`]).catch(() => {});
+
+    const pins = () => { try { return JSON.parse(localStorage.getItem('valo.pins') || '[]') || []; } catch { return []; } };
+    const base = p => (p || '').toLowerCase().split('\\').pop();
+
+    // ---------- app list (same cache the menu uses)
+    async function loadApps() {
+      try {
+        const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-apps.ps1', '-Cached']);
+        const data = JSON.parse((r.stdout || '[]').trim() || '[]');
+        if (!Array.isArray(data)) return;
+        apps = data;
+        byId = new Map(); byExe = new Map(); byBase = new Map();
+        const seenBase = new Map();
+        for (const a of apps) {
+          byId.set(String(a.id).toLowerCase(), a);
+          if (a.t) {
+            byExe.set(a.t.toLowerCase(), a);
+            const b = base(a.t); seenBase.set(b, (seenBase.get(b) || 0) + 1); byBase.set(b, a);
+          }
+        }
+        for (const [b, n] of seenBase) if (n > 1) byBase.delete(b);
+        render();
+      } catch { }
+    }
+
+    function appFor(w) {
+      if (w.a) { const a = byId.get(String(w.a).toLowerCase()); if (a) return a; }
+      const e = (w.exe || '').toLowerCase();
+      return byExe.get(e) || byBase.get(base(e)) || null;
+    }
+
+    // ---------- helper process (window list, focusing, Win key, Windows taskbar)
+    function send(cmd) { try { Promise.resolve(helper?.write(cmd + '\n')).catch(e => log('write failed: ' + e)); } catch (e) { log('write threw: ' + e); } }
+    async function startHelper() {
+      try {
+        helper = await zebar.shellSpawn('powershell', [...PS, '-File', dir + '\\valo-shell.ps1']);
+      } catch (e) { log('spawn failed: ' + e); setTimeout(startHelper, 5000); return; }
+      log('helper spawned pid ' + helper.processId);
+      helper.onStdout(line => {
+        let m; try { m = JSON.parse(line); } catch { return; }
+        if (m.type === 'windows') { wins = m.list || []; render(); }
+        else if (m.type === 'icon') { exeIcons.set(String(m.path).toLowerCase(), m.png); render(); }
+        else if (m.type === 'win') toggleMenu();
+        else if (m.type === 'dockvis') setVisible(m.show);
+        else if (m.type === 'trash') { trashN = m.n; render(); }
+        else if (m.type === 'cc') toggleWidget('cc', 'control');
+        else if (m.type === 'emoji') toggleWidget('emoji', 'emoji');
+        else if (m.type === 'game') onGame(m.on);
+        else if (m.type === 'desks') { desks = m; render(); }
+        // results other widgets asked for (mixer, monitor, warm screen, idle) go through localStorage
+        if (['audio', 'sys', 'warm', 'idle', 'game', 'desks', 'bt', 'lang', 'privacy', 'net', 'rec', 'backup', 'dlsort', 'ffmpeg'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
+      });
+      helper.onStderr(l => log('stderr: ' + l));
+      helper.onExit(s => { log('helper exit ' + JSON.stringify(s)); helper = null; setTimeout(startHelper, 2000); });
+      send('taskbar ' + (localStorage.getItem('valo.taskbarHide') === '0' ? 'show' : 'hide'));
+      lastMode = ''; lastBar = ''; lastCol = ''; lastFeat = ''; lastPrefs = ''; lastWarm = -1; syncDock(); syncPrefs();
+    }
+
+    // generic toggle for the persistent widgets (control center, emoji picker...)
+    function toggleWidget(key, widgetName) {
+      const ls = localStorage, token = String(Date.now());
+      ls.setItem('valo.' + key + 'Toggle', token);
+      setTimeout(() => { if (ls.getItem('valo.' + key + 'Ack') !== token) zebar.startWidgetPreset(widgetName, 'default').catch(() => {}); }, 600);
+    }
+
+    // ---------- game mode: a fullscreen app is in front -> dock and bar step aside, performance + quiet
+    let gameOn = false;
+    function onGame(on) {
+      if (on === gameOn) return;
+      gameOn = on;
+      document.documentElement.classList.toggle('gamehide', on);
+      try { tauriWin?.setIgnoreCursorEvents(on || !shown)?.catch?.(() => {}); } catch { }
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-game.ps1', on ? '-On' : '-Off']).catch(() => {});
+      log('game ' + on);
+    }
+
+    // ---------- preferences for the helper (hot corners, game mode, screensaver, zones, warm screen)
+    let lastPrefs = '', lastWarm = -1;
+    function prefs() { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } }
+    function syncPrefs() {
+      const p = prefs(), c = p.corners || ['menu', 'none', 'none', 'desktop'];
+      const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves')];
+      // part 3 switches (each feature can be turned off in the settings)
+      const on = (k, def) => (p[k] ?? def) ? 1 : 0;
+      lines.push(`feat2 lang=${on('langChip', true)} privacy=${on('privacy', true)} net=${on('netChip', false)} ocr=${on('ocr', true)} tr=${on('translate', true)} rec=${on('rec', true)} dlsort=${on('dlSort', false)} dlclean=${on('dlClean', false)}`);
+      lines.push('trtarget ' + (p.trTarget || 'en'), 'recfmt ' + (p.recFormat || 'mp4'));
+      const b = p.backup || {};
+      lines.push(`backup ${b.on ? 1 : 0} ${+b.hour || 20} ${(b.folders || ['Documents', 'Desktop', 'Pictures']).join('|')} ${b.target || ''}`);
+      const sig = lines.join('|');
+      if (sig !== lastPrefs && helper) { lastPrefs = sig; lines.forEach(send); }
+      syncWarm();
+    }
+    function warmNow() {
+      const w = prefs().warm || {};
+      if (w.mode === 'on') return +w.value || 40;
+      if (w.mode !== 'schedule') return 0;
+      const toM = s => { const [h, m] = String(s || '').split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+      const d = new Date(), m = d.getHours() * 60 + d.getMinutes(), a = toM(w.from || '21:00'), b = toM(w.to || '07:00');
+      const inside = a < b ? (m >= a && m < b) : (m >= a || m < b);
+      return inside ? (+w.value || 40) : 0;
+    }
+    function syncWarm() { const v = warmNow(); if (v !== lastWarm && helper) { lastWarm = v; send('warm ' + v); } }
+    setInterval(syncWarm, 60000);
+
+    // ---------- virtual desktops (dots at the start of the dock)
+    let desks = { n: 1, cur: 0 };
+    function desksEl() {
+      const box = document.createElement('div'); box.className = 'desks';
+      for (let i = 0; i < desks.n; i++) {
+        const d = document.createElement('i'); d.className = i === desks.cur ? 'on' : '';
+        d.title = 'Робочий стіл ' + (i + 1); d.onclick = () => send('desk ' + i); box.append(d);
+      }
+      const plus = document.createElement('b'); plus.textContent = '+'; plus.title = 'Новий робочий стіл'; plus.onclick = () => send('desknew');
+      box.append(plus);
+      return box;
+    }
+
+    function toggleMenu() {
+      const ls = localStorage, token = String(Date.now());
+      ls.setItem('valo.menuToggle', token);
+      setTimeout(() => { if (ls.getItem('valo.menuAck') !== token) zebar.startWidgetPreset('menu', 'default').catch(() => {}); }, 600);
+    }
+
+    // ---------- groups
+    function groups() {
+      const map = new Map();
+      for (const id of pins()) {
+        const a = byId.get(String(id).toLowerCase());
+        if (a) map.set('app:' + a.id, { key: 'app:' + a.id, app: a, name: a.n, wins: [], pinned: true });
+      }
+      for (const w of wins) {
+        const a = appFor(w);
+        const key = a ? 'app:' + a.id : 'exe:' + (w.exe || '').toLowerCase();
+        if (!map.has(key)) {
+          map.set(key, { key, app: a, name: a ? a.n : (w.d || w.t), exe: w.exe, wins: [], pinned: false });
+          if (!runOrder.includes(key)) runOrder.push(key);
+        }
+        const g = map.get(key);
+        if (!g.exe) g.exe = w.exe;
+        g.wins.push(w);
+      }
+      const pinned = [...map.values()].filter(g => g.pinned);
+      const running = [...map.values()].filter(g => !g.pinned).sort((x, y) => runOrder.indexOf(x.key) - runOrder.indexOf(y.key));
+      return { pinned, running };
+    }
+
+    function iconEl(g) {
+      const png = g.app?.ic || exeIcons.get((g.exe || '').toLowerCase());
+      if (png) { const i = document.createElement('img'); i.src = 'data:image/png;base64,' + png; return i; }
+      const t = document.createElement('div'); t.className = 'tile'; t.textContent = (g.name || '?')[0].toUpperCase(); return t;
+    }
+
+    function launch(g) {
+      if (g.app) zebar.shellExec('explorer', ['shell:AppsFolder\\' + g.app.id]).catch(() => {});
+      else if (g.exe) zebar.shellExec('explorer', [g.exe]).catch(() => {});
+    }
+
+    // ---------- dock mode for the helper: reserve screen space (app bar) or overlap windows (window shrunk to the dock itself)
+    let lastMode = '', lastBar = '', lastCol = '', lastFeat = '';
+    function syncDock() {
+      const t = getTheme(), dpr = window.devicePixelRatio || 1;
+      const fit = t.dockOverlap && !t.dockSticky ? Math.ceil(($('dock').offsetWidth + 24) * dpr) : 0;
+      const m = 'dock ' + (t.dockOverlap ? 1 : 0) + ' ' + fit + ' ' + (t.dockOverlap && t.dockHide ? 1 : 0);
+      if (!(t.dockOverlap && t.dockHide)) setVisible(true);
+      // theme colours for the helper's own windows (Alt+Tab, clipboard, screenshots) + which of them are on
+      const col = ['colors', cssVar('solid'), cssVar('text'), cssVar('accent'), cssVar('muted')].join(' ');
+      if (col !== lastCol && helper) { lastCol = col; send(col); }
+      let f = {}; try { f = JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { }
+      const fs = `features alttab=${f.alttab === false ? 0 : 1} clip=${f.clip === false ? 0 : 1} shot=${f.shot === false ? 0 : 1} emoji=${f.emoji === false ? 0 : 1}`;
+      if (fs !== lastFeat && helper) { lastFeat = fs; send(fs); }
+      const bs = 'barstyle ' + (t.sticky ? 1 : 0);
+      if (bs !== lastBar) { lastBar = bs; send(bs); }
+      if (m !== lastMode) { lastMode = m; send(m); log('mode ' + m + (helper ? '' : ' (no helper yet)')); }
+    }
+    new ResizeObserver(syncDock).observe($('dock'));
+
+    // ---------- auto-hide (overlap + hide): the helper watches the cursor and tells us when to show / hide
+    const tauriWin = widget.tauriWindow ?? widget.window?.tauri;
+    let shown = true;
+    function setVisible(v) {
+      if (v === shown) return;
+      shown = v;
+      document.documentElement.classList.toggle('autohidden', !v);
+      if (!v) send('preview hide');
+      try { tauriWin?.setIgnoreCursorEvents(!v || gameOn)?.catch?.(e => log('ignore-cursor failed: ' + e)); } catch (e) { log('ignore-cursor threw: ' + e); }
+    }
+
+    // ---------- hover preview (DWM thumbnails in a small window drawn by the helper)
+    let pvTimer = null, pvWarm = false, pvCool = null;
+    const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue('--' + n).trim();
+    function previewShow(g, el) {
+      clearTimeout(pvTimer); clearTimeout(pvCool);
+      if (!g.wins.length) return send('preview off');
+      pvTimer = setTimeout(() => {
+        const dpr = window.devicePixelRatio || 1, r = el.getBoundingClientRect(), top = $('dock').getBoundingClientRect().top;
+        send(['preview', Math.round((r.left + r.width / 2) * dpr), Math.round(top * dpr), cssVar('solid'), cssVar('text'), cssVar('accent'), cssVar('muted'),
+          g.wins.map(w => w.h).join(',')].join(' '));
+        pvWarm = true;
+      }, pvWarm ? 60 : 450);
+    }
+    function previewLeave() {
+      clearTimeout(pvTimer); send('preview off');
+      pvCool = setTimeout(() => { pvWarm = false; }, 700);
+    }
+
+    function click(g) {
+      clearTimeout(pvTimer); send('preview hide'); pvWarm = false;
+      if (!g.wins.length) return launch(g);
+      const fgIdx = g.wins.findIndex(w => w.fg);
+      if (fgIdx < 0) return send('activate ' + g.wins[0].h);
+      if (g.wins.length === 1) return send('min ' + g.wins[0].h);
+      send('activate ' + g.wins[(fgIdx + 1) % g.wins.length].h);
+    }
+
+    function togglePin(g) {
+      if (!g.app) return;
+      let p = pins();
+      p = p.includes(g.app.id) ? p.filter(x => x !== g.app.id) : [...p, g.app.id];
+      localStorage.setItem('valo.pins', JSON.stringify(p));
+      render();
+    }
+
+    function item(g) {
+      const el = document.createElement('div');
+      el.className = 'item' + (g.wins.length ? ' run' : '') + (g.wins.some(w => w.fg) ? ' fg' : '');
+      const titles = g.wins.map(w => '• ' + w.t).join('\n');
+      el.title = g.name + (titles ? '\n' + titles : '') + '\n\nПКМ — ' + (g.pinned ? 'відкріпити' : 'закріпити') + ', коліщатко — нове вікно, Shift+ПКМ — закрити';
+      el.append(iconEl(g));
+      const dot = document.createElement('i'); dot.className = 'dot'; el.append(dot);
+      if (g.wins.length > 1) { const c = document.createElement('b'); c.className = 'count'; c.textContent = g.wins.length; el.append(c); }
+      el.onclick = () => click(g);
+      el.onmouseenter = () => previewShow(g, el);
+      el.onmouseleave = previewLeave;
+      el.onauxclick = e => { if (e.button === 1) launch(g); };
+      el.oncontextmenu = e => {
+        e.preventDefault();
+        if (e.shiftKey) { for (const w of g.wins) send('close ' + w.h); return; }
+        togglePin(g);
+      };
+      return el;
+    }
+
+    // ---------- recycle bin (optional, at the end of the dock)
+    let trashN = 0, trashArmed = 0;
+    function trashItem() {
+      const el = document.createElement('div');
+      el.className = 'item' + (Date.now() - trashArmed < 3000 ? ' armed' : '');
+      const t = document.createElement('div'); t.className = 'tile nf';
+      t.textContent = String.fromCodePoint(trashN > 0 ? 0xF0A79 : 0xF0A7A);
+      el.append(t);
+      el.title = (trashN > 0 ? 'Кошик — об’єктів: ' + trashN : 'Кошик порожній') + '\n\nКлік — відкрити, ПКМ двічі — очистити';
+      if (el.classList.contains('armed')) el.title = 'ПКМ ще раз — очистити кошик назавжди';
+      el.onclick = () => zebar.shellExec('explorer', ['shell:RecycleBinFolder']).catch(() => {});
+      el.oncontextmenu = e => {
+        e.preventDefault();
+        if (trashN <= 0) return;
+        if (Date.now() - trashArmed < 3000) { trashArmed = 0; send('emptytrash'); lastSig = ''; render(); return; }
+        trashArmed = Date.now(); lastSig = ''; render();
+        setTimeout(() => { lastSig = ''; render(); }, 3100);
+      };
+      return el;
+    }
+
+    let lastSig = '';
+    function render() {
+      const { pinned, running } = groups();
+      const showTrash = getTheme().dockTrash !== false, showDesks = prefs().desks !== false;
+      const sig = JSON.stringify([showTrash, trashN, trashArmed, showDesks, desks.n, desks.cur]) + JSON.stringify([pinned, running].map(l => l.map(g => [g.key, g.wins.map(w => [w.h, w.fg, w.t]), !!(g.app?.ic || exeIcons.has((g.exe || '').toLowerCase()))])));
+      if (sig === lastSig) return;
+      lastSig = sig;
+      const d = $('dock'); d.innerHTML = '';
+      if (showDesks) { d.append(desksEl()); const s0 = document.createElement('div'); s0.className = 'sep'; d.append(s0); }
+      for (const g of pinned) d.append(item(g));
+      if (pinned.length && running.length) { const s = document.createElement('div'); s.className = 'sep'; d.append(s); }
+      for (const g of running) d.append(item(g));
+      if (showTrash) {
+        if (pinned.length || running.length) { const s = document.createElement('div'); s.className = 'sep'; d.append(s); }
+        d.append(trashItem());
+      }
+    }
+
+    // ---------- sync with the menu / settings
+    window.addEventListener('storage', e => {
+      if (e.key === 'valo.pins') { lastSig = ''; render(); }
+      else if (e.key === 'valo.appsAt') loadApps();
+      else if (e.key === 'valo.taskbarHide') send('taskbar ' + (e.newValue === '0' ? 'show' : 'hide'));
+      else if (e.key === 'valo.focusMenu') send('activatetitle Zebar - quill / menu');
+      else if (e.key === 'valo.focusWin' && e.newValue) send('activatetitle ' + e.newValue.split('|')[0]);
+      else if (e.key === 'valo.theme') { lastSig = ''; render(); setTimeout(syncDock, 350); }
+      else if (e.key === 'valo.features') syncDock();
+      else if (e.key === 'valo.prefs') { syncPrefs(); lastSig = ''; render(); }
+      else if (e.key === 'valo.helperCmd' && e.newValue) { try { send(JSON.parse(e.newValue).cmd); } catch { } }
+    });
+
+    log('dock start');
+    startHelper();
+    loadApps().then(() => log('apps ' + apps.length));
+  </script>
+</body>
+</html>

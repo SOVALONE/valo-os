@@ -1,12 +1,9 @@
 {
-    "version":  "1.7.0",
-    "date":  "2026-11-26",
+    "version":  "1.8.0",
+    "date":  "2026-11-27",
     "notes":  [
-                  "valo Link: передача файлів через QR-код без підключення (в обидва боки), а також «Надіслати → valo Link» у меню Провідника",
-                  "valo Link: сканер документів на телефоні — краї сторінки, вирівнювання, фільтр «документ», PDF на ПК",
-                  "valo Link для Android: сповіщення телефона на ПК, «Поділитися → valo Link», гучний пошук телефона, батарея й буфер у фоні — кожну функцію можна вимкнути",
-                  "valo Link: QR-код адреси у вікні, пошук ПК у мережі, кнопка дозволу в брандмауері",
-                  "Сайт valo.os: sovalone.github.io/valo-os"
+                  "valo Link тепер необов\u0027язковий: встановлюється й видаляється в Магазині valo (на нових ПК не ставиться сам)",
+                  "Магазин: Radmin VPN, ZeroTier і Parsec (розділ «Гра з друзями»), EA app, Ubisoft Connect, Battle.net, Playnite, MSI Afterburner"
               ],
     "files":  [
                   {
@@ -15,7 +12,7 @@
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "d2e480b82baf15effa8b3ad939fea9f4e9f5057f48bd79c467b43be625ab4877"
+                      "sha256":  "72fac43354f25f28bf63974587ec7048bcf15ffcbf7d08d9ee75115e55195185"
                   },
                   {
                       "path":  "pack/desk.html",
@@ -35,11 +32,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "f878333f6638d76d9e0f4a83fa82013b667c437c5de7dc458e24fbbc94d26b8c"
+                      "sha256":  "ff7ae580de0db37bf3990eb5b8c814ca8efab7c51e6fafd3797a5f067f0f5ca6"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "ac99730a58021d5af2c030806ec66dc3c350ed99e7890d6a57178a0bdcff0922"
+                      "sha256":  "19b176746b43ddfc0ee753ebde48e8abf6ea9d15f3c18c8496fdeb5becfdcd06"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -103,7 +100,7 @@
                   },
                   {
                       "path":  "pack/valo-link-build.ps1",
-                      "sha256":  "5d9f28a96f364fe8445b895cf3956eb37ccd9c2d1621eefa084d7e96f6d0bbdd"
+                      "sha256":  "7b3521a53921ca730dda8526b02111e165e57b5cc753b0149e1f300687a33211"
                   },
                   {
                       "path":  "pack/valo-link-firewall.ps1",
@@ -131,7 +128,7 @@
                   },
                   {
                       "path":  "pack/valo-postupdate.ps1",
-                      "sha256":  "936a8f3a76572ace24c7cdda6df6a863aff5a41a0848e9688ca43b8323b1a9e5"
+                      "sha256":  "4b387845042595c8c226f9ae7b5010c654f33681bd5fe222ae966748c130225b"
                   },
                   {
                       "path":  "pack/valo-power.ps1",
@@ -183,7 +180,7 @@
                   },
                   {
                       "path":  "pack/valo-store.ps1",
-                      "sha256":  "bcd9e4fff72bec6911e1f2ec54766bb80d50f70a5e3c0f650e8d9449eb22d4bc"
+                      "sha256":  "914cfc918ea75c3742965fa21fcbbc8a22aab7e9c744cbf234a9cdb57deb4d4e"
                   },
                   {
                       "path":  "pack/valo-sync.ps1",
@@ -219,7 +216,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "d76691c4c46d81113a144184f827c87fa53c9c4a01ffcec1891e36485c2e1574"
+                      "sha256":  "35678898273f2f01343ef5516137de28669b68425cb9ea2d4ae3dce64838e6c0"
                   },
                   {
                       "path":  "pack/weather.js",
