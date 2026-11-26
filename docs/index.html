@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>valo.os — оболонка для Windows 11</title>
+<meta name="description" content="valo.os: верхня панель, меню з розумним пошуком, док, центр керування, живі шпалери, теми і valo Link — телефон разом з ПК. Безкоштовно, з підписаними оновленнями." />
+<meta name="theme-color" content="#1e1a1f" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<style>
+  :root { --bg: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96; --text: #f5e6ea; --muted: #9c8a93; --radius: 14px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.55 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif; transition: background .4s, color .4s; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+  header.top { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 80%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, transparent); }
+  header.top .wrap { display: flex; align-items: center; gap: 14px; height: 58px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 650; font-size: 18px; }
+  .brand svg { width: 30px; height: 30px; }
+  nav.links { margin-left: auto; display: flex; gap: 20px; font-size: 14px; }
+  body { overflow-x: hidden; }
+  nav.links a { color: var(--muted); text-decoration: none; }
+  nav.links a:hover { color: var(--text); }
+  @media (max-width: 640px) { nav.links { display: none; } }
+
+  .hero { padding: 72px 0 40px; display: grid; grid-template-columns: 1.05fr 1fr; gap: 44px; align-items: center; }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding-top: 44px; } }
+  .hero > * { min-width: 0; }
+  .hero h1 { font-family: Gabriola, 'Segoe Script', Georgia, serif; font-weight: 400; font-size: clamp(64px, 9vw, 104px); line-height: .9; color: var(--accent); }
+  .hero p.lead { font-size: 19px; color: var(--text); margin: 18px 0 8px; max-width: 34ch; }
+  .hero p.sub { color: var(--muted); max-width: 46ch; }
+  .cmd { margin-top: 26px; display: flex; align-items: stretch; background: var(--chip); border-radius: var(--radius); overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent); }
+  .cmd code { flex: 1; padding: 14px 16px; font: 13.5px/1.4 'Cascadia Code', Consolas, monospace; overflow-x: auto; white-space: nowrap; }
+  .cmd button { all: unset; cursor: pointer; padding: 0 18px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 14px; }
+  .note { margin-top: 10px; font-size: 13px; color: var(--muted); }
+
+  /* desktop mockup */
+  .shot { aspect-ratio: 16/10; border-radius: 18px; position: relative; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.45); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+          background: radial-gradient(120% 90% at 80% 10%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 60%), radial-gradient(90% 80% at 10% 100%, color-mix(in srgb, var(--accent2) 40%, transparent), transparent 60%), var(--bg); transition: background .4s; }
+  .shot .petal { position: absolute; width: 10px; height: 7px; border-radius: 70% 0; background: color-mix(in srgb, var(--accent) 80%, white); opacity: .7; animation: fall linear infinite; }
+  @keyframes fall { from { transform: translate(0, -20px) rotate(0); } to { transform: translate(-90px, 380px) rotate(540deg); } }
+  .bar { position: absolute; left: 3%; right: 3%; top: 3.5%; height: 7.5%; border-radius: 10px; background: color-mix(in srgb, var(--bg) 88%, transparent); display: flex; align-items: center; gap: 6px; padding: 0 2.4%; font-size: clamp(8px, 1.15vw, 12px); }
+  .bar .pill { background: var(--hi); border-radius: 6px; padding: 2px 8px; }
+  .bar .pill.on { background: var(--accent); color: var(--bg); font-weight: 700; }
+  .bar .clock { margin-left: auto; font-weight: 600; }
+  .win { position: absolute; left: 9%; top: 18%; width: 52%; height: 56%; border-radius: 12px; background: color-mix(in srgb, var(--bg) 92%, white 4%); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); padding: 3%; }
+  .win i { display: block; height: 7%; border-radius: 5px; background: var(--hi); margin-bottom: 4%; }
+  .win i:nth-child(1) { width: 45%; background: var(--accent); opacity: .85; } .win i:nth-child(3) { width: 80%; } .win i:nth-child(4) { width: 62%; }
+  .cc { position: absolute; right: 4%; top: 14%; width: 28%; height: 62%; border-radius: 12px; background: color-mix(in srgb, var(--bg) 90%, transparent); padding: 2.4%; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 17%; gap: 5%; }
+  .cc span { border-radius: 8px; background: var(--hi); }
+  .cc span.on { background: var(--accent); }
+  .cc span.wide { grid-column: span 2; height: 40%; align-self: center; background: linear-gradient(90deg, var(--accent) 62%, var(--hi) 62%); }
+  .dock { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); display: flex; gap: 8px; padding: 1.2% 1.6%; border-radius: 16px; background: color-mix(in srgb, var(--bg) 86%, transparent); }
+  .dock b { width: clamp(16px, 3vw, 32px); aspect-ratio: 1; border-radius: 28%; background: var(--hi); }
+  .dock b:nth-child(2) { background: var(--accent); } .dock b:nth-child(4) { background: var(--accent2); }
+
+  .themes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  .themes button { all: unset; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 7px 12px 7px 8px; border-radius: 99px; background: var(--chip); font-size: 13px; border: 1px solid transparent; }
+  .themes button i { width: 18px; height: 18px; border-radius: 50%; }
+  .themes button.on { border-color: var(--accent); }
+
+  section { padding: 56px 0; scroll-margin-top: 64px; }
+  h2 { font-size: clamp(26px, 3.4vw, 36px); font-weight: 650; letter-spacing: -.5px; margin-bottom: 8px; }
+  h2 + p { color: var(--muted); max-width: 60ch; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: var(--chip); border-radius: var(--radius); padding: 18px; border: 1px solid color-mix(in srgb, var(--accent) 10%, transparent); }
+  .card h3 { font-size: 16px; margin-bottom: 6px; display: flex; gap: 10px; align-items: center; }
+  .card h3 em { font-style: normal; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); font-size: 15px; }
+  .card p { color: var(--muted); font-size: 14.5px; }
+  kbd { font: 12px Consolas, monospace; background: var(--hi); padding: 1px 6px; border-radius: 5px; color: var(--text); }
+
+  .link { display: grid; grid-template-columns: 1fr 300px; gap: 34px; align-items: center; background: var(--chip); border-radius: 22px; padding: 34px; }
+  @media (max-width: 820px) { .link { grid-template-columns: 1fr; } }
+  .link ul { list-style: none; display: grid; gap: 8px; margin: 18px 0 24px; }
+  .link li::before { content: '✿'; color: var(--accent); margin-right: 10px; }
+  .btn { display: inline-block; text-decoration: none; padding: 13px 20px; border-radius: 12px; background: var(--accent); color: var(--bg); font-weight: 700; margin-right: 8px; }
+  .btn.alt { background: var(--hi); color: var(--text); }
+  .phone { width: 220px; height: 440px; margin: 0 auto; border-radius: 34px; background: var(--bg); border: 7px solid var(--hi); padding: 18px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .phone h4 { font-family: Gabriola, Georgia, serif; font-weight: 400; font-size: 30px; color: var(--accent); line-height: 1; }
+  .phone div { border-radius: 12px; background: var(--chip); padding: 10px; font-size: 11px; color: var(--muted); }
+  .phone div b { display: block; color: var(--text); font-size: 12px; margin-bottom: 4px; }
+  .phone .row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0; background: none; }
+  .phone .row span { background: var(--hi); border-radius: 8px; padding: 8px 4px; text-align: center; color: var(--text); }
+  .phone .row span.on { background: var(--accent); color: var(--bg); font-weight: 700; }
+
+  .log { display: grid; gap: 12px; }
+  .log .card h3 { justify-content: space-between; }
+  .log .card h3 small { color: var(--muted); font-weight: 400; font-size: 13px; }
+  .log ul { margin: 6px 0 0 18px; color: var(--muted); font-size: 14.5px; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: var(--accent); color: var(--bg); font-weight: 700; margin-left: 8px; }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 13px; border-top: 1px solid color-mix(in srgb, var(--accent) 14%, transparent); }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; }
+  @media (prefers-reduced-motion: reduce) { .shot .petal { animation: none; display: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="#"><svg viewBox="-118 -150 236 236" aria-hidden="true"><use href="#mark" /></svg>valo.os</a>
+  <nav class="links"><a href="#features">Можливості</a><a href="#link">valo Link</a><a href="#install">Встановлення</a><a href="#changes">Що нового</a><a href="https://github.com/SOVALONE/valo-os">GitHub</a></nav>
+</div></header>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <path id="bl" d="M0 -130 C 1 -62, 3 -38, 23 -23 C 17 -27, 12 -29, 9 -29 A 14 14 0 0 0 0 -23 A 14 14 0 0 0 -9 -29 C -12 -29, -17 -27, -23 -23 C -3 -38, -1 -62, 0 -130 Z"/>
+  <g id="mark" fill="var(--accent)"><use href="#bl"/><use href="#bl" transform="rotate(120)"/><use href="#bl" transform="rotate(240)"/><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g>
+</defs></svg>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>valo.os</h1>
+      <p class="lead">Оболонка для Windows 11: красива, швидка і своя.</p>
+      <p class="sub">Верхня панель, меню з розумним пошуком, док, центр керування, живі шпалери і шість тем. Плюс valo Link, щоб телефон працював разом з ПК. Безкоштовно, українською, з підписаними оновленнями.</p>
+      <div class="cmd" id="install"><code id="cmdText">irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/install.ps1 | iex</code><button id="copy">Копіювати</button></div>
+      <div class="note">Вставте в PowerShell. Права адміністратора не потрібні. Видалити можна однією командою: <a href="#remove">як</a>.</div>
+      <div class="themes" id="themes"></div>
+    </div>
+    <div class="shot" id="shot" role="img" aria-label="Робочий стіл з valo.os: панель, вікно, центр керування, док">
+      <div class="bar"><span class="pill on">1</span><span class="pill">2</span><span class="pill">3</span><span style="margin-left:10px;opacity:.75">valo.os</span><span class="clock" id="clock">12:00</span></div>
+      <div class="win"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="cc"><span class="on"></span><span></span><span></span><span class="on"></span><span class="wide"></span><span class="wide"></span></div>
+      <div class="dock"><b></b><b></b><b></b><b></b><b></b><b></b></div>
+    </div>
+  </div>
+
+  <section id="features">
+    <h2>Що всередині</h2>
+    <p>Кожну функцію можна вимкнути в налаштуваннях: valo.os нічого не нав'язує.</p>
+    <div class="grid">
+      <div class="card"><h3><em>▤</em>Верхня панель</h3><p>Робочі столи, погода, мережа, звук, батарея Bluetooth-навушників, мова вводу. Липка або плаваюча, будь-якого розміру.</p></div>
+      <div class="card"><h3><em>⌕</em>Меню з пошуком</h3><p>Програми, файли, калькулятор, курси валют, одиниці, команди. Нагадування й нотатки там само.</p></div>
+      <div class="card"><h3><em>◫</em>Док</h3><p>Мініатюри вікон при наведенні, кошик, автоховання. Може перекривати програми або займати місце.</p></div>
+      <div class="card"><h3><em>◐</em>Центр керування</h3><p>Wi‑Fi, звук і мікшер, яскравість, теплий екран, режими «Робота / Ігри / Відпочинок / В дорозі» з автоувімкненням за Wi‑Fi.</p></div>
+      <div class="card"><h3><em>✿</em>Живі шпалери</h3><p>Анімовані сцени під кожну тему через Lively Wallpaper. Шпалера змінюється разом з темою.</p></div>
+      <div class="card"><h3><em>⇆</em>Свій Alt+Tab і буфер</h3><p>Перемикач вікон, історія буфера <kbd>Win</kbd>+<kbd>V</kbd>, знімки області, емодзі, зони вікон, гарячі кути.</p></div>
+      <div class="card"><h3><em>Т</em>Текст з екрана</h3><p><kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd> розпізнає текст, <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>Y</kbd> перекладає виділене, <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> записує екран.</p></div>
+      <div class="card"><h3><em>♥</em>Здоров'я ПК</h3><p>Диски і що займає місце, батарея, автозавантаження, тимчасові файли, оновлення Windows.</p></div>
+      <div class="card"><h3><em>⛨</em>Підписані оновлення</h3><p>Кнопка «Перевірити оновлення», стабільний і бета-канали, відкат на попередню версію. Кожен випуск підписаний ключем RSA-3072.</p></div>
+    </div>
+  </section>
+
+  <section id="link">
+    <div class="link">
+      <div>
+        <h2>valo Link</h2>
+        <p style="color:var(--muted);max-width:56ch">Ваш телефон і ПК разом, як KDE Connect, але свій. Працює лише у вашій Wi‑Fi мережі, без хмар і акаунтів.</p>
+        <ul>
+          <li>Файли в обидва боки, а через QR-код навіть без підключення</li>
+          <li>Сканер документів: фото → рівна сторінка → PDF на ПК</li>
+          <li>Сповіщення телефона на ПК, буфер обміну, батарея</li>
+          <li>Тачпад і клавіатура, музика, блокування та сон ПК</li>
+          <li>«Знайти телефон»: гучно навіть у беззвучному режимі</li>
+          <li>«Поділитися → valo Link» з будь-якої програми</li>
+        </ul>
+        <a class="btn" href="https://sovalone.github.io/valo-os/valo-link.apk">Завантажити для Android</a>
+        <a class="btn alt" href="#install">Програма для ПК входить у valo.os</a>
+        <div class="note">iPhone і будь-який телефон: відкрийте адресу з вікна valo Link у браузері, застосунок не потрібен.</div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <h4>valo Link</h4>
+        <div><b>Швидкі дії</b><div class="row"><span>Буфер → ПК</span><span>Буфер ← ПК</span><span>Заблокувати</span><span>Стіл</span></div></div>
+        <div><b>Музика на ПК</b><div class="row"><span>⏮</span><span class="on">⏯</span></div></div>
+        <div><b>Сканер</b>Сторінка 1 · Документ<div class="row" style="margin-top:6px"><span class="on">PDF на ПК</span><span>+ ще</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="remove">
+    <h2>Встановлення і видалення</h2>
+    <p>Потрібна Windows 11. Інсталятор ставить Zebar (Windows може попросити дозвіл), завантажує файли valo.os і перевіряє підпис кожного.</p>
+    <div class="grid">
+      <div class="card"><h3><em>↓</em>Встановити</h3><p><code style="font:12.5px Consolas,monospace;color:var(--text);word-break:break-all">irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/install.ps1 | iex</code></p></div>
+      <div class="card"><h3><em>β</em>Бета-канал</h3><p>Нові функції раніше: перемкніть канал у меню valo.os → «Перевірити оновлення».</p></div>
+      <div class="card"><h3><em>✕</em>Видалити</h3><p><code style="font:12.5px Consolas,monospace;color:var(--text);word-break:break-all">irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/uninstall.ps1 | iex</code></p></div>
+    </div>
+  </section>
+
+  <section id="changes">
+    <h2>Що нового</h2>
+    <p>Історія випусків з репозиторію.</p>
+    <div class="log" id="log"><div class="card"><p>Завантажую…</p></div></div>
+  </section>
+</main>
+<footer><div class="wrap"><span>valo.os · зроблено з ✿ · SOVALONE</span><span><a href="https://github.com/SOVALONE/valo-os">GitHub</a> · <a href="https://github.com/SOVALONE/valo-os/releases">Випуски</a></span></div></footer>
+
+<script>
+  const THEMES = {
+    sakura:   { name: 'Сакура',       bg: '#1e1a1f', chip: '#2a2329', hi: '#3a2f37', accent: '#f2a7bb', accent2: '#e07a96', text: '#f5e6ea', muted: '#9c8a93', radius: 14 },
+    night:    { name: 'Нічне місто',  bg: '#1a1b26', chip: '#24283b', hi: '#2f3549', accent: '#7aa2f7', accent2: '#bb9af7', text: '#c0caf5', muted: '#737aa2', radius: 12 },
+    matcha:   { name: 'Матча',        bg: '#1e231e', chip: '#283028', hi: '#34402f', accent: '#a7c080', accent2: '#dbbc7f', text: '#e2e6d8', muted: '#8f9a86', radius: 6 },
+    latte:    { name: 'Латте',        bg: '#efeae4', chip: '#e2d9cf', hi: '#d6cabd', accent: '#b4637a', accent2: '#d7827e', text: '#3b3236', muted: '#7d6f70', radius: 20 },
+    graphite: { name: 'Графіт',       bg: '#121212', chip: '#222222', hi: '#2e2e2e', accent: '#e6e6e6', accent2: '#9a9a9a', text: '#f0f0f0', muted: '#8a8a8a', radius: 8 },
+    sunset:   { name: 'Захід',        bg: '#24161c', chip: '#3a2229', hi: '#4a2c34', accent: '#ff9e64', accent2: '#f7768e', text: '#fbe3d6', muted: '#b08a86', radius: 22 },
+  };
+  const box = document.getElementById('themes');
+  function apply(id) {
+    const t = THEMES[id], r = document.documentElement.style;
+    for (const k of ['bg', 'chip', 'hi', 'accent', 'accent2', 'text', 'muted']) r.setProperty('--' + k, t[k]);
+    r.setProperty('--radius', t.radius + 'px');
+    document.querySelector('meta[name=theme-color]').content = t.bg;
+    for (const b of box.children) b.classList.toggle('on', b.dataset.id === id);
+  }
+  for (const [id, t] of Object.entries(THEMES)) {
+    const b = document.createElement('button'); b.dataset.id = id; b.innerHTML = '<i></i><span></span>';
+    b.querySelector('i').style.background = `linear-gradient(135deg, ${t.accent} 50%, ${t.bg} 50%)`; b.querySelector('span').textContent = t.name;
+    b.onclick = () => apply(id); box.append(b);
+  }
+  apply('sakura');
+
+  // petals in the mockup
+  const shot = document.getElementById('shot');
+  for (let i = 0; i < 14; i++) { const p = document.createElement('i'); p.className = 'petal'; p.style.left = (Math.random() * 110) + '%'; p.style.top = '-5%'; p.style.animationDuration = (7 + Math.random() * 8) + 's'; p.style.animationDelay = (-Math.random() * 14) + 's'; shot.append(p); }
+  const clock = () => document.getElementById('clock').textContent = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+  clock(); setInterval(clock, 20000);
+
+  document.getElementById('copy').onclick = async e => {
+    try { await navigator.clipboard.writeText(document.getElementById('cmdText').textContent); e.target.textContent = 'Скопійовано'; }
+    catch { getSelection().selectAllChildren(document.getElementById('cmdText')); e.target.textContent = 'Ctrl+C'; }
+    setTimeout(() => e.target.textContent = 'Копіювати', 1800);
+  };
+
+  // changelog from the repository
+  fetch('https://raw.githubusercontent.com/SOVALONE/valo-os/main/history.json', { cache: 'no-store' }).then(r => r.json()).then(list => {
+    const log = document.getElementById('log'); log.innerHTML = '';
+    for (const v of [].concat(list).slice(0, 8)) {
+      if (!v || !v.version) continue;
+      const c = document.createElement('div'); c.className = 'card';
+      c.innerHTML = '<h3><span></span><small></small></h3><ul></ul>';
+      c.querySelector('h3 span').textContent = 'valo.os ' + v.version;
+      if (v.channel === 'beta') { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'бета'; c.querySelector('h3 span').append(t); }
+      c.querySelector('small').textContent = v.date ? new Date(v.date).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      for (const n of v.notes || []) { const li = document.createElement('li'); li.textContent = n; c.querySelector('ul').append(li); }
+      log.append(c);
+    }
+  }).catch(() => { document.getElementById('log').innerHTML = '<div class="card"><p>Не вдалося завантажити. Дивіться <a href="https://github.com/SOVALONE/valo-os/releases">випуски на GitHub</a>.</p></div>'; });
+</script>
+</body>
+</html>

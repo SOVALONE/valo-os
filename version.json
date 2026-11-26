@@ -1,14 +1,12 @@
 {
-    "version":  "1.6.0",
+    "version":  "1.7.0",
     "date":  "2026-11-26",
     "notes":  [
-                  "Мова вводу, мікрофон/камера і швидкість мережі на панелі",
-                  "Текст з екрана (Win+Shift+T), переклад виділеного (Win+Shift+Y), запис екрана (Win+Shift+R, потрібен FFmpeg)",
-                  "Розкладання «Завантажень» по папках, щоденні резервні копії файлів",
-                  "Режими: Робота, Ігри, Відпочинок, В дорозі — з авто за Wi‑Fi",
-                  "Здоров\u0027я ПК: диски, що займає місце, батарея, автозавантаження, тимчасові файли, оновлення Windows",
-                  "Віджети на робочому столі",
-                  "Кожну нову функцію можна вимкнути: Налаштування панелі → Система → Функції"
+                  "valo Link: передача файлів через QR-код без підключення (в обидва боки), а також «Надіслати → valo Link» у меню Провідника",
+                  "valo Link: сканер документів на телефоні — краї сторінки, вирівнювання, фільтр «документ», PDF на ПК",
+                  "valo Link для Android: сповіщення телефона на ПК, «Поділитися → valo Link», гучний пошук телефона, батарея й буфер у фоні — кожну функцію можна вимкнути",
+                  "valo Link: QR-код адреси у вікні, пошук ПК у мережі, кнопка дозволу в брандмауері",
+                  "Сайт valo.os: sovalone.github.io/valo-os"
               ],
     "files":  [
                   {
@@ -97,19 +95,31 @@
                   },
                   {
                       "path":  "pack/valo-link.cs",
-                      "sha256":  "c5afaa50f041353c758d43fecbe755307ae182399b8a8d0108196fbee61c7227"
+                      "sha256":  "d999c5fab34d55331a554b6716781e51e504368304a41461491ad0f650c9d4be"
                   },
                   {
                       "path":  "pack/valo-link.ps1",
-                      "sha256":  "f14cc8a3ed90b3d0a8736a28f562ec6bfb51135faa3842c6ff99db19ac9e2b9e"
+                      "sha256":  "d5d2d6698734f75deb99cdc262cc4fe422bda2e9c026b51dd567e12a5cf4a3c9"
                   },
                   {
                       "path":  "pack/valo-link-build.ps1",
-                      "sha256":  "64e44f3c70337ec4b2893600c2e2440bb56ab631eed02cd03852c05c40b07861"
+                      "sha256":  "5d9f28a96f364fe8445b895cf3956eb37ccd9c2d1621eefa084d7e96f6d0bbdd"
+                  },
+                  {
+                      "path":  "pack/valo-link-firewall.ps1",
+                      "sha256":  "91f49562732aaaaff4ff42d8c188c383420afabc02cce9a4765840ab4fb8090d"
                   },
                   {
                       "path":  "pack/valo-link-phone.html",
-                      "sha256":  "86d799d20390cbbfbff71ee6997c03f625394a62a69f6927d9367ebd08adbc0e"
+                      "sha256":  "7401c6a4470b0e08a15604e23a207b56ccc0024b6d753c181f7307b93f2b4670"
+                  },
+                  {
+                      "path":  "pack/valo-link-qr.cs",
+                      "sha256":  "e2e00368338fa7a6f896752201efef17e6cb591291c39aca31b60a2265eb025e"
+                  },
+                  {
+                      "path":  "pack/valo-link-qr.html",
+                      "sha256":  "4572f9779ba04fe0eda1578035057ff6939cf75a441ea07febfa57ac58ce52f4"
                   },
                   {
                       "path":  "pack/valo-ocr.ps1",
@@ -209,7 +219,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "cd47b7163ec0068d30ec05d0eb0741e0ad143599b5b27d1c6aafbbe24112d2bf"
+                      "sha256":  "d76691c4c46d81113a144184f827c87fa53c9c4a01ffcec1891e36485c2e1574"
                   },
                   {
                       "path":  "pack/weather.js",

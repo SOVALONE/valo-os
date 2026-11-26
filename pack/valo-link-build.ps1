@@ -38,6 +38,12 @@ $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'valo Link.lnk'
 $sh = New-Object -ComObject WScript.Shell
 $s = $sh.CreateShortcut($lnk); $s.TargetPath = $ps; $s.Arguments = $psArgs; $s.WorkingDirectory = $dir
 $s.Description = 'valo Link — телефон і ПК разом'; $s.IconLocation = "$ico,0"; $s.WindowStyle = 7; $s.Save()
+# Explorer "Send to": QR quick share (no pairing) and to paired phones
+$st = [Environment]::GetFolderPath('SendTo')
+foreach ($x in @(@('valo Link — на телефон через QR', '--qr'), @('valo Link — на підключений телефон', '--send'))) {
+    $s2 = $sh.CreateShortcut((Join-Path $st ($x[0] + '.lnk'))); $s2.TargetPath = $ps; $s2.Arguments = "$psArgs $($x[1])"; $s2.WorkingDirectory = $dir
+    $s2.IconLocation = "$ico,0"; $s2.WindowStyle = 7; $s2.Save()
+}
 Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'valo-link' -Value "`"$ps`" $psArgs --hidden"
 
 # restart so a new version is used

@@ -3,9 +3,12 @@
 //   - small HTTP + WebSocket server on the local network (port 47800), phone page = valo-link-phone.html next to the exe
 //   - pairing with a 6-digit code shown in the window; every request needs the device token
 //   - files both ways, clipboard both ways, media keys, touchpad + keyboard, lock / sleep, "find my phone", phone battery
+//   - QR quick share without pairing, document scans (PDF) from the phone, phone notifications (Android app), UDP discovery
+//   source files: valo-link.cs + valo-link-qr.cs (compiled together by valo-link.ps1)
 // Data: %LOCALAPPDATA%\valo\link\devices.json, received files: Downloads\valo Link
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -94,6 +97,7 @@ class Server {
     public static volatile bool Enabled = true;
     public static List<Offer> Offers = new List<Offer>();
     public static List<WsClient> Clients = new List<WsClient>();
+    public static Dictionary<string, QuickShare> Shares = new Dictionary<string, QuickShare>();
     public static string WebDir;
     public static MainForm Ui;
     static JavaScriptSerializer js = new JavaScriptSerializer();
@@ -181,6 +185,32 @@ class Server {
                 c.Close(); return;
             }
 
+            // ---- quick share by QR: no pairing, a one-time link that lives 15 minutes
+            if (route.StartsWith("/q/")) {
+                string[] seg = route.Substring(3).Split('/');
+                QuickShare qs = null; lock (Shares) Shares.TryGetValue(seg[0], out qs);
+                if (qs != null && !qs.Alive) { lock (Shares) Shares.Remove(qs.id); qs = null; }
+                if (seg.Length == 1 && method == "GET") { File_(s, "valo-link-qr.html", "text/html; charset=utf-8"); c.Close(); return; }
+                if (qs == null) { Err(s, 404, "Посилання застаріло. Створіть новий QR на ПК."); c.Close(); return; }
+                if (seg.Length == 2 && seg[1] == "info") {
+                    List<object> fl = new List<object>(); int n = 0;
+                    foreach (Offer f in qs.files) fl.Add(new Dictionary<string, object> { { "n", n++ }, { "name", f.name }, { "size", f.size } });
+                    Json(s, new Dictionary<string, object> { { "pc", Environment.MachineName }, { "mode", qs.receive ? "receive" : "send" }, { "files", fl }, { "left", qs.until - Now() }, { "theme", Theme.Json() } });
+                }
+                else if (seg.Length == 3 && seg[1] == "f" && method == "GET") {
+                    int n; Offer f = int.TryParse(seg[2], out n) && n >= 0 && n < qs.files.Count ? qs.files[n] : null;
+                    if (f == null || !File.Exists(f.path)) Err(s, 404, "Файл недоступний");
+                    else { SendFile(s, f); qs.got++; }
+                }
+                else if (seg.Length == 2 && seg[1] == "up" && method == "POST" && qs.receive) {
+                    string dst = SaveUpload(s, len, Query(path, "name"));
+                    qs.got++; Ui.Received(dst, "QR");
+                    Json(s, new Dictionary<string, object> { { "ok", true }, { "name", Path.GetFileName(dst) } });
+                }
+                else Err(s, 404, "?");
+                c.Close(); return;
+            }
+
             // ---- everything else needs a paired device
             string token; if (!h.TryGetValue("X-Valo-Token", out token)) token = Query(path, "token");
             Device dev = Store.ByToken(token);
@@ -205,15 +235,7 @@ class Server {
                 Json(s, new Dictionary<string, object> { { "text", text } });
             }
             else if (method == "POST" && route == "/api/upload") {
-                string name = Path.GetFileName(Query(path, "name") ?? "file");
-                name = Regex.Replace(name, "[\\\\/:*?\"<>|]", "_"); if (name.Length == 0) name = "file";
-                string dir = Path.Combine(Native.Downloads(), "valo Link"); Directory.CreateDirectory(dir);
-                string dst = Path.Combine(dir, name);
-                for (int i = 2; File.Exists(dst); i++) dst = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + " (" + i + ")" + Path.GetExtension(name));
-                using (FileStream fs = File.Create(dst)) {
-                    byte[] buf = new byte[81920]; long left = len;
-                    while (left > 0) { int r = s.Read(buf, 0, (int)Math.Min(buf.Length, left)); if (r <= 0) break; fs.Write(buf, 0, r); left -= r; }
-                }
+                string dst = SaveUpload(s, len, Query(path, "name"));
                 Ui.Received(dst, dev.name);
                 Json(s, new Dictionary<string, object> { { "ok", true }, { "name", Path.GetFileName(dst) } });
             }
@@ -221,13 +243,13 @@ class Server {
                 string id = route.Substring(11); Offer f = null;
                 lock (Offers) foreach (Offer x in Offers) if (x.id == id) f = x;
                 if (f == null || !File.Exists(f.path)) { Err(s, 404, "Файл недоступний"); }
-                else {
-                    FileInfo fi = new FileInfo(f.path);
-                    string hd = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fi.Length +
-                                "\r\nContent-Disposition: attachment; filename*=UTF-8''" + Uri.EscapeDataString(f.name) + "\r\nConnection: close\r\n\r\n";
-                    byte[] hb = Encoding.UTF8.GetBytes(hd); s.Write(hb, 0, hb.Length);
-                    using (FileStream fs = File.OpenRead(f.path)) fs.CopyTo(s);
-                }
+                else SendFile(s, f);
+            }
+            else if (method == "POST" && route == "/api/notify") {
+                Dictionary<string, object> b = js.Deserialize<Dictionary<string, object>>(Encoding.UTF8.GetString(ReadBody(s, len)));
+                Func<string, string> g = k => b.ContainsKey(k) && b[k] != null ? Convert.ToString(b[k]) : "";
+                if (Settings.Notify) Ui.PhoneNote(dev.name, g("app"), g("title"), g("text"));
+                Json(s, new Dictionary<string, object> { { "ok", true } });
             }
             else if (method == "POST" && route == "/api/media") {
                 string a = Query(path, "a") ?? "";
@@ -252,6 +274,35 @@ class Server {
         } catch { }
         try { c.Close(); } catch { }
     }
+    static string SaveUpload(NetworkStream s, long len, string raw) {
+        string name = Path.GetFileName(raw ?? "file");
+        name = Regex.Replace(name, "[\\\\/:*?\"<>|]", "_"); if (name.Length == 0) name = "file";
+        string dir = Path.Combine(Native.Downloads(), "valo Link"); Directory.CreateDirectory(dir);
+        string dst = Path.Combine(dir, name);
+        for (int i = 2; File.Exists(dst); i++) dst = Path.Combine(dir, Path.GetFileNameWithoutExtension(name) + " (" + i + ")" + Path.GetExtension(name));
+        using (FileStream fs = File.Create(dst)) {
+            byte[] buf = new byte[81920]; long left = len;
+            while (left > 0) { int r = s.Read(buf, 0, (int)Math.Min(buf.Length, left)); if (r <= 0) break; fs.Write(buf, 0, r); left -= r; }
+        }
+        return dst;
+    }
+    static void SendFile(NetworkStream s, Offer f) {
+        FileInfo fi = new FileInfo(f.path);
+        string hd = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + fi.Length +
+                    "\r\nContent-Disposition: attachment; filename*=UTF-8''" + Uri.EscapeDataString(f.name) + "\r\nConnection: close\r\n\r\n";
+        byte[] hb = Encoding.UTF8.GetBytes(hd); s.Write(hb, 0, hb.Length);
+        using (FileStream fs = File.OpenRead(f.path)) fs.CopyTo(s);
+    }
+    public static QuickShare NewShare(bool receive, string[] files) {
+        QuickShare q = new QuickShare(); q.id = Store.Random(16); q.receive = receive; q.until = Now() + 15 * 60 * 1000;
+        if (files != null) foreach (string f in files) {
+            if (!File.Exists(f)) continue;
+            Offer o = new Offer(); o.id = q.files.Count.ToString(); o.path = f; o.name = Path.GetFileName(f); o.size = new FileInfo(f).Length; q.files.Add(o);
+        }
+        lock (Shares) Shares[q.id] = q;
+        return q;
+    }
+    public static bool IsLocalAddr(IPAddress a) { return IsLocal(a); }
     static long Now() { return DateTime.UtcNow.Ticks / 10000; }
     static bool IsLocal(IPAddress a) {
         if (IPAddress.IsLoopback(a)) return true;
@@ -402,32 +453,46 @@ class MainForm : Form {
     Label title = new Label(), status = new Label(), codeL = new Label(), codeHint = new Label(), addr = new Label(), devHead = new Label();
     ListBox devs = new ListBox();
     FlowLayoutPanel buttons = new FlowLayoutPanel();
-    CheckBox enabled = new CheckBox();
+    CheckBox enabled = new CheckBox(), notify = new CheckBox();
+    PictureBox addrQr = new PictureBox(); Label qrHint = new Label(); LinkLabel links = new LinkLabel(); string qrFor = null;
     System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
     bool quitting = false;
 
     public MainForm() {
         Text = "valo Link"; Icon = Icons.Ico(64); StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false; AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(440, 600); Font = new Font("Segoe UI", 10f);
+        ClientSize = new Size(440, 720); Font = new Font("Segoe UI", 10f);
         title.Text = "valo Link"; title.Font = new Font("Gabriola", 30f); title.AutoSize = true; title.Location = new Point(24, 8);
         status.AutoSize = false; status.SetBounds(28, 70, 390, 22);
         codeHint.Text = "Код для підключення телефона:"; codeHint.SetBounds(28, 104, 390, 22);
         codeL.Font = new Font("Segoe UI Semibold", 30f); codeL.SetBounds(24, 126, 300, 56); codeL.Cursor = Cursors.Hand;
-        addr.SetBounds(28, 186, 390, 66);
+        addr.SetBounds(28, 186, 250, 72);
+        addrQr.SetBounds(296, 104, 120, 120); addrQr.SizeMode = PictureBoxSizeMode.Zoom; addrQr.Cursor = Cursors.Hand;
+        qrHint.SetBounds(280, 226, 150, 34); qrHint.Text = "або наведіть камеру\nтелефона на код"; qrHint.TextAlign = ContentAlignment.TopCenter; qrHint.Font = new Font("Segoe UI", 8f);
         devHead.Text = "ПІДКЛЮЧЕНІ ПРИСТРОЇ"; devHead.Font = new Font("Segoe UI Semibold", 8.5f); devHead.SetBounds(28, 262, 390, 20);
         devs.SetBounds(24, 284, 392, 150); devs.BorderStyle = BorderStyle.None; devs.DrawMode = DrawMode.OwnerDrawFixed; devs.ItemHeight = 44; devs.DrawItem += DrawDev;
         enabled.Text = "Доступ з телефона увімкнено"; enabled.Checked = true; enabled.SetBounds(28, 442, 390, 24);
         enabled.CheckedChanged += delegate { Server.Enabled = enabled.Checked; Refresh(); };
-        buttons.SetBounds(20, 474, 400, 120); buttons.FlowDirection = FlowDirection.LeftToRight;
+        notify.Text = "Показувати сповіщення з телефона (застосунок Android)"; notify.Checked = Settings.Notify; notify.SetBounds(28, 468, 390, 24);
+        notify.CheckedChanged += delegate { Settings.Notify = notify.Checked; Settings.Save(); };
+        buttons.SetBounds(20, 500, 400, 170); buttons.FlowDirection = FlowDirection.LeftToRight;
+        links.SetBounds(28, 680, 390, 24); links.Text = "Застосунок для Android · Дозволити в брандмауері"; links.Font = new Font("Segoe UI", 8.5f);
+        links.LinkArea = new LinkArea(0, 0);
+        links.Links.Add(0, 23, "apk"); links.Links.Add(26, 23, "fw");
+        links.LinkClicked += delegate (object o, LinkLabelLinkClickedEventArgs e) {
+            if ((string)e.Link.LinkData == "apk") { try { Process.Start("https://sovalone.github.io/valo-os/#link"); } catch { } }
+            else Firewall();
+        };
         AddBtn("Надіслати файл", delegate { SendFiles(null); });
         AddBtn("Надіслати буфер", delegate { try { if (Clipboard.ContainsText()) { Server.Broadcast(new JavaScriptSerializer().Serialize(new Dictionary<string, object> { { "t", "clip" }, { "v", Clipboard.GetText() } })); Note("Буфер надіслано на телефон"); } } catch { } });
         AddBtn("Знайти телефон", delegate { Server.Broadcast("{\"t\":\"ring\"}"); Note("Телефон дзвонить (якщо сторінка valo Link відкрита)"); });
         AddBtn("Отримані файли", delegate { string d = Path.Combine(Native.Downloads(), "valo Link"); Directory.CreateDirectory(d); Process.Start("explorer.exe", "\"" + d + "\""); });
+        AddBtn("QR: на телефон", delegate { QrSend(null); });
+        AddBtn("QR: з телефона", delegate { QrShow(Server.NewShare(true, null)); });
         AddBtn("Новий код", delegate { Server.NewCode(); Refresh(); });
         AddBtn("Відключити", delegate { RemoveSelected(); });
         codeL.Click += delegate { Server.NewCode(); Refresh(); };
-        Controls.AddRange(new Control[] { title, status, codeHint, codeL, addr, devHead, devs, enabled, buttons });
+        Controls.AddRange(new Control[] { title, status, codeHint, codeL, addr, addrQr, qrHint, devHead, devs, enabled, notify, buttons, links });
         AllowDrop = true;
         DragEnter += delegate (object o, DragEventArgs e) { if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy; };
         DragDrop += delegate (object o, DragEventArgs e) { SendFiles((string[])e.Data.GetData(DataFormats.FileDrop)); };
@@ -436,6 +501,8 @@ class MainForm : Form {
         ContextMenuStrip menu = new ContextMenuStrip();
         menu.Items.Add("Відкрити valo Link", null, delegate { ShowUi(); });
         menu.Items.Add("Надіслати файл на телефон…", null, delegate { SendFiles(null); });
+        menu.Items.Add("Передати через QR…", null, delegate { QrSend(null); });
+        menu.Items.Add("Прийняти через QR", null, delegate { QrShow(Server.NewShare(true, null)); });
         menu.Items.Add("Отримані файли", null, delegate { string d = Path.Combine(Native.Downloads(), "valo Link"); Directory.CreateDirectory(d); Process.Start("explorer.exe", "\"" + d + "\""); });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Вийти", null, delegate { quitting = true; tray.Visible = false; Application.Exit(); });
@@ -453,8 +520,9 @@ class MainForm : Form {
     void ApplyTheme() {
         BackColor = Theme.Bg; ForeColor = Theme.Fg;
         title.ForeColor = Theme.Accent; codeL.ForeColor = Theme.Accent;
-        foreach (Label l in new Label[] { status, codeHint, addr, devHead }) l.ForeColor = Theme.Muted;
-        devs.BackColor = Theme.Mix(Theme.Bg, Theme.Fg, .05f); devs.ForeColor = Theme.Fg; enabled.ForeColor = Theme.Fg;
+        foreach (Label l in new Label[] { status, codeHint, addr, devHead, qrHint }) l.ForeColor = Theme.Muted;
+        devs.BackColor = Theme.Mix(Theme.Bg, Theme.Fg, .05f); devs.ForeColor = Theme.Fg; enabled.ForeColor = Theme.Fg; notify.ForeColor = Theme.Fg;
+        links.LinkColor = Theme.Accent; links.ActiveLinkColor = Theme.Fg; links.ForeColor = Theme.Muted;
         foreach (Control c in buttons.Controls) { c.BackColor = Theme.Mix(Theme.Bg, Theme.Fg, .1f); c.ForeColor = Theme.Fg; }
         int bc = Theme.Accent.R | (Theme.Accent.G << 8) | (Theme.Accent.B << 16); Native.DwmSetWindowAttribute(Handle, 34, ref bc, 4);
         tray.Icon = Icons.Ico(32); Icon = Icons.Ico(64);
@@ -467,8 +535,14 @@ class MainForm : Form {
         if (Environment.TickCount > Server.CodeUntil) Server.NewCode();
         codeL.Text = Server.Code.Substring(0, 3) + " " + Server.Code.Substring(3);
         List<string> ips = new List<string>();
-        try { foreach (IPAddress a in Dns.GetHostAddresses(Dns.GetHostName())) if (a.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(a)) ips.Add("http://" + a + ":" + Server.Port); } catch { }
+        foreach (string a in Net.Addresses()) { ips.Add("http://" + a + ":" + Server.Port); if (ips.Count == 3) break; }
         addr.Text = "На телефоні в тій самій Wi‑Fi мережі відкрийте:\n" + (ips.Count > 0 ? string.Join("\n", ips.ToArray()) : "(немає мережі)");
+        string first = ips.Count > 0 ? ips[0] : null;
+        if (first != qrFor) {
+            qrFor = first; Image old = addrQr.Image;
+            addrQr.Image = first == null ? null : Qr.Draw(first + "/#code", 240, Color.FromArgb(20, 18, 20), Color.White);
+            if (old != null) old.Dispose();
+        }
         int sel = devs.SelectedIndex;
         devs.BeginUpdate(); devs.Items.Clear();
         lock (Store.Lock) foreach (Device d in Store.Devices) devs.Items.Add(d);
@@ -515,6 +589,32 @@ class MainForm : Form {
             tray.Tag = path; tray.ShowBalloonTip(4000);
         });
     }
+    public void PhoneNote(string dev, string app, string title, string text) {
+        Run(delegate {
+            tray.BalloonTipTitle = "📱 " + (app.Length > 0 ? app : dev) + (title.Length > 0 ? " · " + title : "");
+            tray.BalloonTipText = text.Length > 0 ? (text.Length > 180 ? text.Substring(0, 180) + "…" : text) : " ";
+            tray.Tag = null; tray.ShowBalloonTip(5000);
+        });
+    }
+    public void QrSend(string[] files) {
+        if (files == null) {
+            using (OpenFileDialog dlg = new OpenFileDialog()) { dlg.Multiselect = true; dlg.Title = "Файли для телефона (через QR)"; if (dlg.ShowDialog(this) != DialogResult.OK) return; files = dlg.FileNames; }
+        }
+        QuickShare q = Server.NewShare(false, files);
+        if (q.files.Count == 0) { lock (Server.Shares) Server.Shares.Remove(q.id); return; }
+        QrShow(q);
+    }
+    public void QrShow(QuickShare q) { Run(delegate { QrForm f = new QrForm(q); f.Show(); f.Activate(); Native.SetForegroundWindow(f.Handle); }); }
+    public void AddOffers(string[] files) { SendFiles(files); }
+    void Firewall() {
+        string fw = Path.Combine(Program.WebDir ?? "", "valo-link-firewall.ps1");
+        if (!File.Exists(fw)) return;
+        if (MessageBox.Show(this, "Щоб телефон бачив цей ПК, брандмауер Windows має пропускати з'єднання на порт " + Server.Port + " (TCP і UDP) — лише з вашої локальної мережі.\n\nЯкщо раніше у вікні брандмауера для PowerShell натиснули «Скасувати», Windows блокує PowerShell повністю: ці правила блокування буде вимкнено (не видалено), а натомість додано одне вузьке правило лише для порту valo Link.\n\nWindows попросить дозвіл адміністратора. Продовжити?", "valo Link", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+        try {
+            ProcessStartInfo psi = new ProcessStartInfo("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -File \"" + fw + "\"");
+            psi.Verb = "runas"; psi.UseShellExecute = true; psi.WindowStyle = ProcessWindowStyle.Hidden; Process.Start(psi);
+        } catch { }
+    }
     public void Note(string text) { Run(delegate { tray.BalloonTipTitle = "valo Link"; tray.BalloonTipText = text; tray.Tag = null; tray.ShowBalloonTip(3000); }); }
     public void Run(Action a) { try { if (IsHandleCreated) BeginInvoke(a); } catch { } }
     public void RunWait(Action a) { try { if (IsHandleCreated) Invoke(a); } catch { } }
@@ -532,19 +632,46 @@ public static class Program {
     public static string WebDir;
     [STAThread]
     public static void Main(string[] args) {
+        // "Send to" menu: --qr <files> (QR quick share) or --send <files> (to paired phones)
+        string mode = Array.IndexOf(args, "--qr") >= 0 ? "qr" : Array.IndexOf(args, "--send") >= 0 ? "send" : null;
+        List<string> files = new List<string>(); foreach (string a in args) if (!a.StartsWith("--") && File.Exists(a)) files.Add(Path.GetFullPath(a));
         bool created; Mutex m = new Mutex(true, "valo-link-single", out created);
-        if (!created) { try { EventWaitHandle.OpenExisting("valo-link-show").Set(); } catch { } return; }   // already running: bring its window up
+        if (!created) {
+            if (mode != null && files.Count > 0) {
+                try { Directory.CreateDirectory(Store.Dir); File.WriteAllLines(Path.Combine(Store.Dir, "request.txt"), new string[] { mode }.Concat(files).ToArray(), Encoding.UTF8); EventWaitHandle.OpenExisting("valo-link-req").Set(); } catch { }
+                return;
+            }
+            try { EventWaitHandle.OpenExisting("valo-link-show").Set(); } catch { } return;   // already running: bring its window up
+        }
         Hidden = Array.IndexOf(args, "--hidden") >= 0;
         Application.EnableVisualStyles();
-        Theme.Load(); Store.Load(); Server.NewCode();
+        Theme.Load(); Store.Load(); Settings.Load(); Server.NewCode();
         Server.WebDir = WebDir ?? Path.GetDirectoryName(Application.ExecutablePath);
         MainForm f = new MainForm(); Server.Ui = f; f.Wire();
         EventWaitHandle showEv = new EventWaitHandle(false, EventResetMode.AutoReset, "valo-link-show");
         Thread sw = new Thread(delegate () { while (true) { showEv.WaitOne(); f.Run(delegate { f.ShowFromOutside(); }); } }); sw.IsBackground = true; sw.Start();
+        EventWaitHandle reqEv = new EventWaitHandle(false, EventResetMode.AutoReset, "valo-link-req");
+        Thread rq = new Thread(delegate () {
+            while (true) {
+                reqEv.WaitOne();
+                try {
+                    string rp = Path.Combine(Store.Dir, "request.txt");
+                    string[] l = File.ReadAllLines(rp, Encoding.UTF8); File.Delete(rp);
+                    if (l.Length > 1) Request(f, l[0], l.Skip(1).ToArray());
+                } catch { }
+            }
+        });
+        rq.IsBackground = true; rq.Start();
+        if (mode != null && files.Count > 0) { string[] fa = files.ToArray(); f.HandleCreated += delegate { Request(f, mode, fa); }; }
+        Discovery.Start();
         try { new Server().Start(); }
         catch (Exception e) { MessageBox.Show("Не вдалося запустити сервер на порту " + Server.Port + ":\n" + e.Message, "valo Link"); }
         Application.Run(f);
         GC.KeepAlive(m);
+    }
+    static void Request(MainForm f, string mode, string[] files) {
+        if (mode == "qr") f.Run(delegate { f.QrSend(files); });
+        else f.Run(delegate { f.AddOffers(files); });
     }
 }
 }

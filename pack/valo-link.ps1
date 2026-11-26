@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 try {
-    Add-Type -ReferencedAssemblies System.Web.Extensions, System.Windows.Forms, System.Drawing -TypeDefinition ([IO.File]::ReadAllText((Join-Path $dir 'valo-link.cs')))
+    Add-Type -ReferencedAssemblies System.Web.Extensions, System.Windows.Forms, System.Drawing, System.Core -Path (Join-Path $dir 'valo-link.cs'), (Join-Path $dir 'valo-link-qr.cs')
 } catch {
     Add-Content -LiteralPath "$env:TEMP\valo-link.log" -Value ((Get-Date -f s) + " compile failed: $_")
     exit 1
