@@ -1,36 +1,46 @@
 {
-    "version":  "1.1.0",
+    "version":  "1.2.0",
     "date":  "2026-11-26",
     "notes":  [
-                  "Док valo.os замість панелі задач: прев\u0027ю вікон, перекриття й автоховання",
-                  "Центр керування, медіа на панелі, кошик у доці",
-                  "Живі шпалери під кожну тему (Lively Wallpaper)",
-                  "Оновлення valo.os з GitHub"
+                  "Розумний пошук у меню: файли, налаштування Windows, калькулятор, курси валют, пошук в інтернеті",
+                  "Свій Alt+Tab з мініатюрами, історія буфера Win+V, знімки області PrtSc",
+                  "Своя тема: власні кольори, кольори з шпалер чи картинки; тема за часом доби",
+                  "Центр керування: світовий час, нагадування, нотатки, режим «В дорозі»",
+                  "Живі шпалери реагують на музику; екран блокування під тему",
+                  "Звуки системи valo.os, резервна копія налаштувань, майстер першого запуску"
               ],
     "files":  [
                   {
                       "path":  "pack/bar.html",
-                      "sha256":  "677ec0f69af75ed7ec2df6530837baa2937e3059a80323332dd467932984aa04"
+                      "sha256":  "78816719341d5c843d06c9322f6b0528d9c77e57edf741b0c21e844159a285fa"
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "5b43a0e9ad166dcf413b061671ec7f14b30420cf2ec76c882ad2e520de965d3e"
+                      "sha256":  "98c18bd24addebd2018f4a83534197dd3e2594b248e1b18462feed96b7bcfca9"
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "3c093b2d9ea91ee0751596353993a0a0ed4d6514a53858961c301010ac8ed063"
+                      "sha256":  "a916b80117395b1c3c13c0cff9b9315a5779a54520138ebe3fcbffdfb96c41a7"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "c3f8469ec4b69111c23dd902b4df4b488f1651ca6e24f0c55f415d33f58d9be9"
+                      "sha256":  "f5176490582ec8fbfa78259b66f6831c28e0f062fb25123c9c2f73d93dc70656"
+                  },
+                  {
+                      "path":  "pack/search.js",
+                      "sha256":  "f659538e37a683d5789531898ee11ee5a5b6a9fc915940242251663c2462c4ef"
                   },
                   {
                       "path":  "pack/themes.js",
-                      "sha256":  "0da5d9a081d387d611ea764dee133925db588293538ccca45ba1a78f153aa9fc"
+                      "sha256":  "2ec65ad59c03d79daa2a89f40ec2d86328fd074a71776ae2bf7235e6e6556acc"
                   },
                   {
                       "path":  "pack/valo-apps.ps1",
                       "sha256":  "5905d0d082c0f52b9a2deaf8d6d29e85702936caf8e399878248ef6c635153a8"
+                  },
+                  {
+                      "path":  "pack/valo-backup.ps1",
+                      "sha256":  "e81bbb44bd81a04de0a5b3509758ee90c0850adc7d5abe3d0d7d462b84e065e4"
                   },
                   {
                       "path":  "pack/valo-bar-apply.ps1",
@@ -41,16 +51,80 @@
                       "sha256":  "ccbc0bf00b056e45405d68bacea8a71ffec8a0011a363bbea837b4c4474139a1"
                   },
                   {
+                      "path":  "pack/valo-palette.ps1",
+                      "sha256":  "eca67b98d42668486ef537848ea5650d6b1e31cde980a8a1b7e4c0251abb4125"
+                  },
+                  {
+                      "path":  "pack/valo-postupdate.ps1",
+                      "sha256":  "509d45914be7676ba5c8d8bc08c8411ee99f699cacac7da7ac507cc97b1fd14e"
+                  },
+                  {
+                      "path":  "pack/valo-search.ps1",
+                      "sha256":  "ab9ff2889f272c792e630f41d66187daa16db87bc01744f675d4cb3dd667669e"
+                  },
+                  {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "57bf9f76de33b4357e757867c678c438eea9fbee6235998ef3b60ec31f46333c"
+                      "sha256":  "4652959cd036fe9f7bbe0bbea5a0a85591807517ccf07b1b2ffa69763adcbc4d"
+                  },
+                  {
+                      "path":  "pack/valo-snd-connect.wav",
+                      "sha256":  "9310fccb1a91d582215aceb2ee16faae07a5d402cad6d3013dd4d8b5810d54f8"
+                  },
+                  {
+                      "path":  "pack/valo-snd-default.wav",
+                      "sha256":  "a91f90d552541d6f68767db99c21e2face381e540f75b2f3ca14bd000404fc89"
+                  },
+                  {
+                      "path":  "pack/valo-snd-disconnect.wav",
+                      "sha256":  "e902474d7dc40aada2c03b6b6b475f7b086d70630d60ae29e5a11bb1e90c77ea"
+                  },
+                  {
+                      "path":  "pack/valo-snd-error.wav",
+                      "sha256":  "bea4fb15cf04fd507202deca1f054ee158dc044702e5d0527f8214157248615d"
+                  },
+                  {
+                      "path":  "pack/valo-snd-exclamation.wav",
+                      "sha256":  "e93dcdb7aeca31425ce21e7df7637d9e5496bba214322632be7e3899091d9d50"
+                  },
+                  {
+                      "path":  "pack/valo-snd-logon.wav",
+                      "sha256":  "8eb12f77c90bd4f4b90326bcc4dbb79ff48a6a244a921362bd41f1c45371d461"
+                  },
+                  {
+                      "path":  "pack/valo-snd-notify.wav",
+                      "sha256":  "484d7f7659ba49c3ff476de8cd6ebed04798f4a1204a05d47bbb7cf03ecf56d4"
+                  },
+                  {
+                      "path":  "pack/valo-snd-trash.wav",
+                      "sha256":  "ef529421bc20e6ffdc2ec215460f9c24353f395b61bf25c931ab5a6c028da088"
+                  },
+                  {
+                      "path":  "pack/valo-sounds.ps1",
+                      "sha256":  "7f8646c457562b340d8ec9bf40e8a747c1f855226fc931ed2cae6d919940b7a6"
+                  },
+                  {
+                      "path":  "pack/valo-toast.ps1",
+                      "sha256":  "e8e7aaedd573a46a21404db550601e5ec1059fb075695dde92fa4cb13a3ac8ec"
+                  },
+                  {
+                      "path":  "pack/valo-travel.ps1",
+                      "sha256":  "57244f583fc1abb511648a9c22ec1cc83cf035a47b8e1ada27f6590df2de7859"
+                  },
+                  {
+                      "path":  "pack/valo-ui.cs",
+                      "sha256":  "9b0a4c007e9bd804cc2d5e8140e207f89cd81cd901b31c60b41c435b8e311656"
                   },
                   {
                       "path":  "pack/valo-update.ps1",
-                      "sha256":  "0822322e0502600a180687ae1c344056c7a35d36c46e36895e3959d834fb2061"
+                      "sha256":  "8e149805273199b500ed081e0cc413cd53a0bf1134c064b763a52f79d1d7788e"
                   },
                   {
                       "path":  "pack/valo-wallpaper.ps1",
-                      "sha256":  "ef6cbd980d962a2d0736b24bacae45e255d77d0dcd89c180d5f67f3bf25a3af0"
+                      "sha256":  "de68794adeeb77c8c545b9e66af406e1c401ef4453cb82e6ec2890d26100d8c2"
+                  },
+                  {
+                      "path":  "pack/welcome.html",
+                      "sha256":  "cd6a96edaed797a887d8eb5323213fd3dd23dc8da19f458acbec8b6c6588f388"
                   },
                   {
                       "path":  "pack/zebar.js",
@@ -58,7 +132,7 @@
                   },
                   {
                       "path":  "pack/zpack.json",
-                      "sha256":  "a62ca998bb977ff2237fb1a0fa80e40110bfeba72a627a587076dc1541c14cc4"
+                      "sha256":  "d446423337e05816819bc46a3809e679250547b14c9c0940b81c2b4d237c3452"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/index.html",
@@ -66,11 +140,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-graphite/LivelyInfo.json",
-                      "sha256":  "095088d7866e78e094a326a268548d6fee72d630f2f7f1b62c72f76d09893dd0"
+                      "sha256":  "ee53d39e41664da959c4ecb31b0fb03fd157754128b30c8c01431f5169490ce1"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/LivelyProperties.json",
-                      "sha256":  "56c29d2de8717d694cdb7bf2518d3476b9a3e1343b76114f61ea42d11c818a6a"
+                      "sha256":  "977046c456a382f792ddff410a2fd249b6aec223b51581fc195af0007b625504"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/lock.png",
+                      "sha256":  "e62222628222a3a4d15329db4b4a72dec5c32d7258e3c8a89d3118145d41155d"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/theme.js",
@@ -78,11 +156,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-graphite/thumbnail.png",
-                      "sha256":  "f3135dff2ab11fc97bd7d1f9490a45dbe7301b1f5f8c6a4e568714bed22506d1"
+                      "sha256":  "b8ac9df5ca76504abe41a25127193d2366cc22f32e5a02fb3165ecf7d4e0ed84"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "wallpapers/valo-latte/index.html",
@@ -90,11 +168,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-latte/LivelyInfo.json",
-                      "sha256":  "098e73295c3ad1ea7e5e31f2e8741bf2ccc8eab9203981327b0cf44a4646cb19"
+                      "sha256":  "5ef30c8cfb99828e702b4681351ec029b0aa181fe96404f3d6d38690f627a5aa"
                   },
                   {
                       "path":  "wallpapers/valo-latte/LivelyProperties.json",
-                      "sha256":  "eef589f62eea46b435b7c604cee1196325225c4469b8c756b77c8ec6660d5c13"
+                      "sha256":  "a72f89c3c51a6af8dc86b562d13b1716f489628751ddd3bcf5ab32612345950b"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/lock.png",
+                      "sha256":  "85f5f11d61f03dfd0ce2d75fefd7b7919de9e5694ffa12da7e82c126766fa7ac"
                   },
                   {
                       "path":  "wallpapers/valo-latte/theme.js",
@@ -102,11 +184,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-latte/thumbnail.png",
-                      "sha256":  "0f7931ce95c93ec251e6131d783ef5e674e8126fc87bb140b6d5fa1f56eb13b7"
+                      "sha256":  "0887f8cbd9b942094131d29f8a7a85a4ca05a55f18d0d5524cbd2c8335217411"
                   },
                   {
                       "path":  "wallpapers/valo-latte/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "wallpapers/valo-matcha/index.html",
@@ -114,11 +196,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-matcha/LivelyInfo.json",
-                      "sha256":  "02d30d55c8f42bf38f7621c076c227e2f0cf69e96ffcbae193ec5a39e755968c"
+                      "sha256":  "02bdea02c452275ac55a951f47e5e58e5eb90ae72365c85a5eba37f0bbac4a78"
                   },
                   {
                       "path":  "wallpapers/valo-matcha/LivelyProperties.json",
-                      "sha256":  "53a664432f83414dd893d2cf785ded83d1f9590aa0e4700ea7e35861cc7b4d0b"
+                      "sha256":  "1f0f32ed49c10f90aff26dfc5eeec545e7110f1fe65a52ad8afb97c628ba222d"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/lock.png",
+                      "sha256":  "910be051e5565a3e396c4f0ea55d2998701eb088b3939d9d09caa184e983dba9"
                   },
                   {
                       "path":  "wallpapers/valo-matcha/theme.js",
@@ -126,11 +212,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-matcha/thumbnail.png",
-                      "sha256":  "4899fbe6792b75b6fcc6192f58d91efc4e8fd99a88dc4622e5683b78fbb0367a"
+                      "sha256":  "6ec0933baaf57bcadb53a99b0d6355ca01750ad62eb5e4217404a3510bd14b48"
                   },
                   {
                       "path":  "wallpapers/valo-matcha/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "wallpapers/valo-night/index.html",
@@ -138,11 +224,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-night/LivelyInfo.json",
-                      "sha256":  "3a1b4d8e8341abe2485bb13d4c2455832dc49481b3ab6aa8e9f76c308350658f"
+                      "sha256":  "afbdc788612785a8122ccc058b34d0e1a70c86e29b707529a50ffe1177d3fb2c"
                   },
                   {
                       "path":  "wallpapers/valo-night/LivelyProperties.json",
-                      "sha256":  "7db6467c7fd1798e0cd444ade310f575cc09ed144bf6e5fd592b2aba8fa1cbcd"
+                      "sha256":  "bddd0093705fb2a82b93cb83aadc3cbb60691e3554b37b8cde382f6f046015a5"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/lock.png",
+                      "sha256":  "e711b7a780d7551e8e560c46626ece0d9b6feda3ffde52b56ec6e1ec74593db2"
                   },
                   {
                       "path":  "wallpapers/valo-night/theme.js",
@@ -150,11 +240,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-night/thumbnail.png",
-                      "sha256":  "31c0d4137f06f6c264ec06e4eefc84a8a99292b12820e007284b9f82e18b89d6"
+                      "sha256":  "9dfc898d51e6a4a20a11c770f43dd3a0475f95481f5634dd73e48cd2e24149ea"
                   },
                   {
                       "path":  "wallpapers/valo-night/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "wallpapers/valo-sakura/index.html",
@@ -162,11 +252,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-sakura/LivelyInfo.json",
-                      "sha256":  "6567393d30f4d1d19418dadbdc9d6f59c067b8c80f093d494ea8c9297c5b3be5"
+                      "sha256":  "7b64c68ffb22fa99d983f12bac2ede28ee89ec2282a727d6613e4f194a19c748"
                   },
                   {
                       "path":  "wallpapers/valo-sakura/LivelyProperties.json",
-                      "sha256":  "801ea50e702328134dba90815f4fe4177d594ec5e70415c2d6b22aa700558928"
+                      "sha256":  "68e71f91b250ca4d3c4a36d43f47f18e3771d41d830f763edf839a597708a567"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/lock.png",
+                      "sha256":  "49a76316bad46fe7bbb65af78c1d455946fe594760b74e14882061836b4682db"
                   },
                   {
                       "path":  "wallpapers/valo-sakura/theme.js",
@@ -174,11 +268,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-sakura/thumbnail.png",
-                      "sha256":  "abcc37629e08374627fe148d266b263d5bb159194aaf70d79fe3365260a414d4"
+                      "sha256":  "134e60e3ad35c430cc4869f4dafaea33a9381114ba8b0719bb1c6b7c190c7fc3"
                   },
                   {
                       "path":  "wallpapers/valo-sakura/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   },
                   {
                       "path":  "wallpapers/valo-sunset/index.html",
@@ -186,11 +280,15 @@
                   },
                   {
                       "path":  "wallpapers/valo-sunset/LivelyInfo.json",
-                      "sha256":  "5ce039c35bd8e60785f3ff85e37818d700cec0d21dfcc3742781a10de294ca8b"
+                      "sha256":  "98e2975268b6b3227ed1b1c51dd5b44105712a922bb0d203704e184f6fab601d"
                   },
                   {
                       "path":  "wallpapers/valo-sunset/LivelyProperties.json",
-                      "sha256":  "b833c25c546fa89cd22d0c2c6bb943bbdd19bd7bb0417024a1435624368b71fe"
+                      "sha256":  "974756f921303430f9fd2316e76fc32a3864c866b3950f57fc663b2851557a57"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/lock.png",
+                      "sha256":  "0a645b986e5fd752608f6f41e47879126c398b4ae9e0d152526158b3a9c7db4d"
                   },
                   {
                       "path":  "wallpapers/valo-sunset/theme.js",
@@ -198,11 +296,11 @@
                   },
                   {
                       "path":  "wallpapers/valo-sunset/thumbnail.png",
-                      "sha256":  "ef1cb28a7455db9e68870f6fec17a7b03a55e0abe0d79c39eb0df3be9e018064"
+                      "sha256":  "d08667f28aecb4ddf0844aeb5c3cc6c750f5a0c08a95d1c5090667525ba2caec"
                   },
                   {
                       "path":  "wallpapers/valo-sunset/wallpaper.js",
-                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                      "sha256":  "70a472c6a234cdbe8b3a03e8b0c75a2dbbf5e00037d7eb7594a61561233451df"
                   }
               ]
 }

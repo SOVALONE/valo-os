@@ -66,6 +66,9 @@ $installed = [ordered]@{ version = $remote.version; date = $remote.date; notes =
 [IO.File]::WriteAllText((Join-Path $pack 'version.json'), ($installed | ConvertTo-Json -Depth 3), [Text.UTF8Encoding]::new($false))
 Remove-Item $stage -Recurse -Force
 Log "installed $($remote.version), backup $bk"
+# post-install steps that come with the new version (e.g. register new widgets)
+$post = Join-Path $pack 'valo-postupdate.ps1'
+if (Test-Path $post) { try { & $post } catch { Log "postupdate failed: $_" } }
 Out-Json @{ ok = $true; version = $remote.version; backup = $bk }
 
 if ($NoRestart) { return }

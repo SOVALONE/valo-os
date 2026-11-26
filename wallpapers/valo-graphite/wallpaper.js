@@ -1,5 +1,6 @@
 // valo.os live wallpaper for Lively Wallpaper: one animated scene per panel theme, palette shared with the Zebar themes.
-// Lively properties (LivelyProperties.json): theme (dropdown index), speed, density, mark, clock, parallax.
+// Lively properties (LivelyProperties.json): theme (dropdown index), speed, density, mark, clock, parallax, audio.
+// With "--audio" in LivelyInfo Arguments the scene reacts to music: faster motion, the mark and a bottom glow pulse with the bass.
 (() => {
   'use strict';
 
@@ -14,7 +15,8 @@
   ];
 
   const startTheme = Math.max(0, THEMES.findIndex(t => t.id === (window.VALO_THEME || 'sakura')));
-  const P = { theme: startTheme, speed: 100, density: 100, mark: true, clock: false, parallax: true };
+  const P = { theme: startTheme, speed: 100, density: 100, mark: true, clock: false, parallax: true, audio: true };
+  const A = { bass: 0, level: 0, sb: 0, sl: 0 };   // raw and smoothed music levels
 
   const cv = document.getElementById('c');
   const ctx = cv.getContext('2d');
@@ -68,7 +70,7 @@
   function drawMark(x, y, size, color, alpha) {
     if (!P.mark) return;
     const img = markImage(Math.round(size), color);
-    ctx.globalAlpha = alpha; ctx.drawImage(img, x - size / 2, y - size / 2); ctx.globalAlpha = 1;
+    ctx.globalAlpha = Math.min(1, alpha * (1 + A.sb * 2.2)); ctx.drawImage(img, x - size / 2, y - size / 2); ctx.globalAlpha = 1;
   }
 
   // ======================================================================== scenes
@@ -399,12 +401,29 @@
     const dt = Math.min(0.05, (now - last) / 1000) * (P.speed / 100);
     last = now; simT += dt;
     pm.x += (mouse.x - pm.x) * 0.05; pm.y += (mouse.y - pm.y) * 0.05;
-    scene.draw(simT, dt);
+    A.bass *= 0.9; A.level *= 0.9;                      // decays when the music stops
+    A.sb += (A.bass - A.sb) * 0.3; A.sl += (A.level - A.sl) * 0.15;
+    const boost = 1 + A.sl * 1.6;
+    simT += dt * (boost - 1);
+    scene.draw(simT, dt * boost);
+    if (A.sb > 0.02) {                                   // bass glow from the bottom edge
+      const g = ctx.createRadialGradient(W / 2, H * 1.05, 0, W / 2, H * 1.05, M * 0.9);
+      g.addColorStop(0, rgba(theme.c.accent, Math.min(0.35, A.sb * 0.3))); g.addColorStop(1, rgba(theme.c.accent, 0));
+      ctx.fillStyle = g; ctx.fillRect(0, H * 0.3, W, H * 0.75);
+    }
     requestAnimationFrame(frame);
   }
 
   window.addEventListener('mousemove', e => { mouse.x = e.clientX / W; mouse.y = e.clientY / H; });
   window.addEventListener('resize', resize);
+
+  // Lively Wallpaper audio (needs "--audio" in LivelyInfo Arguments): 128 values, usually 0..1
+  window.livelyAudioListener = arr => {
+    if (!P.audio || !arr || !arr.length) return;
+    let b = 0, l = 0; const n = arr.length, nb = Math.max(1, Math.round(n / 10));
+    for (let i = 0; i < n; i++) { const v = Math.min(1.5, Math.max(0, +arr[i] || 0)); l += v; if (i < nb) b += v; }
+    A.bass = Math.max(A.bass, Math.min(1.2, b / nb)); A.level = Math.max(A.level, Math.min(1.2, l / n * 2));
+  };
 
   // Lively Wallpaper: called once per property at load, then on every change
   window.livelyPropertyListener = (name, val) => {

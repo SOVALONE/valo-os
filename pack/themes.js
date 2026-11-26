@@ -38,6 +38,30 @@ export const THEMES = {
 export const DEFAULT = { id: 'sakura', sticky: false, size: 100, dockSticky: false, dockOverlap: false, dockHide: false, dockTrash: true, wallSync: true };
 export const SIZES = [100, 75, 50];
 
+// ---------- custom theme ("Своя"): built from 4 colours + rounding + opacity
+export const CUSTOM_DEFAULT = { solid: '#1e1a1f', accent: '#f2a7bb', accent2: '#e07a96', text: '#f5e6ea', radius: 12, alpha: 92 };
+const rgbOf = h => { const n = parseInt(String(h).replace('#', ''), 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const hex = a => '#' + a.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+export const mixHex = (a, b, t) => { const x = rgbOf(a), y = rgbOf(b); return hex(x.map((v, i) => v + (y[i] - v) * t)); };
+export const lum = h => { const [r, g, b] = rgbOf(h).map(v => v / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+export function customVars(c) {
+  c = { ...CUSTOM_DEFAULT, ...(c || {}) };
+  const [r, g, b] = rgbOf(c.solid), [ar, ag, ab] = rgbOf(c.accent), rad = Math.max(0, Math.min(24, +c.radius || 0));
+  const light = lum(c.solid) > 0.5;
+  return {
+    bg: `rgba(${r},${g},${b},${(+c.alpha || 92) / 100})`, solid: c.solid,
+    chip: mixHex(c.solid, c.text, light ? 0.1 : 0.07), hi: mixHex(c.solid, c.text, light ? 0.17 : 0.14),
+    accent: c.accent, accent2: c.accent2, text: c.text, muted: mixHex(c.text, c.solid, 0.42),
+    ink: lum(c.accent) > 0.5 ? mixHex(c.solid, '#000000', light ? 0.7 : 0) : '#ffffff',
+    border: `rgba(${ar},${ag},${ab},.28)`, radius: rad + 'px', chipRadius: Math.max(2, Math.round(rad * 0.66)) + 'px',
+    shadow: rad > 0 ? '0 6px 18px rgba(0,0,0,.25)' : 'none',
+  };
+}
+export function themeVars(t) {
+  if (t.id === 'custom') return customVars(t.custom);
+  return (THEMES[t.id] || THEMES.sakura).vars;
+}
+
 export function getTheme() {
   try { return { ...DEFAULT, ...JSON.parse(localStorage.getItem('valo.theme') || '{}') }; } catch { return { ...DEFAULT }; }
 }
@@ -51,13 +75,13 @@ export function saveTheme(patch) {
 
 export function applyTheme() {
   const t = getTheme();
-  const th = THEMES[t.id] || THEMES.sakura;
+  const vars = themeVars(t);
   const s = document.documentElement.style;
-  for (const [k, v] of Object.entries(th.vars)) s.setProperty('--' + k, v);
+  for (const [k, v] of Object.entries(vars)) s.setProperty('--' + k, v);
   const root = document.documentElement, isDock = root.dataset.widget === 'dock';
   root.classList.toggle('sticky', isDock ? !!t.dockSticky : !!t.sticky);
   root.classList.toggle('overlap', isDock && !!t.dockOverlap);
-  root.classList.toggle('light', t.id === 'latte');
+  root.classList.toggle('light', lum(vars.solid) > 0.5);
   for (const z of SIZES) root.classList.toggle('s' + z, !isDock && !!t.sticky && t.size === z);
 }
 

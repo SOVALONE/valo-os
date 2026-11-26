@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="uk">
 <head>
 <meta charset="utf-8" />
@@ -89,6 +89,12 @@
   .row .ic { width: 24px; height: 24px; flex: none; }
   .row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .row .star { margin-left: auto; color: var(--pink); font-size: 11px; }
+  .row .gl { width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 6px; background: var(--chip-hi); color: var(--pink);
+    font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-size: 14px; }
+  .row .tx { display: flex; flex-direction: column; min-width: 0; }
+  .row .tx small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.big .tx span { font-size: 16px; font-weight: 600; color: var(--pink); }
+  .row.wait { opacity: .6; pointer-events: none; }
   .ic { border-radius: 6px; object-fit: contain; }
   .tile { display: grid; place-items: center; background: var(--chip-hi); color: var(--pink); font-weight: 700; }
   .empty { color: var(--muted); padding: 20px 8px; text-align: center; }
@@ -114,6 +120,24 @@
   .upd button:hover { color: var(--pink); }
   .upd button.go { background: var(--pink); color: var(--ink); font-weight: 600; }
   .upd button:disabled { opacity: .5; pointer-events: none; }
+  .cust, .auto { display: flex; flex-direction: column; gap: 10px; background: var(--chip); border-radius: var(--chipRadius); padding: 10px 12px; }
+  .cust[hidden], .auto[hidden] { display: none; }
+  .cgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cgrid label { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+  input[type=color] { -webkit-appearance: none; appearance: none; width: 42px; height: 30px; border: 2px solid var(--border); border-radius: 8px; padding: 0; background: none; cursor: pointer; }
+  input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type=color]::-webkit-color-swatch { border: none; border-radius: 6px; }
+  .rng { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+  .rng span { width: 96px; }
+  .rng input { flex: 1; accent-color: var(--pink); }
+  .cbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cbtns button { all: unset; cursor: pointer; flex: 1; text-align: center; padding: 8px 10px; border-radius: calc(var(--chipRadius) - 2px); background: var(--hi); color: var(--text); font-size: 12px; white-space: nowrap; }
+  .cbtns button:hover { color: var(--pink); }
+  .auto label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .auto select, .auto input[type=time] { background: var(--hi); color: var(--text); border: none; border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12px; color-scheme: dark; }
+  .light .auto select, .light .auto input[type=time] { color-scheme: light; }
+  .auto select { flex: 1; }
+  .seg.multi button.on { background: var(--pink); }
   .btn.badge::after { content: ''; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); }
 </style>
 </head>
@@ -140,6 +164,22 @@
       <div class="back"><button id="backBtn" class="nf">&#xF0141;</button><b>Налаштування панелі</b></div>
       <h3>Тема</h3>
       <div class="themes" id="themes"></div>
+      <div class="cust" id="customWrap" hidden>
+        <div class="cgrid">
+          <label>Фон<input type="color" id="cSolid" /></label><label>Акцент<input type="color" id="cAccent" /></label>
+          <label>Другий<input type="color" id="cAccent2" /></label><label>Текст<input type="color" id="cText" /></label>
+        </div>
+        <label class="rng"><span>Заокруглення</span><input type="range" id="cRadius" min="0" max="24" /></label>
+        <label class="rng"><span>Непрозорість</span><input type="range" id="cAlpha" min="60" max="100" /></label>
+        <div class="cbtns"><button id="cWall">Кольори з шпалер</button><button id="cPick">З картинки…</button></div>
+        <div class="hint" id="cHint"></div>
+      </div>
+      <h3>Тема за часом доби</h3>
+      <div class="seg" id="autoSeg"><button data-auto="0">Вимкнено</button><button data-auto="1">Увімкнено</button></div>
+      <div class="auto" id="autoWrap" hidden>
+        <label>Вдень <select id="aDay"></select> з <input type="time" id="aDayAt" /></label>
+        <label>Увечері <select id="aNight"></select> з <input type="time" id="aNightAt" /></label>
+      </div>
       <h3>Стиль панелі</h3>
       <div class="seg" id="seg"><button data-sticky="0">Плаваюча</button><button data-sticky="1">Липка</button></div>
       <div id="sizeWrap">
@@ -154,9 +194,19 @@
       <div class="seg" id="trashSeg"><button data-tr="1">Кошик у доці</button><button data-tr="0">Без кошика</button></div>
       <h3>Панель задач Windows</h3>
       <div class="seg" id="tbSeg"><button data-tb="1">Сховати (док valo.os)</button><button data-tb="0">Показати</button></div>
+      <h3>Інструменти</h3>
+      <div class="seg three multi" id="featSeg"><button data-f="alttab">Alt+Tab</button><button data-f="clip">Буфер Win+V</button><button data-f="shot">Знімки PrtSc</button></div>
+      <div class="hint">Свій перемикач вікон, історія буфера обміну й знімок області екрана. Натисніть, щоб увімкнути або вимкнути.</div>
+      <h3>Звуки системи</h3>
+      <div class="seg" id="sndSeg"><button data-snd="1">Звуки valo.os</button><button data-snd="0">Звуки Windows</button></div>
       <h3>Живі шпалери</h3>
       <div class="seg" id="wpSeg"><button data-wp="1">Змінювати з темою</button><button data-wp="0">Не чіпати</button></div>
-      <div class="hint" id="wpHint">Потрібен Lively Wallpaper. Кожна тема має свої анімовані шпалери.</div>
+      <div class="hint" id="wpHint">Потрібен Lively Wallpaper. Кожна тема має свої анімовані шпалери, що реагують на музику.</div>
+      <div class="seg" id="lockSeg"><button data-lock="1">Екран блокування під тему</button><button data-lock="0">Не чіпати</button></div>
+      <h3>Резервна копія налаштувань</h3>
+      <div class="cbtns"><button id="bkSave">Зберегти у файл</button><button id="bkLoad">Відновити з файлу</button></div>
+      <div class="hint" id="bkHint">Тема, панель, док, закріплені програми та інструменти — одним файлом у «Документах».</div>
+      <div class="cbtns"><button id="welcomeBtn">Майстер першого запуску</button></div>
       <h3>Оновлення valo.os</h3>
       <div class="upd"><div class="grow"><b id="updVer">valo.os</b><span id="updMsg">Ще не перевірено</span><ul id="updNotes"></ul></div><button id="updBtn">Перевірити</button></div>
     </div>
@@ -176,7 +226,8 @@
 
   <script type="module">
     import * as zebar from './zebar.js';
-    import { THEMES, getTheme, saveTheme } from './themes.js';
+    import { THEMES, getTheme, saveTheme, applyTheme, customVars, CUSTOM_DEFAULT } from './themes.js';
+    import { calc, currencyQuery, rates, convert, matchSettings, fmt } from './search.js';
     // panel height changes need a Zebar restart with another preset (and a GlazeWM gap update)
     let applyTimer = null;
     function applyBarSize() {
@@ -278,6 +329,36 @@
         card.onclick = () => { saveTheme({ id }); renderSettings(); syncWallpaper(); };
         box.appendChild(card);
       }
+      {   // "Своя" (custom) theme card
+        const v = customVars(cur.custom);
+        const card = document.createElement('div');
+        card.className = 'card' + (cur.id === 'custom' ? ' on' : '');
+        const r = cur.sticky ? '0' : v.radius, cr = cur.sticky ? '2px' : v.chipRadius;
+        card.innerHTML = `
+          <div class="pv" style="background:${v.bg};border:1px solid ${v.border};border-radius:${r}">
+            <i class="lg" style="background:${v.accent};border-radius:${cr}"></i><i class="sp"></i>
+            <i class="c" style="background:${v.chip};border-radius:${cr}"></i><i class="c" style="background:${v.chip};border-radius:${cr}"></i>
+            <i class="c" style="background:${v.accent2};border-radius:${cr};width:10px"></i>
+          </div><b>Своя</b><span>власні кольори, з шпалер чи картинки</span>`;
+        card.onclick = () => { saveTheme({ id: 'custom', custom: { ...CUSTOM_DEFAULT, ...(cur.custom || {}) } }); renderSettings(); };
+        box.appendChild(card);
+      }
+      renderCustom(cur);
+      renderAuto(cur);
+      const feats = features();
+      for (const b of $('featSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', feats[b.dataset.f] !== false);
+        b.onclick = () => { const f = features(); f[b.dataset.f] = f[b.dataset.f] === false; localStorage.setItem('valo.features', JSON.stringify(f)); renderSettings(); };
+      }
+      const sndOn = localStorage.getItem('valo.sounds') === '1';
+      for (const b of $('sndSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.snd === '1') === sndOn);
+        b.onclick = () => {
+          const on = b.dataset.snd === '1'; if (on === (localStorage.getItem('valo.sounds') === '1')) return;
+          localStorage.setItem('valo.sounds', on ? '1' : '0'); renderSettings();
+          zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-sounds.ps1', on ? '-Enable' : '-Disable']).catch(() => {});
+        };
+      }
       for (const b of $('seg').querySelectorAll('button')) {
         b.classList.toggle('on', (b.dataset.sticky === '1') === !!cur.sticky);
         b.onclick = () => { const st = b.dataset.sticky === '1'; if (st === !!getTheme().sticky) return; saveTheme({ sticky: st }); renderSettings(); if ((getTheme().size || 100) !== 100) applyBarSize(); };
@@ -309,6 +390,10 @@
         b.classList.toggle('on', (b.dataset.wp === '1') === (cur.wallSync !== false));
         b.onclick = () => { saveTheme({ wallSync: b.dataset.wp === '1' }); renderSettings(); syncWallpaper(); };
       }
+      for (const b of $('lockSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.lock === '1') === !!cur.lockSync);
+        b.onclick = () => { saveTheme({ lockSync: b.dataset.lock === '1' }); renderSettings(); syncWallpaper(); };
+      }
       renderUpdate();
       if (Date.now() - (+localStorage.getItem('valo.updCheckedAt') || 0) > 6 * 3600e3) checkUpdate();
       const hideTb = localStorage.getItem('valo.taskbarHide') !== '0';
@@ -322,9 +407,103 @@
     }
     $('backBtn').onclick = () => showPage('main');
 
+    // ---------- custom theme editor
+    function features() { try { return JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { return {}; } }
+    function renderCustom(cur) {
+      $('customWrap').hidden = cur.id !== 'custom';
+      if (cur.id !== 'custom') return;
+      const c = { ...CUSTOM_DEFAULT, ...(cur.custom || {}) };
+      $('cSolid').value = c.solid; $('cAccent').value = c.accent; $('cAccent2').value = c.accent2; $('cText').value = c.text;
+      $('cRadius').value = c.radius; $('cAlpha').value = c.alpha;
+    }
+    let custTimer = null;
+    function editCustom(patch) {
+      const t = getTheme();
+      saveTheme({ id: 'custom', custom: { ...CUSTOM_DEFAULT, ...(t.custom || {}), ...patch } });
+      clearTimeout(custTimer); custTimer = setTimeout(renderSettings, 250);
+    }
+    for (const [id, key] of [['cSolid', 'solid'], ['cAccent', 'accent'], ['cAccent2', 'accent2'], ['cText', 'text'], ['cRadius', 'radius'], ['cAlpha', 'alpha']])
+      $(id).addEventListener('input', () => editCustom({ [key]: id === 'cRadius' || id === 'cAlpha' ? +$(id).value : $(id).value }));
+    async function paletteFrom(args, label) {
+      $('cHint').textContent = label;
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-palette.ps1', ...args]).catch(() => null);
+      let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+      if (!o || o.error) { $('cHint').textContent = o?.error === 'cancel' ? '' : (o?.error || 'Не вдалося взяти кольори'); return; }
+      editCustom({ solid: o.solid, accent: o.accent, accent2: o.accent2, text: o.text });
+      $('cHint').textContent = 'Кольори взято з ' + String(o.source).split('\\').pop();
+      setTimeout(renderSettings, 50);
+    }
+    $('cWall').onclick = () => paletteFrom([], 'Беру кольори з шпалер…');
+    $('cPick').onclick = () => paletteFrom(['-Pick'], 'Оберіть картинку…');
+
+    // ---------- theme by time of day (the menu runs all the time, so it keeps the schedule)
+    const themeOptions = () => [...Object.entries(THEMES).map(([id, t]) => [id, t.name]), ['custom', 'Своя']];
+    function autoCfg() { return { on: false, day: 'latte', night: 'sakura', dayAt: '07:00', nightAt: '20:00', ...(getTheme().auto || {}) }; }
+    function renderAuto(cur) {
+      const a = autoCfg();
+      for (const b of $('autoSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.auto === '1') === !!a.on);
+        b.onclick = () => { saveTheme({ auto: { ...autoCfg(), on: b.dataset.auto === '1' } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); renderSettings(); };
+      }
+      $('autoWrap').hidden = !a.on;
+      for (const [sid, key] of [['aDay', 'day'], ['aNight', 'night']]) {
+        const sel = $(sid); sel.innerHTML = '';
+        for (const [id, name] of themeOptions()) { const o = document.createElement('option'); o.value = id; o.textContent = name; sel.append(o); }
+        sel.value = a[key];
+        sel.onchange = () => { saveTheme({ auto: { ...autoCfg(), [key]: sel.value } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); };
+      }
+      $('aDayAt').value = a.dayAt; $('aNightAt').value = a.nightAt;
+      $('aDayAt').onchange = () => { saveTheme({ auto: { ...autoCfg(), dayAt: $('aDayAt').value || '07:00' } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); };
+      $('aNightAt').onchange = () => { saveTheme({ auto: { ...autoCfg(), nightAt: $('aNightAt').value || '20:00' } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); };
+    }
+    function autoTheme() {
+      const a = autoCfg();
+      if (!a.on) return;
+      const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
+      const toM = s => { const [h, mm] = String(s).split(':').map(Number); return (h || 0) * 60 + (mm || 0); };
+      const d = toM(a.dayAt), n = toM(a.nightAt);
+      const isDay = d < n ? (m >= d && m < n) : !(m >= n && m < d);
+      const period = (isDay ? 'day' : 'night') + ':' + now.toDateString();
+      if (localStorage.getItem('valo.autoPeriod') === period) return;    // switch only when the period starts, manual picks stay
+      localStorage.setItem('valo.autoPeriod', period);
+      const want = isDay ? a.day : a.night;
+      if (getTheme().id !== want) { saveTheme({ id: want }); syncWallpaper(); if (page === 'settings') renderSettings(); }
+    }
+    setInterval(autoTheme, 60000); setTimeout(autoTheme, 3000);
+
+    // ---------- settings backup
+    const SKIP = /Toggle|Ack|Closed|focus|rates|upd|appsAt|autoPeriod/;
+    $('bkSave').onclick = async () => {
+      const data = { app: 'valo.os', savedAt: new Date().toISOString(), keys: {} };
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('valo.') && !SKIP.test(k)) data.keys[k] = localStorage.getItem(k); }
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-backup.ps1', '-Save', b64]).catch(() => null);
+      let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+      $('bkHint').textContent = o?.ok ? 'Збережено: ' + o.path : 'Не вдалося зберегти';
+    };
+    $('bkLoad').onclick = async () => {
+      $('bkHint').textContent = 'Оберіть файл…';
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-backup.ps1', '-Load']).catch(() => null);
+      let o = null; try { o = JSON.parse((r?.stdout || '').trim()); } catch { }
+      if (!o || o.error || !o.keys) { $('bkHint').textContent = o?.error === 'cancel' ? '' : 'Це не файл налаштувань valo.os'; return; }
+      let n = 0;
+      for (const [k, v] of Object.entries(o.keys)) if (k.startsWith('valo.') && typeof v === 'string') { localStorage.setItem(k, v); n++; }
+      pins = JSON.parse(localStorage.getItem('valo.pins') || 'null');
+      applyTheme(); renderSettings(); syncWallpaper();
+      $('bkHint').textContent = `Відновлено (${n} параметрів). Розмір панелі зміниться після перезапуску.`;
+    };
+    $('welcomeBtn').onclick = () => {
+      const ls = localStorage, token = String(Date.now());
+      ls.setItem('valo.welcomeToggle', token);
+      setTimeout(() => { if (ls.getItem('valo.welcomeAck') !== token) zebar.startWidgetPreset('welcome', 'default').catch(() => {}); }, 600);
+      close();
+    };
+
     // ---------- live wallpaper per theme (Lively Wallpaper, valo-wallpaper.ps1)
     function syncWallpaper() {
       const t = getTheme();
+      if (t.id === 'custom') return;
+      if (t.lockSync) zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id, '-Lock']).catch(() => {});
       if (t.wallSync === false) return;
       zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id]).then(r => {
         let o = null; try { o = JSON.parse((r.stdout || '').trim()); } catch { }
@@ -428,29 +607,113 @@
         pb.appendChild(el);
       }
 
-      let shown = apps;
-      if (q) {
-        shown = apps.filter(a => a.n.toLowerCase().includes(q))
-          .sort((x, y) => (x.n.toLowerCase().startsWith(q) ? 0 : 1) - (y.n.toLowerCase().startsWith(q) ? 0 : 1));
+      if (!q) {
+        if (!apps.length) { list.innerHTML = '<div class="empty">Завантаження…</div>'; return; }
+        let last = '';
+        apps.forEach(a => {
+          const L = (a.n[0] || '#').toUpperCase();
+          if (L !== last) { last = L; const h = document.createElement('div'); h.className = 'letter'; h.textContent = L; list.appendChild(h); }
+          list.appendChild(appRow(a, false));
+        });
+        list._shown = [];
+        return;
       }
-      if (!shown.length) { list.innerHTML = `<div class="empty">${apps.length ? 'Нічого не знайдено' : 'Завантаження…'}</div>`; return; }
-      sel = Math.min(sel, shown.length - 1);
 
-      let last = '';
-      shown.forEach((a, i) => {
-        const L = (a.n[0] || '#').toUpperCase();
-        if (!q && L !== last) { last = L; const h = document.createElement('div'); h.className = 'letter'; h.textContent = L; list.appendChild(h); }
-        const r = document.createElement('div'); r.className = 'row' + (q && i === sel ? ' sel' : '');
-        const s = document.createElement('span'); s.textContent = a.n;
-        r.append(icon(a, ''), s);
-        if (pins?.includes(a.id)) { const st = document.createElement('i'); st.className = 'star nf'; st.textContent = String.fromCodePoint(0xF0403); r.appendChild(st); }
-        r.title = 'Клік — запустити, правий клік — закріпити';
-        r.onclick = () => launch(a);
-        r.oncontextmenu = e => { e.preventDefault(); togglePin(a); };
-        r.dataset.i = i;
+      // ---------- smart search: calculator, currency, apps, Windows settings, files, web
+      const raw = $('q').value.trim();
+      const items = [];
+      const c = calc(raw);
+      if (c) items.push({ sec: 'Калькулятор', big: true, n: '= ' + c.text, sub: 'Enter — скопіювати', glyph: 0xF00EC, run: () => copy(String(+c.value.toFixed(10)).replace('.', ',')) });
+      const cq = currencyQuery(raw);
+      if (cq) {
+        if (rateCache) for (const r of convert(cq, rateCache))
+          items.push({ sec: 'Валюта', big: true, n: r.text, sub: 'курс open.er-api.com · Enter — скопіювати', glyph: 0xF01C1, run: () => copy(fmt(r.value, 2)) });
+        else { items.push({ sec: 'Валюта', n: 'Завантажую курси…', glyph: 0xF01C1, wait: true }); rates().then(x => { rateCache = x; if (x) render(); }); }
+      }
+      apps.filter(a => a.n.toLowerCase().includes(q))
+        .sort((x, y) => (x.n.toLowerCase().startsWith(q) ? 0 : 1) - (y.n.toLowerCase().startsWith(q) ? 0 : 1))
+        .slice(0, 8).forEach(a => items.push({ sec: 'Програми', app: a, run: () => launch(a), pin: () => togglePin(a) }));
+      for (const [n, target] of matchSettings(q))
+        items.push({ sec: 'Налаштування', n, sub: 'налаштування Windows', glyph: 0xF0493, run: () => openTarget(target) });
+      if (q.length >= 2) {
+        const fr = fileCache.get(q);
+        if (fr) for (const f of fr) items.push({ sec: 'Файли', n: f.n, sub: f.p, glyph: f.d ? 0xF024B : fileGlyph(f.n), run: () => openTarget(f.p), reveal: () => reveal(f.p) });
+        else { items.push({ sec: 'Файли', n: 'Шукаю файли…', glyph: 0xF0349, wait: true }); searchFiles(q); }
+      }
+      items.push({ sec: 'Інтернет', n: `Шукати «${raw}» в інтернеті`, glyph: 0xF059F, run: () => openTarget('https://www.google.com/search?q=' + encodeURIComponent(raw)) });
+
+      const runnable = items.filter(x => x.run);
+      sel = Math.max(0, Math.min(sel, runnable.length - 1));
+      let sec = '';
+      for (const it of items) {
+        if (it.sec !== sec) {
+          if (sec && !(it.sec === 'Файли' && fileCache.get(q)?.length === 0)) { }
+          sec = it.sec; const h = document.createElement('div'); h.className = 'letter'; h.textContent = sec; list.appendChild(h);
+        }
+        const r = it.app ? appRow(it.app, runnable.indexOf(it) === sel) : document.createElement('div');
+        if (!it.app) {
+          r.className = 'row' + (it.big ? ' big' : '') + (it.wait ? ' wait' : '') + (runnable.indexOf(it) === sel ? ' sel' : '');
+          const g = document.createElement('i'); g.className = 'gl'; g.textContent = String.fromCodePoint(it.glyph || 0xF0219);
+          const tx = document.createElement('div'); tx.className = 'tx';
+          const sp = document.createElement('span'); sp.textContent = it.n; tx.append(sp);
+          if (it.sub) { const sm = document.createElement('small'); sm.textContent = it.sub; tx.append(sm); }
+          r.append(g, tx);
+          if (it.run) r.onclick = () => it.run();
+          if (it.reveal) { r.title = 'Клік — відкрити, правий клік — показати в папці'; r.oncontextmenu = e => { e.preventDefault(); it.reveal(); }; }
+        }
         list.appendChild(r);
-      });
-      list._shown = shown;
+      }
+      list._shown = runnable;
+    }
+
+    function appRow(a, selected) {
+      const r = document.createElement('div'); r.className = 'row' + (selected ? ' sel' : '');
+      const s = document.createElement('span'); s.textContent = a.n;
+      r.append(icon(a, ''), s);
+      if (pins?.includes(a.id)) { const st = document.createElement('i'); st.className = 'star nf'; st.textContent = String.fromCodePoint(0xF0403); r.appendChild(st); }
+      r.title = 'Клік — запустити, правий клік — закріпити';
+      r.onclick = () => launch(a);
+      r.oncontextmenu = e => { e.preventDefault(); togglePin(a); };
+      return r;
+    }
+    let rateCache = null;
+    const fileCache = new Map();
+    let fileTimer = null;
+    function searchFiles(q) {
+      clearTimeout(fileTimer);
+      fileTimer = setTimeout(async () => {
+        try {
+          const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-search.ps1', '-Q', q]);
+          const data = JSON.parse((r.stdout || '[]').trim() || '[]');
+          fileCache.set(q, Array.isArray(data) ? data : [data]);
+        } catch { fileCache.set(q, []); }
+        if (fileCache.size > 60) fileCache.delete(fileCache.keys().next().value);
+        if ($('q').value.trim().toLowerCase() === q) render();
+      }, 250);
+    }
+    function fileGlyph(n) {
+      const e = (n.split('.').pop() || '').toLowerCase();
+      if (/^(png|jpe?g|gif|webp|bmp|svg|heic)$/.test(e)) return 0xF021F;
+      if (/^(mp4|mkv|avi|mov|webm)$/.test(e)) return 0xF022B;
+      if (/^(mp3|flac|wav|ogg|m4a)$/.test(e)) return 0xF0223;
+      if (/^(zip|rar|7z|tar|gz)$/.test(e)) return 0xF05C4;
+      if (/^(pdf)$/.test(e)) return 0xF0226;
+      if (/^(docx?|odt|rtf|txt|md)$/.test(e)) return 0xF0219;
+      if (/^(xlsx?|csv|ods)$/.test(e)) return 0xF021B;
+      if (/^(js|ts|py|cs|ps1|html|css|json|kt|java|c|cpp|rs|go)$/.test(e)) return 0xF022E;
+      return 0xF0214;
+    }
+    function openTarget(t) {
+      if (/^(ms-settings:|windowsdefender:|https?:)/.test(t) || /^[A-Za-z]:\\/.test(t)) zebar.shellExec('explorer', [t]).catch(() => {});
+      else zebar.shellExec('powershell', [...PS, '-Command', `Start-Process '${t.replace(/'/g, "''")}'`]).catch(() => {});
+      close();
+    }
+    function reveal(p) { zebar.shellExec('explorer', ['/select,', p]).catch(() => {}); close(); }
+    async function copy(text) {
+      try { await navigator.clipboard.writeText(text); }
+      catch { await zebar.shellExec('powershell', [...PS, '-Command', `Set-Clipboard -Value '${text.replace(/'/g, "''")}'`]).catch(() => {}); }
+      const r = document.querySelector('.row.sel small'); if (r) r.textContent = 'Скопійовано: ' + text;
+      setTimeout(close, 500);
     }
 
     async function loadApps(fresh) {
@@ -479,7 +742,7 @@
       const shown = $('list')._shown || [];
       if (e.key === 'Escape' && page === 'settings') { e.preventDefault(); showPage('main'); return; }
       if (e.key === 'Escape') { e.preventDefault(); if ($('q').value) { $('q').value = ''; render(); } else close(); }
-      else if (e.key === 'Enter') { const a = $('q').value ? shown[sel] : null; if (a) launch(a); }
+      else if (e.key === 'Enter') { const it = $('q').value ? shown[sel] : null; if (it?.run) it.run(); }
       else if (e.key === 'ArrowDown' && $('q').value) { e.preventDefault(); sel = Math.min(sel + 1, shown.length - 1); render(); document.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' }); }
       else if (e.key === 'ArrowUp' && $('q').value) { e.preventDefault(); sel = Math.max(sel - 1, 0); render(); document.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' }); }
     });

@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Continue'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 [Console]::InputEncoding = [Text.UTF8Encoding]::new($false)
 
-Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition @'
+$valoCs = @'
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -168,18 +168,47 @@ public static class ValoShell {
     public static ConcurrentQueue<string> Events = new ConcurrentQueue<string>();
     public static volatile bool CaptureWin = true;
     static HookProc hookProc;
-    static bool winDown, otherKey;
+    static bool winDown, otherKey, altTabbing, vSwallow;
+    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
+    // also: Alt+Tab -> valo switcher, Win+V -> clipboard history, PrintScreen -> area screenshot
     static IntPtr Hook(int code, IntPtr w, IntPtr l) {
-        if (code >= 0 && CaptureWin) {
+        if (code >= 0) {
             KBD k = (KBD)Marshal.PtrToStructure(l, typeof(KBD));
             bool injected = (k.flags & 0x10) != 0;
             bool down = w.ToInt32() == 0x100 || w.ToInt32() == 0x104;
-            bool isWin = k.vk == 0x5B || k.vk == 0x5C;
-            if (isWin && !injected) {
-                if (down && !winDown) { winDown = true; otherKey = false; keybd_event(0xE8, 0, 0, UIntPtr.Zero); keybd_event(0xE8, 0, 2, UIntPtr.Zero); }
-                else if (!down) { if (winDown && !otherKey) Events.Enqueue("win"); winDown = false; }
-            } else if (down && winDown && !injected) {
-                otherKey = true;
+            uint vk = k.vk;
+            if (!injected) {
+                if (vk == 0x09 && ValoUi.AltTabOn && AltTabForm.Inst != null) {
+                    if (down && (k.flags & 0x20) != 0) {               // LLKHF_ALTDOWN
+                        bool back = (GetAsyncKeyState(0x10) & 0x8000) != 0;
+                        if (!altTabbing) {
+                            altTabbing = true; AltTabForm.Active = true;
+                            keybd_event(0xE8, 0, 0, UIntPtr.Zero); keybd_event(0xE8, 0, 2, UIntPtr.Zero);   // Alt release won't open app menus
+                            ValoUi.Post(delegate { AltTabForm.Inst.Begin(back); });
+                        } else ValoUi.Post(delegate { AltTabForm.Inst.Step(back); });
+                        return new IntPtr(1);
+                    }
+                    if (!down && altTabbing) return new IntPtr(1);
+                }
+                if (altTabbing) {
+                    if (!down && (vk == 0xA4 || vk == 0xA5 || vk == 0x12)) { altTabbing = false; ValoUi.Post(delegate { AltTabForm.Inst.Commit(); }); }
+                    else if (down && vk == 0x1B) { altTabbing = false; ValoUi.Post(delegate { AltTabForm.Inst.Cancel(); }); return new IntPtr(1); }
+                }
+                if (vk == 0x2C && ValoUi.ShotOn && ShotForm.Inst != null) {
+                    if (down) ValoUi.Post(delegate { ShotForm.Inst.Start(); });
+                    return new IntPtr(1);
+                }
+                if (vk == 0x56 && !down && vSwallow) { vSwallow = false; return new IntPtr(1); }
+            }
+            if (CaptureWin) {
+                bool isWin = vk == 0x5B || vk == 0x5C;
+                if (isWin && !injected) {
+                    if (down && !winDown) { winDown = true; otherKey = false; keybd_event(0xE8, 0, 0, UIntPtr.Zero); keybd_event(0xE8, 0, 2, UIntPtr.Zero); }
+                    else if (!down) { if (winDown && !otherKey) Events.Enqueue("win"); winDown = false; }
+                } else if (down && winDown && !injected) {
+                    otherKey = true;
+                    if (vk == 0x56 && ValoUi.ClipOn && ClipForm.Inst != null) { vSwallow = true; ValoUi.Post(delegate { ClipForm.Inst.Toggle(); }); return new IntPtr(1); }
+                }
             }
         }
         return CallNextHookEx(IntPtr.Zero, code, w, l);
@@ -342,6 +371,12 @@ public static class ValoShell {
                         if (c.StartsWith("activate ")) { PreviewForm.Cmd("preview hide"); Activate(long.Parse(c.Substring(9))); continue; }
                         if (c.StartsWith("min ")) { Minimize(long.Parse(c.Substring(4))); continue; }
                         if (c == "emptytrash") { EmptyTrash(); continue; }
+                        if (c.StartsWith("colors ")) { string[] a = c.Split(' '); if (a.Length >= 5) ValoUi.SetColors(a[1], a[2], a[3], a[4]); continue; }
+                        if (c.StartsWith("features ")) {
+                            string f = c.Substring(9);
+                            ValoUi.AltTabOn = !f.Contains("alttab=0"); ValoUi.ClipOn = !f.Contains("clip=0"); ValoUi.ShotOn = !f.Contains("shot=0");
+                            continue;
+                        }
                         if (c.StartsWith("barstyle ")) { BarSticky = c.EndsWith("1"); Commands.Enqueue("popups"); continue; }
                         if (c.StartsWith("dock ")) {
                             string[] a = c.Split(' ');
@@ -404,11 +439,19 @@ public class PreviewForm : WF.Form {
         Thread t = new Thread(delegate () {
             inst = new PreviewForm();
             IntPtr force = inst.Handle;
+            try { AltTabForm.Inst = new AltTabForm(); force = AltTabForm.Inst.Handle; } catch { }
+            try { ClipForm.Inst = new ClipForm(); force = ClipForm.Inst.Handle; } catch { }   // starts listening to the clipboard
+            try { ShotForm.Inst = new ShotForm(); force = ShotForm.Inst.Handle; } catch { }
             ready.Set();
             WF.Application.Run();
         });
         t.SetApartmentState(ApartmentState.STA); t.IsBackground = true; t.Start();
         ready.WaitOne(5000);
+    }
+    public static void Post(Action a) {
+        PreviewForm f = inst;
+        if (f == null) return;
+        try { f.BeginInvoke(a); } catch { }
     }
     public static void Cmd(string line) {
         PreviewForm f = inst;
@@ -570,6 +613,9 @@ public class PreviewForm : WF.Form {
 }
 
 '@
+# UI parts (Alt+Tab, clipboard history, screenshots) live in valo-ui.cs next to this script
+$valoCs += "`n" + [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'valo-ui.cs'))
+Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition $valoCs
 
 if ($RestoreTaskbar) { [ValoShell]::ShowTaskbar(); return }
 if ($HideTaskbar) { for ($i = 0; $i -lt 20; $i++) { if ([ValoShell]::TaskbarVisible()) { [ValoShell]::HideTaskbar() }; Start-Sleep -Milliseconds 500 }; return }

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="uk">
 <head>
 <meta charset="utf-8" />
@@ -145,6 +145,11 @@
       const hh = String(d.getHours()).padStart(2, '0');
       const mm = String(d.getMinutes()).padStart(2, '0');
       $('clock').innerHTML = `${hh}<span>:</span>${mm}`;
+      // world clocks on hover (same list as the control center)
+      let cl = null; try { cl = JSON.parse(localStorage.getItem('valo.clocks') || 'null'); } catch { }
+      cl = cl || [['Київ', 'Europe/Kyiv'], ['Бухарест', 'Europe/Bucharest'], ['Прага', 'Europe/Prague'], ['Варшава', 'Europe/Warsaw']];
+      $('clock').title = cl.map(([n, tz]) => { try { return n + '  ' + new Intl.DateTimeFormat('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(d); } catch { return n; } }).join('\n')
+        + '\n\nклік — центр керування';
 
     }
     tick(); setInterval(tick, 2000);
@@ -278,6 +283,8 @@
       setTimeout(() => { if (ls.getItem('valo.ccAck') !== token) zebar.startWidgetPreset('control', 'default').catch(() => {}); }, 600);
     }
     $('net').onclick = toggleCC;
+    $('clock').onclick = toggleCC;
+    $('clock').style.cursor = 'pointer';
     $('bat').onclick = toggleCC;
     $('net').oncontextmenu = e => { e.preventDefault(); open('ms-availablenetworks:'); };
     $('bat').oncontextmenu = e => { e.preventDefault(); open('ms-settings:powersleep'); };

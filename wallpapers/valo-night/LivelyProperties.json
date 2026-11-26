@@ -42,5 +42,10 @@
                      "type":  "checkbox",
                      "value":  true,
                      "text":  "Реакція на курсор"
-                 }
+                 },
+    "audio":  {
+                  "type":  "checkbox",
+                  "value":  true,
+                  "text":  "Реакція на музику"
+              }
 }

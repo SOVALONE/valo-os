@@ -111,7 +111,7 @@
       helper.onStderr(l => log('stderr: ' + l));
       helper.onExit(s => { log('helper exit ' + JSON.stringify(s)); helper = null; setTimeout(startHelper, 2000); });
       send('taskbar ' + (localStorage.getItem('valo.taskbarHide') === '0' ? 'show' : 'hide'));
-      lastMode = ''; lastBar = ''; syncDock();
+      lastMode = ''; lastBar = ''; lastCol = ''; lastFeat = ''; syncDock();
     }
 
     function toggleMenu() {
@@ -155,12 +155,18 @@
     }
 
     // ---------- dock mode for the helper: reserve screen space (app bar) or overlap windows (window shrunk to the dock itself)
-    let lastMode = '', lastBar = '';
+    let lastMode = '', lastBar = '', lastCol = '', lastFeat = '';
     function syncDock() {
       const t = getTheme(), dpr = window.devicePixelRatio || 1;
       const fit = t.dockOverlap && !t.dockSticky ? Math.ceil(($('dock').offsetWidth + 24) * dpr) : 0;
       const m = 'dock ' + (t.dockOverlap ? 1 : 0) + ' ' + fit + ' ' + (t.dockOverlap && t.dockHide ? 1 : 0);
       if (!(t.dockOverlap && t.dockHide)) setVisible(true);
+      // theme colours for the helper's own windows (Alt+Tab, clipboard, screenshots) + which of them are on
+      const col = ['colors', cssVar('solid'), cssVar('text'), cssVar('accent'), cssVar('muted')].join(' ');
+      if (col !== lastCol && helper) { lastCol = col; send(col); }
+      let f = {}; try { f = JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { }
+      const fs = `features alttab=${f.alttab === false ? 0 : 1} clip=${f.clip === false ? 0 : 1} shot=${f.shot === false ? 0 : 1}`;
+      if (fs !== lastFeat && helper) { lastFeat = fs; send(fs); }
       const bs = 'barstyle ' + (t.sticky ? 1 : 0);
       if (bs !== lastBar) { lastBar = bs; send(bs); }
       if (m !== lastMode) { lastMode = m; send(m); log('mode ' + m + (helper ? '' : ' (no helper yet)')); }
@@ -279,6 +285,7 @@
       else if (e.key === 'valo.focusMenu') send('activatetitle Zebar - quill / menu');
       else if (e.key === 'valo.focusWin' && e.newValue) send('activatetitle ' + e.newValue.split('|')[0]);
       else if (e.key === 'valo.theme') { lastSig = ''; render(); setTimeout(syncDock, 350); }
+      else if (e.key === 'valo.features') syncDock();
     });
 
     log('dock start');
