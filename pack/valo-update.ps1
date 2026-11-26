@@ -5,7 +5,7 @@
 #   { "version": "1.2.0", "date": "...", "notes": ["..."], "files": [ { "path": "pack/bar.html", "sha256": "..." }, ... ] }
 #   pack/*        -> %USERPROFILE%\.glzr\zebar\quill\
 #   wallpapers/*  -> %LOCALAPPDATA%\valo\wallpapers\
-param([switch]$Check, [switch]$Apply, [string]$Repo = 'SOVALONE/valo-os', [string]$Branch = 'main')
+param([switch]$Check, [switch]$Apply, [string]$Repo = 'SOVALONE/valo-os', [string]$Branch = 'main', [string]$BaseUrl, [switch]$NoRestart)   # BaseUrl / NoRestart: testing
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -17,7 +17,7 @@ function Log($m) { Add-Content -LiteralPath $log -Value ((Get-Date -f 'yyyy-MM-d
 function Out-Json($o) { [Console]::Out.Write(($o | ConvertTo-Json -Compress -Depth 4)) }
 function Ver($s) { try { [version]$s } catch { [version]'0.0.0' } }
 
-$base = "https://raw.githubusercontent.com/$Repo/$Branch"
+$base = if ($BaseUrl) { $BaseUrl.TrimEnd('/') } else { "https://raw.githubusercontent.com/$Repo/$Branch" }
 $current = '0.0.0'
 try { $current = (Get-Content (Join-Path $pack 'version.json') -Raw | ConvertFrom-Json).version } catch { }
 
@@ -67,6 +67,7 @@ Remove-Item $stage -Recurse -Force
 Log "installed $($remote.version), backup $bk"
 Out-Json @{ ok = $true; version = $remote.version; backup = $bk }
 
+if ($NoRestart) { return }
 # ---- restart Zebar from a detached process (this script is a child of Zebar)
 $zebar = 'C:\Program Files\glzr.io\Zebar\zebar.exe'
 $cmd = "Start-Sleep -Milliseconds 800; Stop-Process -Name zebar -Force; Start-Sleep -Milliseconds 1800; Start-Process '$zebar'"
