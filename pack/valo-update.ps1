@@ -47,7 +47,7 @@ foreach ($f in $remote.files) {
     if ($rel -notmatch '^(pack|wallpapers)/[A-Za-z0-9._/-]+$' -or $rel -match '\.\.') { Out-Json @{ ok = $false; error = "Підозрілий шлях у маніфесті: $rel" }; return }
     $dst = Join-Path $stage ($rel -replace '/', '\')
     New-Item -ItemType Directory -Force (Split-Path $dst) | Out-Null
-    try { Invoke-WebRequest -Uri "$base/$rel" -OutFile $dst -UseBasicParsing -TimeoutSec 60 }
+    try { Invoke-WebRequest -Uri "$base/$($rel)?v=$($remote.version)" -OutFile $dst -UseBasicParsing -TimeoutSec 60 }   # ?v= skips stale CDN copies
     catch { Log "download failed $rel : $_"; Out-Json @{ ok = $false; error = "Не вдалося завантажити $rel" }; return }
     $h = (Get-FileHash $dst -Algorithm SHA256).Hash
     if ($h -ne ([string]$f.sha256).ToUpper()) { Log "hash mismatch $rel"; Out-Json @{ ok = $false; error = "Файл $rel пошкоджений (не збігається SHA-256)" }; return }
