@@ -272,10 +272,14 @@
       <div class="cbtns"><button id="welcomeBtn">Майстер першого запуску</button></div>
       <h3>Оновлення valo.os</h3>
       <div class="upd"><div class="grow"><b id="updVer">valo.os</b><span id="updMsg">Ще не перевірено</span><ul id="updNotes"></ul></div><button id="updBtn">Перевірити</button></div>
+      <div class="seg" id="chanSeg"><button data-v="stable">Стабільні версії</button><button data-v="beta">Бета (раніше, але ризиковіше)</button></div>
+      <div class="cbtns"><button id="updRollback">Повернути попередню версію</button><button id="updNews">Що нового</button></div>
+      <div class="hint" id="updHint">Оновлення підписані ключем valo.os — підроблені встановлені не будуть.</div>
     </div>
 
     <footer>
       <div class="user"><div class="av" id="av">?</div><span id="user"></span></div>
+      <button class="btn nf" data-act="update" data-tip="Перевірити оновлення">&#xF0162;</button>
       <button class="btn nf" data-act="store" data-tip="Магазин програм">&#xF0110;</button>
       <button class="btn nf" data-act="panel" data-tip="Панель і теми">&#xF03D8;</button>
       <button class="btn nf" data-act="settings" data-tip="Налаштування Windows">&#xF0493;</button>
@@ -737,12 +741,17 @@
         $('updMsg').textContent = 'Доступна версія ' + upd.latest;
         for (const n of upd.notes || []) { const li = document.createElement('li'); li.textContent = n; notes.append(li); }
         btn.textContent = 'Оновити'; btn.classList.add('go');
-      } else { $('updMsg').textContent = 'Встановлено останню версію'; btn.textContent = 'Перевірити'; }
-      document.querySelector('[data-act="panel"]').classList.toggle('badge', !!upd?.available);
+      } else {
+        $('updMsg').textContent = upd.news?.length ? 'Оновлено до ' + upd.current + ' — що нового:' : 'Встановлено останню версію';
+        for (const n of upd.news || []) { const li = document.createElement('li'); li.textContent = n; notes.append(li); }
+        btn.textContent = 'Перевірити';
+      }
+      document.querySelector('[data-act="update"]').classList.toggle('badge', !!upd?.available);
     }
     function saveUpd() { const { busy, ...keep } = upd || {}; localStorage.setItem('valo.upd', JSON.stringify(keep)); renderUpdate(); }
+    const channel = () => localStorage.getItem('valo.channel') || 'stable';
     async function runUpdate(flag) {
-      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-update.ps1', flag]).catch(e => ({ stdout: JSON.stringify({ error: String(e) }) }));
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-update.ps1', flag, '-Channel', channel()]).catch(e => ({ stdout: JSON.stringify({ error: String(e) }) }));
       try { return JSON.parse((r.stdout || '').trim()); } catch { return { error: 'Помилка оновлювача' }; }
     }
     async function checkUpdate() {
@@ -757,9 +766,37 @@
       upd = { ...upd, busy: 'Завантажую й встановлюю ' + upd.latest + '… панель перезапуститься' }; renderUpdate();
       const r = await runUpdate('-Apply');
       upd = r.ok ? { current: r.version || upd.latest, available: false } : { ...upd, error: r.error || 'Не вдалося оновити' };
-      saveUpd();
+      saveUpd();\n    };\n    renderUpdate();
+
+    // ---------- channel, rollback, what's new
+    function renderChan() {
+      for (const b of $('chanSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', b.dataset.v === channel());
+        b.onclick = () => { localStorage.setItem('valo.channel', b.dataset.v); renderChan(); checkUpdate(); };
+      }
+    }
+    renderChan();
+    let rbArmed = 0;
+    $('updRollback').onclick = async () => {
+      if (Date.now() - rbArmed > 3000) { rbArmed = Date.now(); $('updRollback').textContent = 'Натисніть ще раз — відкотити'; setTimeout(() => $('updRollback').textContent = 'Повернути попередню версію', 3000); return; }
+      rbArmed = 0;
+      $('updHint').textContent = 'Повертаю попередню версію… панель перезапуститься';
+      const r = await runUpdate('-Rollback');
+      $('updHint').textContent = r.ok ? 'Повернуто версію ' + r.version + '.' : (r.error || 'Не вдалося відкотити');
     };
-    renderUpdate();
+    $('updNews').onclick = () => { zebar.shellExec('explorer', ['https://github.com/SOVALONE/valo-os/releases']).catch(() => {}); close(); };
+    // after an update: tell once what's new (Windows notification + list in this section)
+    (async () => {
+      const r = await runUpdate('-Current');
+      if (!r || !r.current) return;
+      const seen = localStorage.getItem('valo.seenVersion');
+      localStorage.setItem('valo.seenVersion', r.current);
+      upd = { ...(upd || {}), current: r.current }; saveUpd();
+      if (seen && seen !== r.current) {
+        upd = { current: r.current, available: false, news: r.notes || [] }; saveUpd();
+        zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-toast.ps1', '-Title', 'valo.os оновлено до ' + r.current, '-Text', (r.notes || []).slice(0, 3).join(' · ')]).catch(() => {});
+      }
+    })();
     // start hidden; the bar opens us
     visible = true; close();
     log('menu ready');
@@ -998,6 +1035,7 @@
       b.onmouseleave = () => { tip.classList.remove('on'); b.classList.remove('arm'); };
       b.onclick = () => {
         if (b.dataset.act === 'panel') { showPage(page === 'settings' ? 'main' : 'settings'); return; }
+        if (b.dataset.act === 'update') { showPage('settings'); showTab('data'); checkUpdate(); setTimeout(() => $('updBtn').scrollIntoView({ block: 'center', behavior: 'smooth' }), 80); return; }
         if (b.dataset.act === 'store') { if (page === 'store') showPage('main'); else openStore(); return; }
         if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; return; }
         ACT[b.dataset.act]()?.catch?.(() => {});

@@ -1,5 +1,23 @@
-# valo.os — оновлення
+# valo.os
 
-Файли оновлень для valo.os: верхня панель, меню, док і центр керування (Zebar-пак `pack/`) та живі шпалери для Lively Wallpaper (`wallpapers/`).
+Оболонка для Windows 11 у стилі «Сакура»: верхня панель, меню з розумним пошуком, док, центр керування, живі шпалери, свій Alt+Tab, історія буфера, знімки, емодзі, теми — і оновлення з цього репозиторію.
 
-Оновлення ставиться з меню valo.os: «Налаштування панелі» → «Оновлення valo.os». Оновлювач (`pack/valo-update.ps1`) читає `version.json`, завантажує файли, перевіряє SHA-256, робить резервну копію і перезапускає панель.
+## Встановити на свою Windows 11
+
+У PowerShell (без прав адміністратора; Windows може попросити дозвіл на встановлення Zebar):
+
+```powershell
+irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/install.ps1 | iex
+```
+
+Бета-версії: ` = 'beta'` перед командою.
+
+## Видалити
+
+```powershell
+irm https://raw.githubusercontent.com/SOVALONE/valo-os/main/uninstall.ps1 | iex
+```
+
+## Оновлення
+
+Меню valo.os → «Перевірити оновлення». Кожен випуск підписаний ключем valo.os (RSA-3072): `stable.json` / `beta.json` + `.sig`, файли випуску в `releases/<версія>/` з SHA-256. Історія змін — [Releases](https://github.com/SOVALONE/valo-os/releases).
