@@ -22,7 +22,8 @@ $current = '0.0.0'
 try { $current = (Get-Content (Join-Path $pack 'version.json') -Raw | ConvertFrom-Json).version } catch { }
 
 try {
-    $remote = Invoke-RestMethod -Uri "$base/version.json?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())" -UseBasicParsing -TimeoutSec 15
+    $resp = Invoke-WebRequest -Uri "$base/version.json?t=$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())" -UseBasicParsing -TimeoutSec 15
+    $remote = [Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()).TrimStart([char]0xFEFF) | ConvertFrom-Json   # always UTF-8, whatever the server says
 } catch {
     Log "check failed: $_"
     Out-Json @{ current = $current; error = 'Не вдалося перевірити оновлення (немає інтернету або репозиторію).' }
