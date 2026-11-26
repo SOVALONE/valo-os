@@ -1,0 +1,14 @@
+{
+    "AppVersion":  "1.0.0.0",
+    "Title":  "valo.os — Графіт",
+    "Thumbnail":  "thumbnail.png",
+    "Preview":  null,
+    "Desc":  "Монохромна мережа точок, що тягнеться до курсора.",
+    "Author":  "valo.os",
+    "License":  "MIT",
+    "Contact":  "",
+    "Type":  1,
+    "FileName":  "index.html",
+    "Arguments":  null,
+    "IsAbsolutePath":  false
+}

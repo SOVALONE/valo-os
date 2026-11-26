@@ -1,0 +1,208 @@
+{
+    "version":  "1.1.0",
+    "date":  "2026-11-26",
+    "notes":  [
+                  "Док valo.os замість панелі задач: прев\u0027ю вікон, перекриття й автоховання",
+                  "Центр керування, медіа на панелі, кошик у доці",
+                  "Живі шпалери під кожну тему (Lively Wallpaper)",
+                  "Оновлення valo.os з GitHub"
+              ],
+    "files":  [
+                  {
+                      "path":  "pack/bar.html",
+                      "sha256":  "677ec0f69af75ed7ec2df6530837baa2937e3059a80323332dd467932984aa04"
+                  },
+                  {
+                      "path":  "pack/control.html",
+                      "sha256":  "5b43a0e9ad166dcf413b061671ec7f14b30420cf2ec76c882ad2e520de965d3e"
+                  },
+                  {
+                      "path":  "pack/dock.html",
+                      "sha256":  "3c093b2d9ea91ee0751596353993a0a0ed4d6514a53858961c301010ac8ed063"
+                  },
+                  {
+                      "path":  "pack/menu.html",
+                      "sha256":  "c3f8469ec4b69111c23dd902b4df4b488f1651ca6e24f0c55f415d33f58d9be9"
+                  },
+                  {
+                      "path":  "pack/themes.js",
+                      "sha256":  "0da5d9a081d387d611ea764dee133925db588293538ccca45ba1a78f153aa9fc"
+                  },
+                  {
+                      "path":  "pack/valo-apps.ps1",
+                      "sha256":  "5905d0d082c0f52b9a2deaf8d6d29e85702936caf8e399878248ef6c635153a8"
+                  },
+                  {
+                      "path":  "pack/valo-bar-apply.ps1",
+                      "sha256":  "6eaecc1a89a44acef8d4f72f26289737f8320578242c9c2cd8fa0d9698f52f2d"
+                  },
+                  {
+                      "path":  "pack/valo-cc.ps1",
+                      "sha256":  "ccbc0bf00b056e45405d68bacea8a71ffec8a0011a363bbea837b4c4474139a1"
+                  },
+                  {
+                      "path":  "pack/valo-shell.ps1",
+                      "sha256":  "57bf9f76de33b4357e757867c678c438eea9fbee6235998ef3b60ec31f46333c"
+                  },
+                  {
+                      "path":  "pack/valo-update.ps1",
+                      "sha256":  "ebd3430bc49550be93a7d447f3d0ef5467dee1abee6bfd6e559d743e22ba4a42"
+                  },
+                  {
+                      "path":  "pack/valo-wallpaper.ps1",
+                      "sha256":  "ef6cbd980d962a2d0736b24bacae45e255d77d0dcd89c180d5f67f3bf25a3af0"
+                  },
+                  {
+                      "path":  "pack/zebar.js",
+                      "sha256":  "0288c33e57500768645fe011c16ab460c105efaa7977d44586731ced3d3d0a9a"
+                  },
+                  {
+                      "path":  "pack/zpack.json",
+                      "sha256":  "a62ca998bb977ff2237fb1a0fa80e40110bfeba72a627a587076dc1541c14cc4"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/LivelyInfo.json",
+                      "sha256":  "095088d7866e78e094a326a268548d6fee72d630f2f7f1b62c72f76d09893dd0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/LivelyProperties.json",
+                      "sha256":  "56c29d2de8717d694cdb7bf2518d3476b9a3e1343b76114f61ea42d11c818a6a"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/theme.js",
+                      "sha256":  "d78d27895c12f27caf10402fd167fed1133415796b91068ec7a860712e292062"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/thumbnail.png",
+                      "sha256":  "f3135dff2ab11fc97bd7d1f9490a45dbe7301b1f5f8c6a4e568714bed22506d1"
+                  },
+                  {
+                      "path":  "wallpapers/valo-graphite/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/LivelyInfo.json",
+                      "sha256":  "098e73295c3ad1ea7e5e31f2e8741bf2ccc8eab9203981327b0cf44a4646cb19"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/LivelyProperties.json",
+                      "sha256":  "eef589f62eea46b435b7c604cee1196325225c4469b8c756b77c8ec6660d5c13"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/theme.js",
+                      "sha256":  "3b962a255c762ba6e8f48b8831ef2d0c2e257759784945e4b2c0e2ed64ada8d5"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/thumbnail.png",
+                      "sha256":  "0f7931ce95c93ec251e6131d783ef5e674e8126fc87bb140b6d5fa1f56eb13b7"
+                  },
+                  {
+                      "path":  "wallpapers/valo-latte/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/LivelyInfo.json",
+                      "sha256":  "02d30d55c8f42bf38f7621c076c227e2f0cf69e96ffcbae193ec5a39e755968c"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/LivelyProperties.json",
+                      "sha256":  "53a664432f83414dd893d2cf785ded83d1f9590aa0e4700ea7e35861cc7b4d0b"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/theme.js",
+                      "sha256":  "b4e8747d769d8ea02547386112321b09bb12f31382902bb8551940a8c0db8118"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/thumbnail.png",
+                      "sha256":  "4899fbe6792b75b6fcc6192f58d91efc4e8fd99a88dc4622e5683b78fbb0367a"
+                  },
+                  {
+                      "path":  "wallpapers/valo-matcha/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/LivelyInfo.json",
+                      "sha256":  "3a1b4d8e8341abe2485bb13d4c2455832dc49481b3ab6aa8e9f76c308350658f"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/LivelyProperties.json",
+                      "sha256":  "7db6467c7fd1798e0cd444ade310f575cc09ed144bf6e5fd592b2aba8fa1cbcd"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/theme.js",
+                      "sha256":  "e444559bf7da07d5fd81d3a1e845dfc6aa3e5f35e03f758e2a423d929ce1d157"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/thumbnail.png",
+                      "sha256":  "31c0d4137f06f6c264ec06e4eefc84a8a99292b12820e007284b9f82e18b89d6"
+                  },
+                  {
+                      "path":  "wallpapers/valo-night/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/LivelyInfo.json",
+                      "sha256":  "6567393d30f4d1d19418dadbdc9d6f59c067b8c80f093d494ea8c9297c5b3be5"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/LivelyProperties.json",
+                      "sha256":  "801ea50e702328134dba90815f4fe4177d594ec5e70415c2d6b22aa700558928"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/theme.js",
+                      "sha256":  "d1e0523c4317694506f99049df33871760967f58b1338d8f1826a9df032defac"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/thumbnail.png",
+                      "sha256":  "abcc37629e08374627fe148d266b263d5bb159194aaf70d79fe3365260a414d4"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sakura/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/index.html",
+                      "sha256":  "f77f95a8650ae35b43c3ab07c5dd62991817330aeff64279198fbbd942d839e0"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/LivelyInfo.json",
+                      "sha256":  "5ce039c35bd8e60785f3ff85e37818d700cec0d21dfcc3742781a10de294ca8b"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/LivelyProperties.json",
+                      "sha256":  "b833c25c546fa89cd22d0c2c6bb943bbdd19bd7bb0417024a1435624368b71fe"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/theme.js",
+                      "sha256":  "f0ef35c67f94f4708e78ba32232c9aceb209af8447e32090334a33f60a85e1fa"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/thumbnail.png",
+                      "sha256":  "ef1cb28a7455db9e68870f6fec17a7b03a55e0abe0d79c39eb0df3be9e018064"
+                  },
+                  {
+                      "path":  "wallpapers/valo-sunset/wallpaper.js",
+                      "sha256":  "5468b41137743ff86300a08c79eec6d45eaf4aa05c6f3f2179535ee5f730c511"
+                  }
+              ]
+}

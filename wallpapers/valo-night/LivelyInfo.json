@@ -1,0 +1,14 @@
+{
+    "AppVersion":  "1.0.0.0",
+    "Title":  "valo.os — Нічне місто",
+    "Thumbnail":  "thumbnail.png",
+    "Preview":  null,
+    "Desc":  "Неонове місто під дощем, вікна вмикаються й гаснуть.",
+    "Author":  "valo.os",
+    "License":  "MIT",
+    "Contact":  "",
+    "Type":  1,
+    "FileName":  "index.html",
+    "Arguments":  null,
+    "IsAbsolutePath":  false
+}

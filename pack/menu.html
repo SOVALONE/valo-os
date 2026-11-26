@@ -1,0 +1,509 @@
+﻿<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  /* theme variables come from themes.js; these are the Sakura defaults */
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+    --chip-hi: var(--hi); --pink: var(--accent); --rose: var(--accent2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); padding: 6px; }
+  .nf { font-family: 'JetBrainsMono Nerd Font', 'JetBrainsMono NF', monospace; font-style: normal; }
+
+  .menu {
+    height: 100%; min-width: 0; overflow: hidden; display: flex; flex-direction: column; gap: 12px;
+    background: color-mix(in srgb, var(--solid) 97%, transparent); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35); padding: 16px;
+    opacity: 0; transform: translateY(-10px) scale(.98); transform-origin: top left;
+    transition: opacity .18s ease, transform .22s cubic-bezier(.2, .8, .2, 1);
+  }
+  .menu.show { opacity: 1; transform: none; }
+  .sticky body { padding: 0; }
+  .sticky .menu { border-radius: 0; box-shadow: none; }
+  .page { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+  .page[hidden] { display: none; }
+
+  /* panel settings */
+  .back { display: flex; align-items: center; gap: 10px; }
+  .back button { all: unset; cursor: pointer; width: 32px; height: 32px; border-radius: var(--chipRadius); display: grid; place-items: center;
+    color: var(--pink); font-size: 18px; background: var(--chip); font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
+  .back button:hover { background: var(--chip-hi); }
+  .back b { font-size: 16px; font-weight: 600; }
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; }
+  .card { cursor: pointer; border-radius: 12px; padding: 10px; background: var(--chip); border: 2px solid transparent; transition: border-color .15s, transform .15s; }
+  .card:hover { transform: translateY(-1px); }
+  .card.on { border-color: var(--pink); }
+  .card .pv { height: 30px; display: flex; align-items: center; gap: 5px; padding: 0 7px; margin-bottom: 8px; }
+  .card .pv i { display: block; height: 14px; }
+  .card .pv .lg { width: 14px; }
+  .card .pv .c { width: 22px; }
+  .card .pv .sp { flex: 1; }
+  .card b { display: block; font-size: 13px; }
+  .card span { font-size: 11px; color: var(--muted); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--chip); border-radius: var(--chipRadius); padding: 4px; gap: 4px; }
+  .seg button { all: unset; cursor: pointer; text-align: center; padding: 9px 4px; border-radius: calc(var(--chipRadius) - 2px); color: var(--muted); transition: background .15s, color .15s; }
+  .seg button.on { background: var(--pink); color: var(--ink); font-weight: 600; }
+  .seg.three { grid-template-columns: 1fr 1fr 1fr; }
+  #sizeWrap { display: flex; flex-direction: column; gap: 12px; }
+  #sizeWrap[hidden] { display: none; }
+  .hint { color: var(--muted); font-size: 12px; margin: -4px 4px 0; }
+  #settings { overflow-y: auto; margin-right: -8px; padding-right: 8px; }
+  #settings > * { flex: none; }
+  #settings .themes { overflow: visible; }
+
+  header { display: flex; align-items: center; gap: 10px; }
+  header .mark { width: 34px; height: 34px; border-radius: min(var(--chipRadius), 9px); background: var(--pink); display: grid; place-items: center; }
+  header .mark svg { width: 28px; height: 28px; }
+  .mark svg g[fill] { fill: var(--ink); }
+  .mark svg [stroke] { stroke: var(--accent); }
+  header .name { font-family: 'Gabriola', serif; font-size: 34px; line-height: 30px; color: var(--pink); }
+  header .when { margin-left: auto; text-align: right; color: var(--muted); font-size: 12px; line-height: 16px; }
+  header .when b { display: block; color: var(--text); font-size: 18px; font-weight: 600; }
+
+  .search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: var(--chipRadius);
+    background: var(--chip); border: 1px solid transparent; transition: border-color .2s; }
+  .search:focus-within { border-color: var(--pink); }
+  .search i { color: var(--pink); font-size: 15px; }
+  .search input { all: unset; flex: 1; color: var(--text); font-size: 14px; }
+  .search input::placeholder { color: var(--muted); }
+
+  h3 { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 2px 4px 0; }
+
+  .pins { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .pin { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 8px; border-radius: 10px; cursor: pointer; transition: background .15s; }
+  .pin:hover, .pin.sel { background: var(--chip-hi); }
+  .pin span { font-size: 11px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+  .pin .ic { width: 32px; height: 32px; }
+
+  .list { flex: 1; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+  .list::-webkit-scrollbar { width: 6px; }
+  .list::-webkit-scrollbar-thumb { background: var(--hi); border-radius: 3px; }
+  .letter { color: var(--pink); font-weight: 700; font-size: 12px; padding: 8px 8px 2px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+  .row:hover, .row.sel { background: var(--chip-hi); }
+  .row .ic { width: 24px; height: 24px; flex: none; }
+  .row span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .star { margin-left: auto; color: var(--pink); font-size: 11px; }
+  .ic { border-radius: 6px; object-fit: contain; }
+  .tile { display: grid; place-items: center; background: var(--chip-hi); color: var(--pink); font-weight: 700; }
+  .empty { color: var(--muted); padding: 20px 8px; text-align: center; }
+
+  footer { display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .user { display: flex; align-items: center; gap: 8px; color: var(--text); margin-right: auto; }
+  .user .av { width: 28px; height: 28px; border-radius: 99px; background: var(--chip-hi); color: var(--pink); display: grid; place-items: center; font-weight: 700; }
+  .btn { all: unset; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; cursor: pointer;
+    color: var(--text); font-size: 17px; transition: background .15s, color .15s; position: relative;
+    font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
+  .btn:hover { background: var(--chip-hi); color: var(--pink); }
+  .btn.arm { background: var(--rose); color: var(--ink); }
+  .tip { position: fixed; left: 50%; bottom: 66px; transform: translateX(-50%); background: var(--chip-hi); color: var(--text);
+    padding: 5px 10px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .15s; pointer-events: none; white-space: nowrap; }
+  .tip.on { opacity: 1; }
+
+  /* updates */
+  .upd { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: var(--chipRadius); padding: 10px 12px; }
+  .upd .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .upd .grow span { color: var(--muted); font-size: 11px; }
+  .upd .grow ul { margin: 4px 0 0 16px; color: var(--muted); font-size: 11px; }
+  .upd button { all: unset; cursor: pointer; padding: 7px 12px; border-radius: calc(var(--chipRadius) - 2px); background: var(--hi); color: var(--text); font-size: 12px; white-space: nowrap; }
+  .upd button:hover { color: var(--pink); }
+  .upd button.go { background: var(--pink); color: var(--ink); font-weight: 600; }
+  .upd button:disabled { opacity: .5; pointer-events: none; }
+  .btn.badge::after { content: ''; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); }
+</style>
+</head>
+<body>
+  <div class="menu" id="menu">
+    <header>
+      <div class="mark"><svg viewBox="-118 -150 236 236"><defs><path id="bl" d="M0 -130 C 1 -62, 3 -38, 23 -23 C 17 -27, 12 -29, 9 -29 A 14 14 0 0 0 0 -23 A 14 14 0 0 0 -9 -29 C -12 -29, -17 -27, -23 -23 C -3 -38, -1 -62, 0 -130 Z"/><g id="lb"><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g></defs><g fill="#1e1a1f"><use href="#bl"/><use href="#bl" transform="rotate(120)"/><use href="#bl" transform="rotate(240)"/><use href="#lb" stroke="#f2a7bb" stroke-width="3.5"/><use href="#lb"/></g><g stroke="#f2a7bb" stroke-width="3" stroke-linecap="round"><line x1="0" y1="0" x2="0" y2="-14"/><line x1="0" y1="0" x2="12.1" y2="7"/><line x1="0" y1="0" x2="-12.1" y2="7"/></g></svg></div>
+      <div class="name">valo.os</div>
+      <div class="when"><b id="time">--:--</b><span id="date"></span></div>
+    </header>
+
+    <div class="page" id="main">
+    <label class="search"><i class="nf">&#xF0349;</i><input id="q" placeholder="Пошук програм…" autocomplete="off" spellcheck="false" /></label>
+
+    <div id="pinsWrap">
+      <h3>Закріплені</h3>
+      <div class="pins" id="pins"></div>
+    </div>
+    <h3 id="listTitle">Усі програми</h3>
+    <div class="list" id="list"><div class="empty">Завантаження…</div></div>
+    </div>
+
+    <div class="page" id="settings" hidden>
+      <div class="back"><button id="backBtn" class="nf">&#xF0141;</button><b>Налаштування панелі</b></div>
+      <h3>Тема</h3>
+      <div class="themes" id="themes"></div>
+      <h3>Стиль панелі</h3>
+      <div class="seg" id="seg"><button data-sticky="0">Плаваюча</button><button data-sticky="1">Липка</button></div>
+      <div id="sizeWrap">
+        <h3>Розмір липкої панелі</h3>
+        <div class="seg three" id="sizeSeg"><button data-size="100">100%</button><button data-size="75">75%</button><button data-size="50">50%</button></div>
+      </div>
+      <div class="hint" id="hint"></div>
+      <h3>Док</h3>
+      <div class="seg" id="dockSeg"><button data-dsticky="0">Плаваючий</button><button data-dsticky="1">Липкий</button></div>
+      <div class="seg three" id="ovSeg"><button data-ov="0">Не перекривати</button><button data-ov="1">Перекривати</button><button data-ov="2">Перекривати й ховати</button></div>
+      <div class="hint" id="dockHint"></div>
+      <div class="seg" id="trashSeg"><button data-tr="1">Кошик у доці</button><button data-tr="0">Без кошика</button></div>
+      <h3>Панель задач Windows</h3>
+      <div class="seg" id="tbSeg"><button data-tb="1">Сховати (док valo.os)</button><button data-tb="0">Показати</button></div>
+      <h3>Живі шпалери</h3>
+      <div class="seg" id="wpSeg"><button data-wp="1">Змінювати з темою</button><button data-wp="0">Не чіпати</button></div>
+      <div class="hint" id="wpHint">Потрібен Lively Wallpaper. Кожна тема має свої анімовані шпалери.</div>
+      <h3>Оновлення valo.os</h3>
+      <div class="upd"><div class="grow"><b id="updVer">valo.os</b><span id="updMsg">Ще не перевірено</span><ul id="updNotes"></ul></div><button id="updBtn">Перевірити</button></div>
+    </div>
+
+    <footer>
+      <div class="user"><div class="av" id="av">?</div><span id="user"></span></div>
+      <button class="btn nf" data-act="panel" data-tip="Панель і теми">&#xF03D8;</button>
+      <button class="btn nf" data-act="settings" data-tip="Налаштування Windows">&#xF0493;</button>
+      <button class="btn nf" data-act="lock" data-tip="Заблокувати">&#xF033E;</button>
+      <button class="btn nf" data-act="logout" data-tip="Вийти" data-confirm="1">&#xF0343;</button>
+      <button class="btn nf" data-act="sleep" data-tip="Сон">&#xF0904;</button>
+      <button class="btn nf" data-act="restart" data-tip="Перезавантажити" data-confirm="1">&#xF0709;</button>
+      <button class="btn nf" data-act="shutdown" data-tip="Вимкнути" data-confirm="1">&#xF0425;</button>
+    </footer>
+  </div>
+  <div class="tip" id="tip"></div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import { THEMES, getTheme, saveTheme } from './themes.js';
+    // panel height changes need a Zebar restart with another preset (and a GlazeWM gap update)
+    let applyTimer = null;
+    function applyBarSize() {
+      clearTimeout(applyTimer);
+      applyTimer = setTimeout(() => {
+        const t = getTheme();
+        const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', widget.htmlPath.replace(/[\\/][^\\/]+$/, '') + '\\valo-bar-apply.ps1', '-Size', String(t.size || 100)];
+        if (t.sticky) args.push('-Sticky');
+        zebar.shellExec('powershell', args).catch(() => {});
+      }, 700);
+    }
+
+    const $ = id => document.getElementById(id);
+    const widget = zebar.currentWidget();
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const appsScript = dir + '\\valo-apps.ps1';
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    const days = ['неділя', 'понеділок', 'вівторок', 'середа', 'четвер', "п'ятниця", 'субота'];
+    const months = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+
+    let apps = [];
+    let pins = JSON.parse(localStorage.getItem('valo.pins') || 'null');
+    let sel = 0;
+    // ---------- show / hide (the menu window lives for the whole session; the bar button toggles it)
+    const win = widget.tauriWindow ?? widget.window?.tauri;
+    const log = msg => zebar.shellExec('powershell', [...PS, '-Command',
+      `Add-Content -LiteralPath "$env:TEMP\\valo-menu.log" -Value ('${new Date().toISOString()} ' + '${String(msg).replace(/'/g, '')}')`]).catch(() => {});
+    let visible = true;
+    let mode = null;   // 'native' (window hide/show) or 'ghost' (transparent + click-through)
+
+    async function hideWin() {
+      if (mode !== 'ghost') {
+        try { await win.hide(); mode = 'native'; return; } catch (e) { log('hide failed: ' + e); mode = 'ghost'; }
+      }
+      try { await win.setIgnoreCursorEvents(true); } catch (e) { log('ignore-cursor failed: ' + e); }
+    }
+    async function showWin() {
+      if (mode === 'native') { try { await win.show(); } catch (e) { log('show failed: ' + e); } }
+      else { try { await win.setIgnoreCursorEvents(false); } catch (e) { log('ignore-cursor off failed: ' + e); } }
+      // window focus is not allowed by Zebar's ACL: the dock's helper activates us (Alt trick), AppActivate is a backup
+      localStorage.setItem('valo.focusMenu', String(Date.now()));
+      zebar.shellExec('powershell', [...PS, '-Command', "(New-Object -ComObject WScript.Shell).AppActivate('Zebar - quill / menu') | Out-Null"]).catch(() => {});
+    }
+
+    async function close() {
+      if (!visible) return;
+      visible = false;
+      localStorage.setItem('valo.menuClosed', String(Date.now()));
+      $('menu').classList.remove('show');
+      setTimeout(hideWin, 150);
+    }
+    let page = 'main';
+    function showPage(p) {
+      page = p;
+      $('main').hidden = p !== 'main';
+      $('settings').hidden = p !== 'settings';
+      if (p === 'settings') renderSettings(); else setTimeout(() => $('q').focus(), 30);
+    }
+    async function open(p = 'main') {
+      if (visible) return;
+      visible = true;
+      $('q').value = ''; sel = 0; render(); $('list').scrollTop = 0;
+      showPage(p);
+      await showWin();
+      requestAnimationFrame(() => $('menu').classList.add('show'));
+      if (p === 'main') setTimeout(() => $('q').focus(), 60);
+      refreshIfStale();
+    }
+    window.addEventListener('blur', () => setTimeout(() => { if (visible && !document.hasFocus()) close(); }, 80));
+    window.addEventListener('storage', e => {
+      if (e.key !== 'valo.menuToggle' || !e.newValue) return;
+      localStorage.setItem('valo.menuAck', e.newValue);
+      const want = e.newValue.startsWith('settings:') ? 'settings' : 'main';
+      if (!visible) open(want);
+      else if (want !== page) showPage(want);
+      else close();
+    });
+
+    // ---------- panel settings: theme presets + floating / sticky
+    function renderSettings() {
+      const cur = getTheme();
+      const box = $('themes'); box.innerHTML = '';
+      for (const [id, th] of Object.entries(THEMES)) {
+        const v = th.vars;
+        const card = document.createElement('div');
+        card.className = 'card' + (cur.id === id ? ' on' : '');
+        const r = cur.sticky ? '0' : v.radius, cr = cur.sticky ? '2px' : v.chipRadius;
+        card.innerHTML = `
+          <div class="pv" style="background:${v.bg};border:1px solid ${v.border};border-radius:${r}">
+            <i class="lg" style="background:${v.accent};border-radius:${cr}"></i>
+            <i class="sp"></i>
+            <i class="c" style="background:${v.chip};border-radius:${cr}"></i>
+            <i class="c" style="background:${v.chip};border-radius:${cr}"></i>
+            <i class="c" style="background:${v.accent2};border-radius:${cr};width:10px"></i>
+          </div>
+          <b></b><span></span>`;
+        card.querySelector('b').textContent = th.name;
+        card.querySelector('span').textContent = th.desc;
+        card.onclick = () => { saveTheme({ id }); renderSettings(); syncWallpaper(); };
+        box.appendChild(card);
+      }
+      for (const b of $('seg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.sticky === '1') === !!cur.sticky);
+        b.onclick = () => { const st = b.dataset.sticky === '1'; if (st === !!getTheme().sticky) return; saveTheme({ sticky: st }); renderSettings(); if ((getTheme().size || 100) !== 100) applyBarSize(); };
+      }
+      sizeWrap.hidden = !cur.sticky;
+      for (const b of sizeSeg.querySelectorAll('button')) {
+        b.classList.toggle('on', Number(b.dataset.size) === (cur.size || 100));
+        b.onclick = () => { const z = Number(b.dataset.size); if (z === (getTheme().size || 100)) return; saveTheme({ size: z }); renderSettings(); applyBarSize(); };
+      }
+      for (const b of $('dockSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.dsticky === '1') === !!cur.dockSticky);
+        b.onclick = () => { saveTheme({ dockSticky: b.dataset.dsticky === '1' }); renderSettings(); };
+      }
+      for (const b of $('ovSeg').querySelectorAll('button')) {
+        const ov = !cur.dockOverlap ? 0 : cur.dockHide ? 2 : 1;
+        b.classList.toggle('on', Number(b.dataset.ov) === ov);
+        b.onclick = () => { const v = Number(b.dataset.ov); saveTheme({ dockOverlap: v > 0, dockHide: v === 2 }); renderSettings(); };
+      }
+      for (const b of $('trashSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.tr === '1') === (cur.dockTrash !== false));
+        b.onclick = () => { saveTheme({ dockTrash: b.dataset.tr === '1' }); renderSettings(); };
+      }
+      $('dockHint').textContent = cur.dockOverlap && cur.dockHide
+        ? 'Док ховається, коли на ньому немає курсора. Щоб показати — доведіть курсор до нижнього краю екрана.'
+        : cur.dockOverlap
+        ? 'Док лежить поверх вікон: розгорнуті програми займають увесь екран до низу.'
+        : 'Док резервує місце: розгорнуті вікна зупиняються над ним.';
+      for (const b of $('wpSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.wp === '1') === (cur.wallSync !== false));
+        b.onclick = () => { saveTheme({ wallSync: b.dataset.wp === '1' }); renderSettings(); syncWallpaper(); };
+      }
+      renderUpdate();
+      if (Date.now() - (+localStorage.getItem('valo.updCheckedAt') || 0) > 6 * 3600e3) checkUpdate();
+      const hideTb = localStorage.getItem('valo.taskbarHide') !== '0';
+      for (const b of $('tbSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', (b.dataset.tb === '1') === hideTb);
+        b.onclick = () => { localStorage.setItem('valo.taskbarHide', b.dataset.tb); renderSettings(); };
+      }
+      $('hint').textContent = cur.sticky
+        ? 'Липка: панель пристає до країв екрана, кути без заокруглення. Зміна розміру перезапускає панель (1–2 с).'
+        : 'Плаваюча: панель з відступами від країв і заокругленими кутами.';
+    }
+    $('backBtn').onclick = () => showPage('main');
+
+    // ---------- live wallpaper per theme (Lively Wallpaper, valo-wallpaper.ps1)
+    function syncWallpaper() {
+      const t = getTheme();
+      if (t.wallSync === false) return;
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id]).then(r => {
+        let o = null; try { o = JSON.parse((r.stdout || '').trim()); } catch { }
+        $('wpHint').textContent = o?.ok ? 'Шпалери змінено на тему «' + (THEMES[t.id]?.name || t.id) + '».' : (o?.error || 'Не вдалося змінити шпалери') + '.';
+      }).catch(() => {});
+    }
+
+    // ---------- updates from GitHub (valo-update.ps1)
+    let upd = null; try { upd = JSON.parse(localStorage.getItem('valo.upd') || 'null'); } catch { }
+    function renderUpdate() {
+      const btn = $('updBtn'), notes = $('updNotes');
+      $('updVer').textContent = 'valo.os ' + (upd?.current || '');
+      notes.innerHTML = '';
+      btn.classList.remove('go'); btn.disabled = false;
+      if (!upd) { $('updMsg').textContent = 'Ще не перевірено'; btn.textContent = 'Перевірити'; }
+      else if (upd.busy) { $('updMsg').textContent = upd.busy; btn.textContent = '…'; btn.disabled = true; }
+      else if (upd.error) { $('updMsg').textContent = upd.error; btn.textContent = 'Ще раз'; }
+      else if (upd.available) {
+        $('updMsg').textContent = 'Доступна версія ' + upd.latest;
+        for (const n of upd.notes || []) { const li = document.createElement('li'); li.textContent = n; notes.append(li); }
+        btn.textContent = 'Оновити'; btn.classList.add('go');
+      } else { $('updMsg').textContent = 'Встановлено останню версію'; btn.textContent = 'Перевірити'; }
+      document.querySelector('[data-act="panel"]').classList.toggle('badge', !!upd?.available);
+    }
+    function saveUpd() { const { busy, ...keep } = upd || {}; localStorage.setItem('valo.upd', JSON.stringify(keep)); renderUpdate(); }
+    async function runUpdate(flag) {
+      const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-update.ps1', flag]).catch(e => ({ stdout: JSON.stringify({ error: String(e) }) }));
+      try { return JSON.parse((r.stdout || '').trim()); } catch { return { error: 'Помилка оновлювача' }; }
+    }
+    async function checkUpdate() {
+      upd = { ...(upd || {}), busy: 'Перевіряю…' }; renderUpdate();
+      const r = await runUpdate('-Check');
+      localStorage.setItem('valo.updCheckedAt', String(Date.now()));
+      upd = { current: r.current || upd?.current, latest: r.latest, available: !!r.available, notes: r.notes, error: r.error };
+      saveUpd();
+    }
+    $('updBtn').onclick = async () => {
+      if (!upd?.available) return checkUpdate();
+      upd = { ...upd, busy: 'Завантажую й встановлюю ' + upd.latest + '… панель перезапуститься' }; renderUpdate();
+      const r = await runUpdate('-Apply');
+      upd = r.ok ? { current: r.version || upd.latest, available: false } : { ...upd, error: r.error || 'Не вдалося оновити' };
+      saveUpd();
+    };
+    renderUpdate();
+    // start hidden; the bar opens us
+    visible = true; close();
+    log('menu ready');
+
+    // ---------- clock
+    function tick() {
+      const d = new Date();
+      $('time').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      $('date').textContent = `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+    }
+    tick(); setInterval(tick, 5000);
+
+    // ---------- user
+    zebar.shellExec('powershell', [...PS, '-Command', '[Console]::OutputEncoding=[Text.Encoding]::UTF8; $env:USERNAME'])
+      .then(r => { const u = (r.stdout || '').trim(); $('user').textContent = u; $('av').textContent = (u[0] || '?').toUpperCase(); })
+      .catch(() => {});
+
+    // ---------- apps
+    function icon(a, cls) {
+      if (a.ic) { const img = document.createElement('img'); img.className = 'ic ' + cls; img.src = 'data:image/png;base64,' + a.ic; return img; }
+      const t = document.createElement('div'); t.className = 'ic tile ' + cls; t.textContent = (a.n[0] || '?').toUpperCase(); return t;
+    }
+    function launch(a) {
+      zebar.shellExec('explorer', ['shell:AppsFolder\\' + a.id]).catch(() => {});
+      close();
+    }
+    function togglePin(a) {
+      pins = pins.includes(a.id) ? pins.filter(x => x !== a.id) : [...pins, a.id].slice(0, 15);
+      localStorage.setItem('valo.pins', JSON.stringify(pins));
+      render();
+    }
+    function defaultPins() {
+      const want = [/firefox|chrome|brave|edge/i, /wezterm|terminal|термінал/i, /провідник|file explorer/i, /^spotify/i, /^telegram/i,
+                    /^discord/i, /^steam$/i, /visual studio code/i, /^vlc/i, /^налаштування$|^settings$/i];
+      const out = [];
+      for (const re of want) { const a = apps.find(x => re.test(x.n) && !out.includes(x.id)); if (a) out.push(a.id); }
+      return out.slice(0, 10);
+    }
+
+    function render() {
+      const q = $('q').value.trim().toLowerCase();
+      const list = $('list');
+      list.innerHTML = '';
+
+      if (!pins && apps.length) { pins = defaultPins(); localStorage.setItem('valo.pins', JSON.stringify(pins)); }
+      const pinned = (pins || []).map(id => apps.find(a => a.id === id)).filter(Boolean);
+
+      $('pinsWrap').style.display = q || !pinned.length ? 'none' : '';
+      $('listTitle').textContent = q ? 'Результати' : 'Усі програми';
+      const pb = $('pins'); pb.innerHTML = '';
+      for (const a of pinned) {
+        const el = document.createElement('div'); el.className = 'pin'; el.title = a.n;
+        const s = document.createElement('span'); s.textContent = a.n;
+        el.append(icon(a, ''), s);
+        el.onclick = () => launch(a);
+        el.oncontextmenu = e => { e.preventDefault(); togglePin(a); };
+        pb.appendChild(el);
+      }
+
+      let shown = apps;
+      if (q) {
+        shown = apps.filter(a => a.n.toLowerCase().includes(q))
+          .sort((x, y) => (x.n.toLowerCase().startsWith(q) ? 0 : 1) - (y.n.toLowerCase().startsWith(q) ? 0 : 1));
+      }
+      if (!shown.length) { list.innerHTML = `<div class="empty">${apps.length ? 'Нічого не знайдено' : 'Завантаження…'}</div>`; return; }
+      sel = Math.min(sel, shown.length - 1);
+
+      let last = '';
+      shown.forEach((a, i) => {
+        const L = (a.n[0] || '#').toUpperCase();
+        if (!q && L !== last) { last = L; const h = document.createElement('div'); h.className = 'letter'; h.textContent = L; list.appendChild(h); }
+        const r = document.createElement('div'); r.className = 'row' + (q && i === sel ? ' sel' : '');
+        const s = document.createElement('span'); s.textContent = a.n;
+        r.append(icon(a, ''), s);
+        if (pins?.includes(a.id)) { const st = document.createElement('i'); st.className = 'star nf'; st.textContent = String.fromCodePoint(0xF0403); r.appendChild(st); }
+        r.title = 'Клік — запустити, правий клік — закріпити';
+        r.onclick = () => launch(a);
+        r.oncontextmenu = e => { e.preventDefault(); togglePin(a); };
+        r.dataset.i = i;
+        list.appendChild(r);
+      });
+      list._shown = shown;
+    }
+
+    async function loadApps(fresh) {
+      const args = [...PS, '-File', appsScript];
+      if (!fresh) args.push('-Cached');
+      try {
+        const r = await zebar.shellExec('powershell', args);
+        const data = JSON.parse((r.stdout || '[]').trim() || '[]');
+        if (Array.isArray(data) && data.length) { apps = data.sort((a, b) => a.n.localeCompare(b.n, 'uk')); render(); }
+        return data.length;
+      } catch { return 0; }
+    }
+    let refreshing = false;
+    async function refreshIfStale() {
+      const age = Date.now() - Number(localStorage.getItem('valo.appsAt') || 0);
+      if (refreshing || (apps.length && age < 10 * 60 * 1000)) return;
+      refreshing = true;
+      if (await loadApps(true)) localStorage.setItem('valo.appsAt', String(Date.now()));
+      refreshing = false;
+    }
+    loadApps(false).then(refreshIfStale);
+
+    // ---------- keyboard
+    $('q').addEventListener('input', () => { sel = 0; render(); $('list').scrollTop = 0; });
+    document.addEventListener('keydown', e => {
+      const shown = $('list')._shown || [];
+      if (e.key === 'Escape' && page === 'settings') { e.preventDefault(); showPage('main'); return; }
+      if (e.key === 'Escape') { e.preventDefault(); if ($('q').value) { $('q').value = ''; render(); } else close(); }
+      else if (e.key === 'Enter') { const a = $('q').value ? shown[sel] : null; if (a) launch(a); }
+      else if (e.key === 'ArrowDown' && $('q').value) { e.preventDefault(); sel = Math.min(sel + 1, shown.length - 1); render(); document.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' }); }
+      else if (e.key === 'ArrowUp' && $('q').value) { e.preventDefault(); sel = Math.max(sel - 1, 0); render(); document.querySelector('.row.sel')?.scrollIntoView({ block: 'nearest' }); }
+    });
+
+    // ---------- power + settings
+    const ACT = {
+      settings: () => zebar.shellExec('explorer', ['ms-settings:']),
+      lock: () => zebar.shellExec('rundll32', ['user32.dll,LockWorkStation']),
+      logout: () => zebar.shellExec('shutdown', ['/l']),
+      sleep: () => zebar.shellExec('rundll32', ['powrprof.dll,SetSuspendState', '0,1,0']),
+      restart: () => zebar.shellExec('shutdown', ['/r', '/t', '0']),
+      shutdown: () => zebar.shellExec('shutdown', ['/s', '/t', '0']),
+    };
+    const tip = $('tip');
+    for (const b of document.querySelectorAll('.btn')) {
+      b.onmouseenter = () => { tip.textContent = b.dataset.tip; tip.classList.add('on'); };
+      b.onmouseleave = () => { tip.classList.remove('on'); b.classList.remove('arm'); };
+      b.onclick = () => {
+        if (b.dataset.act === 'panel') { showPage(page === 'settings' ? 'main' : 'settings'); return; }
+        if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; return; }
+        ACT[b.dataset.act]()?.catch?.(() => {});
+        close();
+      };
+    }
+  </script>
+</body>
+</html>

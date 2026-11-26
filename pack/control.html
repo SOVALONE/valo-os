@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); padding: 6px; }
+  .nf { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; }
+
+  .cc {
+    max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px;
+    background: color-mix(in srgb, var(--solid) 97%, transparent); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    opacity: 0; transform: translateY(-10px) scale(.98); transform-origin: top right;
+    transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .cc.show { opacity: 1; transform: none; }
+  .cc::-webkit-scrollbar { width: 0; }
+  .sticky body { padding: 0; }
+  .sticky .cc { border-radius: 0; box-shadow: none; }
+
+  /* quick toggles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { position: relative; cursor: pointer; border-radius: calc(var(--chipRadius) + 2px); background: var(--chip); padding: 10px 10px 9px;
+    display: flex; flex-direction: column; gap: 6px; min-width: 0; transition: background .15s, color .15s; }
+  .tile:hover { background: var(--hi); }
+  .tile i { font-size: 19px; color: var(--accent); line-height: 1; }
+  .tile b { font-size: 12px; font-weight: 600; }
+  .tile span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile.on { background: var(--accent); color: var(--ink); }
+  .tile.on i, .tile.on span { color: var(--ink); }
+  .tile.on span { opacity: .75; }
+  .tile.busy { opacity: .6; pointer-events: none; }
+  .tile .more { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 13px; color: inherit; }
+  .tile .more:hover { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+
+  /* networks */
+  .nets { display: flex; flex-direction: column; gap: 2px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 6px; }
+  .nets[hidden] { display: none; }
+  .net { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--chipRadius); cursor: pointer; }
+  .net:hover { background: var(--hi); }
+  .net i { color: var(--accent); font-size: 15px; width: 18px; text-align: center; }
+  .net span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .net em { font-style: normal; font-size: 11px; color: var(--muted); }
+  .net.cur span { color: var(--accent); font-weight: 600; }
+  .nets .foot { color: var(--muted); font-size: 11px; padding: 6px 8px 2px; cursor: pointer; }
+  .nets .foot:hover { color: var(--text); }
+
+  /* sliders */
+  .slider { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 9px 12px; }
+  .slider[hidden] { display: none; }
+  .slider i { color: var(--accent); font-size: 17px; width: 20px; text-align: center; cursor: pointer; }
+  .slider b { font-size: 11px; color: var(--muted); width: 34px; text-align: right; font-weight: 600; }
+  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 6px; border-radius: 3px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, var(--accent) var(--p, 50%), var(--hi) var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text);
+    border: 3px solid var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+
+  /* media */
+  .media { display: flex; gap: 12px; align-items: center; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px; }
+  .media[hidden] { display: none; }
+  .art { width: 64px; height: 64px; border-radius: var(--chipRadius); flex: none; background: var(--hi) center/cover no-repeat;
+    display: grid; place-items: center; color: var(--accent); font-size: 26px; }
+  .art.img { font-size: 0; }
+  .mi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mi b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mi span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prog { height: 3px; border-radius: 2px; background: var(--hi); margin-top: 4px; overflow: hidden; }
+  .prog div { height: 100%; width: 0; background: var(--accent); transition: width .9s linear; }
+  .ctl { display: flex; gap: 2px; margin-top: 4px; }
+  .ctl button { all: unset; cursor: pointer; width: 30px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 15px;
+    color: var(--text); font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
+  .ctl button:hover { background: var(--hi); color: var(--accent); }
+  .ctl button.main { color: var(--accent); font-size: 18px; }
+
+  /* battery + footer */
+  .row { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .row i { color: var(--accent); font-size: 18px; }
+  .row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .row .grow span { font-size: 11px; color: var(--muted); }
+  .links { display: flex; gap: 6px; }
+  .links button { all: unset; flex: 1; cursor: pointer; text-align: center; padding: 8px 4px; border-radius: var(--chipRadius); background: var(--chip);
+    font-size: 11px; color: var(--muted); transition: background .15s, color .15s; }
+  .links button:hover { background: var(--hi); color: var(--text); }
+  .links button i { display: block; font-size: 16px; color: var(--accent); margin-bottom: 3px; }
+</style>
+</head>
+<body>
+  <div class="cc" id="cc">
+    <div class="media" id="media" hidden>
+      <div class="art nf" id="art">&#xF075A;</div>
+      <div class="mi">
+        <b id="mTitle"></b><span id="mArtist"></span>
+        <div class="prog"><div id="mProg"></div></div>
+        <div class="ctl">
+          <button id="mPrev" title="Попередній">&#xF04AE;</button>
+          <button id="mPlay" class="main" title="Пауза / відтворення">&#xF040A;</button>
+          <button id="mNext" title="Наступний">&#xF04AD;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile" id="tWifi"><i class="nf">&#xF05A9;</i><b>Wi‑Fi</b><span id="tWifiSub">…</span><div class="more nf" id="wifiMore" title="Мережі">&#xF0140;</div></div>
+      <div class="tile" id="tBt"><i class="nf">&#xF00AF;</i><b>Bluetooth</b><span id="tBtSub">…</span></div>
+      <div class="tile" id="tMute"><i class="nf" id="tMuteIc">&#xF057E;</i><b>Звук</b><span id="tMuteSub"></span></div>
+    </div>
+
+    <div class="nets" id="nets" hidden></div>
+
+    <div class="slider" id="sVol"><i class="nf" id="volIc">&#xF057E;</i><input type="range" id="vol" min="0" max="100" /><b id="volV"></b></div>
+    <div class="slider" id="sBri" hidden><i class="nf">&#xF00DF;</i><input type="range" id="bri" min="0" max="100" /><b id="briV"></b></div>
+
+    <div class="row" id="batRow"><i class="nf" id="batIc"></i><div class="grow"><b id="batT"></b><span id="batS"></span></div></div>
+
+    <div class="links">
+      <button data-open="ms-settings:network"><i class="nf">&#xF0318;</i>Мережа</button>
+      <button data-open="ms-settings:sound"><i class="nf">&#xF04C3;</i>Звук</button>
+      <button data-open="ms-settings:bluetooth"><i class="nf">&#xF00AF;</i>Пристрої</button>
+      <button data-open="ms-settings:"><i class="nf">&#xF0493;</i>Усі</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './themes.js';
+
+    const $ = id => document.getElementById(id);
+    const G = c => String.fromCodePoint(c);
+    const widget = zebar.currentWidget();
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    const cc = async (...args) => {
+      try { const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-cc.ps1', ...args]); return JSON.parse((r.stdout || '').trim() || 'null'); }
+      catch (e) { log('cc ' + args[1] + ' failed: ' + e); return null; }
+    };
+    const open = target => zebar.shellExec('powershell', [...PS, '-Command', `Start-Process '${target}'`]).catch(() => {});
+    const log = msg => zebar.shellExec('powershell', [...PS, '-Command',
+      `Add-Content -LiteralPath "$env:TEMP\\valo-cc.log" -Value ('${new Date().toISOString()} ' + '${String(msg).replace(/'/g, '')}')`]).catch(() => {});
+
+    const providers = zebar.createProviderGroup({
+      audio: { type: 'audio' },
+      battery: { type: 'battery', refreshInterval: 10000 },
+      network: { type: 'network', refreshInterval: 5000 },
+      media: { type: 'media' },
+    });
+
+    // ---------- show / hide: persistent window like the menu, toggled by the bar through localStorage
+    const win = widget.tauriWindow ?? widget.window?.tauri;
+    let visible = true;
+    async function hideWin() { try { await win.hide(); } catch (e) { log('hide failed: ' + e); } }
+    async function showWin() {
+      try { await win.show(); } catch (e) { log('show failed: ' + e); }
+      localStorage.setItem('valo.focusWin', 'Zebar - quill / control|' + Date.now());
+      zebar.shellExec('powershell', [...PS, '-Command', "(New-Object -ComObject WScript.Shell).AppActivate('Zebar - quill / control') | Out-Null"]).catch(() => {});
+    }
+    function close() {
+      if (!visible) return;
+      visible = false;
+      localStorage.setItem('valo.ccClosed', String(Date.now()));
+      $('cc').classList.remove('show');
+      setTimeout(hideWin, 150);
+    }
+    async function openCC() {
+      if (visible) return;
+      visible = true;
+      render();
+      refreshState();
+      await showWin();
+      requestAnimationFrame(() => $('cc').classList.add('show'));
+    }
+    window.addEventListener('blur', () => setTimeout(() => { if (visible && !document.hasFocus()) close(); }, 80));
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    window.addEventListener('storage', e => {
+      if (e.key !== 'valo.ccToggle' || !e.newValue) return;
+      localStorage.setItem('valo.ccAck', e.newValue);
+      visible ? close() : openCC();
+    });
+
+    // ---------- radios, networks, brightness (valo-cc.ps1)
+    let st = null, busy = false;
+    async function refreshState() {
+      const s = await cc('-Action', 'state');
+      if (s) { st = s; renderState(); }
+    }
+    function radio(kind) { return st?.radios?.find(r => r.kind === kind); }
+    function renderState() {
+      const w = radio('WiFi'), b = radio('Bluetooth');
+      $('tWifi').classList.toggle('on', !!w?.on);
+      $('tWifiSub').textContent = !w ? 'немає' : !w.on ? 'вимкнено' : (st.connected || 'не підключено');
+      $('tBt').classList.toggle('on', !!b?.on);
+      $('tBtSub').textContent = !b ? 'немає' : b.on ? 'увімкнено' : 'вимкнено';
+      $('sBri').hidden = st.bright == null;
+      if (st.bright != null && !briDrag) setRange($('bri'), st.bright, $('briV'));
+      renderNets();
+    }
+    function sigIcon(s) { return G(s < 25 ? 0xF091F : s < 50 ? 0xF0922 : s < 75 ? 0xF0925 : 0xF0928); }
+    function renderNets() {
+      const box = $('nets'); box.innerHTML = '';
+      for (const n of st?.wifi || []) {
+        const el = document.createElement('div'); el.className = 'net' + (n.connected ? ' cur' : '');
+        const i = document.createElement('i'); i.className = 'nf'; i.textContent = sigIcon(n.signal);
+        const s = document.createElement('span'); s.textContent = n.ssid;
+        const em = document.createElement('em'); em.textContent = n.connected ? 'підключено' : n.known ? 'збережена' : '';
+        el.append(i, s, em);
+        el.onclick = async () => {
+          if (n.connected) return;
+          if (!n.known) return open('ms-availablenetworks:');
+          em.textContent = 'підключення…';
+          const r = await cc('-Action', 'connect', '-Ssid', n.ssid);
+          if (!r?.ok) em.textContent = 'не вдалося';
+          setTimeout(refreshState, 2500);
+        };
+        box.append(el);
+      }
+      if (!(st?.wifi || []).length) { const e = document.createElement('div'); e.className = 'foot'; e.textContent = 'Мереж не знайдено'; box.append(e); }
+      const f = document.createElement('div'); f.className = 'foot'; f.textContent = 'Інші мережі Windows…'; f.onclick = () => open('ms-availablenetworks:'); box.append(f);
+    }
+    async function toggleRadio(kind, tile) {
+      const r = radio(kind); if (!r || busy) return;
+      busy = true; tile.classList.add('busy');
+      const res = await cc('-Action', 'radio', '-Kind', kind, '-On', r.on ? '0' : '1');
+      if (!res?.ok) log('radio ' + kind + ': ' + JSON.stringify(res));
+      await refreshState();
+      tile.classList.remove('busy'); busy = false;
+    }
+    $('tWifi').onclick = e => { if (e.target.closest('.more')) return; toggleRadio('WiFi', $('tWifi')); };
+    $('wifiMore').onclick = () => { $('nets').hidden = !$('nets').hidden; $('wifiMore').textContent = G($('nets').hidden ? 0xF0140 : 0xF0143); };
+    $('tBt').onclick = () => toggleRadio('Bluetooth', $('tBt'));
+    $('tBt').oncontextmenu = e => { e.preventDefault(); open('ms-settings:bluetooth'); };
+    $('tWifi').oncontextmenu = e => { e.preventDefault(); open('ms-availablenetworks:'); };
+
+    // ---------- sliders
+    function setRange(el, v, label) { el.value = v; el.style.setProperty('--p', v + '%'); if (label) label.textContent = v + '%'; }
+    let volDrag = false, briDrag = false, briTimer = null;
+    $('vol').oninput = () => {
+      volDrag = true; const v = +$('vol').value; setRange($('vol'), v, $('volV'));
+      providers.outputMap.audio?.setVolume(v);
+    };
+    $('vol').onchange = () => { volDrag = false; };
+    $('volIc').onclick = () => { const a = providers.outputMap.audio, d = a?.defaultPlaybackDevice; if (d) a.setMute(!d.isMuted); };
+    $('bri').oninput = () => {
+      briDrag = true; const v = +$('bri').value; setRange($('bri'), v, $('briV'));
+      clearTimeout(briTimer); briTimer = setTimeout(() => cc('-Action', 'bright', '-Value', String(v)), 120);
+    };
+    $('bri').onchange = () => { briDrag = false; };
+    $('tMute').onclick = () => $('volIc').click();
+
+    // ---------- media
+    let artKey = '';
+    async function loadArt(key) {
+      const r = await cc('-Action', 'art');
+      if (key !== artKey) return;
+      const a = $('art');
+      if (r?.art) { a.style.backgroundImage = `url(data:image/png;base64,${r.art})`; a.classList.add('img'); }
+      else { a.style.backgroundImage = ''; a.classList.remove('img'); }
+    }
+    $('mPrev').onclick = () => providers.outputMap.media?.previous();
+    $('mNext').onclick = () => providers.outputMap.media?.next();
+    $('mPlay').onclick = () => providers.outputMap.media?.togglePlayPause();
+
+    function fmtTime(sec) {
+      const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+      return h ? `${h} год ${m} хв` : `${m} хв`;
+    }
+
+    function render() {
+      const o = providers.outputMap;
+      // sound
+      const d = o.audio?.defaultPlaybackDevice;
+      if (d) {
+        const v = Math.round(d.volume);
+        if (!volDrag) setRange($('vol'), v, $('volV'));
+        const ic = G(d.isMuted || v === 0 ? 0xF0581 : v < 34 ? 0xF057F : v < 67 ? 0xF0580 : 0xF057E);
+        $('volIc').textContent = ic; $('tMuteIc').textContent = ic;
+        $('tMute').classList.toggle('on', !d.isMuted);
+        $('tMuteSub').textContent = d.isMuted ? 'вимкнено' : (d.name || 'увімкнено');
+      }
+      // media
+      const m = o.media?.session ?? o.media?.currentSession;
+      $('media').hidden = !m || !(m.title || m.artist);
+      if (m && (m.title || m.artist)) {
+        $('mTitle').textContent = m.title || 'Без назви';
+        $('mArtist').textContent = [m.artist, m.albumTitle].filter(Boolean).join(' · ');
+        $('mPlay').textContent = G(m.isPlaying ? 0xF03E4 : 0xF040A);
+        const len = (m.endTime ?? 0) - (m.startTime ?? 0);
+        $('mProg').style.width = len > 0 ? Math.min(100, (m.position / len) * 100) + '%' : '0';
+        const key = (m.title || '') + '|' + (m.artist || '');
+        if (key !== artKey && visible) { artKey = key; loadArt(key); }
+      }
+      // battery
+      const b = o.battery;
+      if (b && b.chargePercent != null) {
+        const p = Math.round(b.chargePercent);
+        $('batIc').textContent = b.isCharging ? G(0xF0084) : G(p >= 95 ? 0xF0079 : 0xF007A + Math.max(0, Math.min(8, Math.round(p / 10) - 1)));
+        $('batT').textContent = 'Батарея ' + p + '%';
+        $('batS').textContent = b.isCharging
+          ? (b.timeTillFull ? 'заряджається, до повного ~' + fmtTime(b.timeTillFull / 1000) : 'заряджається')
+          : (b.timeTillEmpty ? 'залишилось ~' + fmtTime(b.timeTillEmpty / 1000) : 'від батареї');
+      } else {
+        $('batIc').textContent = G(0xF06A5); $('batT').textContent = 'Живлення від мережі'; $('batS').textContent = 'батареї немає';
+      }
+    }
+    $('batRow').onclick = () => open('ms-settings:powersleep');
+    for (const btn of document.querySelectorAll('[data-open]')) btn.onclick = () => { open(btn.dataset.open); close(); };
+
+    providers.onOutput(render);
+    render();
+
+    // start hidden, unless the bar started us just now to open (first click)
+    const t0 = +(localStorage.getItem('valo.ccToggle') || 0);
+    if (Date.now() - t0 < 3000) { localStorage.setItem('valo.ccAck', String(t0)); visible = false; openCC(); }
+    else { visible = true; close(); }
+    log('control ready');
+  </script>
+</body>
+</html>
