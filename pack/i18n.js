@@ -142,6 +142,7 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Робота|Work|Lucru
 Розробка|Development|Dezvoltare
 Утиліти|Utilities|Utilitare
+Рекомендує valo.os|Recommended by valo.os|Recomandat de valo.os
 Ігри|Games|Jocuri
 Wi‑Fi|Wi‑Fi|Wi‑Fi
 Bluetooth|Bluetooth|Bluetooth
@@ -157,6 +158,7 @@ Bluetooth|Bluetooth|Bluetooth
 Інші мережі Windows…|Other Windows networks…|Alte rețele Windows…
 Мережа|Network|Rețea
 Пристрої|Devices|Dispozitive
+Телефон|Phone|Telefon
 Усі|All|Toate
 Вихід звуку|Sound output|Ieșire audio
 Зараз нічого не відтворює звук|Nothing is playing sound|Nimic nu redă sunet

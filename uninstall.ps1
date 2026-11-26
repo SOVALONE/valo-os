@@ -9,8 +9,8 @@ function Say($m, $c = 'Magenta') { Write-Host "  valo.os  " -ForegroundColor $c 
 Write-Host ''; Say 'видалення valo.os'; Write-Host ''
 
 # stop the panel and its helper
-Get-Process zebar | Stop-Process -Force
-Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -like '*valo-shell.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+Get-Process zebar, valo-link | Stop-Process -Force
+Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object { $_.CommandLine -like '*valo-shell.ps1*' -or $_.CommandLine -like '*valo-link.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 
 # put back what valo.os changed
 if (Test-Path "$pack\valo-shell.ps1") { powershell -NoProfile -ExecutionPolicy Bypass -File "$pack\valo-shell.ps1" -RestoreTaskbar; Say 'панель задач Windows повернуто' }
@@ -23,7 +23,8 @@ Add-Type 'using System; using System.Runtime.InteropServices; public static clas
 
 # autostart
 $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
-Remove-ItemProperty $run -Name 'valo-bar', 'valo-taskbar'
+Remove-ItemProperty $run -Name 'valo-bar', 'valo-taskbar', 'valo-link'
+Remove-Item (Join-Path ([Environment]::GetFolderPath('Programs')) 'valo Link.lnk') -Force
 
 # Zebar settings: the backup from the installer, or just without the valo widgets
 $settings = "$env:USERPROFILE\.glzr\zebar\settings.json"

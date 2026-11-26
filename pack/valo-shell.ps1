@@ -378,7 +378,7 @@ public static class ValoShell {
                         if (c.StartsWith("activate ")) { PreviewForm.Cmd("preview hide"); Activate(long.Parse(c.Substring(9))); continue; }
                         if (c.StartsWith("min ")) { Minimize(long.Parse(c.Substring(4))); continue; }
                         if (c == "emptytrash") { EmptyTrash(); continue; }
-                        if (c.StartsWith("colors ")) { string[] a = c.Split(' '); if (a.Length >= 5) ValoUi.SetColors(a[1], a[2], a[3], a[4]); continue; }
+                        if (c.StartsWith("colors ")) { string[] a = c.Split(' '); if (a.Length >= 5) { ValoUi.SetColors(a[1], a[2], a[3], a[4]); try { System.IO.File.WriteAllText(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "valo\\theme.json"), "{\"bg\":\"" + a[1] + "\",\"fg\":\"" + a[2] + "\",\"accent\":\"" + a[3] + "\",\"muted\":\"" + a[4] + "\"}"); } catch { } } continue; }
                         if (c.StartsWith("features ")) {
                             string f = c.Substring(9);
                             ValoUi.AltTabOn = !f.Contains("alttab=0"); ValoUi.ClipOn = !f.Contains("clip=0"); ValoUi.ShotOn = !f.Contains("shot=0"); ValoUi.EmojiOn = !f.Contains("emoji=0");

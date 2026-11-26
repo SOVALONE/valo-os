@@ -1,8 +1,10 @@
 {
-    "version":  "1.4.3",
+    "version":  "1.5.0",
     "date":  "2026-11-26",
     "notes":  [
-                  "Виправлено: меню valo.os не відкривалося у версіях 1.4.0–1.4.2"
+                  "valo Link — телефон і ПК разом: файли в обидва боки, спільний буфер, пульт для музики, тачпад і клавіатура, блокування й сон ПК, «знайти телефон», заряд телефона. На телефоні — сторінка в браузері, без застосунку",
+                  "Магазин valo: добірка «Рекомендує valo.os» — Files, QuickLook, NanaZip, Windhawk",
+                  "Кнопка «Телефон» у центрі керування"
               ],
     "files":  [
                   {
@@ -11,7 +13,7 @@
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "6273eaafa13b8ef4e4e014ce16eb500670178d90562c39433d9a2d2ba04aaae3"
+                      "sha256":  "56864bbf7f31bfd9b4087f7e6038563ced45eaf6cd79dbf53e4f2a9bca49c04b"
                   },
                   {
                       "path":  "pack/dock.html",
@@ -27,11 +29,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "48d11d1a9e3f1d719966fa14076916ef8fb5ce40650a9f6ff74221fdf7d1d972"
+                      "sha256":  "f878333f6638d76d9e0f4a83fa82013b667c437c5de7dc458e24fbbc94d26b8c"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "f251e816d85e9f9abb3a39717b16cf4893667b6f8eaa38cb14b37f9f54cf8f00"
+                      "sha256":  "57630638348b4431291c92a0e647921db82b98ec9b6508ae210791e3c56899e0"
                   },
                   {
                       "path":  "pack/saver.html",
@@ -78,12 +80,28 @@
                       "sha256":  "f789f2f67377ca9a8dea6650cfe0adc387bdfe347662d40696a3328b404f296b"
                   },
                   {
+                      "path":  "pack/valo-link.cs",
+                      "sha256":  "c5afaa50f041353c758d43fecbe755307ae182399b8a8d0108196fbee61c7227"
+                  },
+                  {
+                      "path":  "pack/valo-link.ps1",
+                      "sha256":  "f14cc8a3ed90b3d0a8736a28f562ec6bfb51135faa3842c6ff99db19ac9e2b9e"
+                  },
+                  {
+                      "path":  "pack/valo-link-build.ps1",
+                      "sha256":  "64e44f3c70337ec4b2893600c2e2440bb56ab631eed02cd03852c05c40b07861"
+                  },
+                  {
+                      "path":  "pack/valo-link-phone.html",
+                      "sha256":  "86d799d20390cbbfbff71ee6997c03f625394a62a69f6927d9367ebd08adbc0e"
+                  },
+                  {
                       "path":  "pack/valo-palette.ps1",
                       "sha256":  "eca67b98d42668486ef537848ea5650d6b1e31cde980a8a1b7e4c0251abb4125"
                   },
                   {
                       "path":  "pack/valo-postupdate.ps1",
-                      "sha256":  "3ec60313b5e7170fc27f9cf1326fc52f3d5fea7637a9a39ec299477cff7efd5a"
+                      "sha256":  "6c94a70f716806b0db07c067bc4fad9852e4671560a2780c0229ee3c186dad65"
                   },
                   {
                       "path":  "pack/valo-power.ps1",
@@ -95,7 +113,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "1bcb39525a42b6ebd4442f7722c89b5963e9d154b336bf68af1269df1ca69405"
+                      "sha256":  "1d66e423d9183e6933187add5d83350ea058fd091d9b0e58d414fe024f451cf4"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -167,7 +185,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "37f4a2fb21b96e6460d9e8b163750679bff9314b244b04e50c89bd709f7b9ab7"
+                      "sha256":  "7299e6e03867c064e6ea5e3f833e598d0529f2d31e7933ea46784e6e4d5a96e6"
                   },
                   {
                       "path":  "pack/weather.js",

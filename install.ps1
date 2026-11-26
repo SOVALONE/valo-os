@@ -80,6 +80,9 @@ $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 Set-ItemProperty $run -Name 'valo-bar' -Value "`"$zebarExe`""
 Set-ItemProperty $run -Name 'valo-taskbar' -Value ('conhost.exe --headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + "$pack\valo-shell.ps1" + '" -HideTaskbar')
 
+# ---- valo Link (phone companion) is built on this PC from its source
+if (Test-Path "$pack\valo-link-build.ps1") { Say 'збираю valo Link…'; & "$pack\valo-link-build.ps1" }
+
 # ---- 5. start
 Get-Process zebar -EA SilentlyContinue | Stop-Process -Force
 Start-Sleep 1
