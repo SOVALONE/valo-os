@@ -272,7 +272,7 @@ public static class ValoWatch {
         else if (a == "taskview") { Key(0x5B, false); Key(0x09, false); Key(0x09, true); Key(0x5B, true); }
     }
     static void Loop() {
-        int corner = -1; long cornerSince = 0; bool fired = false; long slow = 0;
+        int corner = -2; long cornerSince = 0; bool fired = true; long slow = 0;   // a cursor already parked in a corner at start does not count
         while (true) {
             Thread.Sleep(60);
             try {
@@ -284,8 +284,14 @@ public static class ValoWatch {
                 if (p.x <= 1 && p.y <= 1) c = 0; else if (p.x >= cx - 2 && p.y <= 1) c = 1;
                 else if (p.x <= 1 && p.y >= cy - 2) c = 2; else if (p.x >= cx - 2 && p.y >= cy - 2) c = 3;
                 bool buttons = (GetAsyncKeyState(0x01) & 0x8000) != 0 || (GetAsyncKeyState(0x02) & 0x8000) != 0;
-                if (c != corner) { corner = c; cornerSince = now; fired = false; }
-                else if (c >= 0 && !fired && !buttons && !Game && now - cornerSince > 220) { fired = true; string a = Corners[c]; if (a != "none") Fire(a); }
+                if (corner == -2) { corner = c; }
+                else if (c != corner) { corner = c; cornerSince = now; fired = false; }
+                else if (c >= 0 && !fired && !buttons && !Game && now - cornerSince > 220) {
+                    fired = true;
+                    StringBuilder fc = new StringBuilder(64); GetClassName(ValoUi.GetForegroundWindow(), fc, 64);
+                    string a = Corners[c];
+                    if (a != "none" && fc.ToString() != "Windows.UI.Core.CoreWindow") Fire(a);   // not on the lock screen / Start
+                }
 
                 if (now - slow < 1000) continue;
                 slow = now;
