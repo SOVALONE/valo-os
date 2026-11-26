@@ -1,8 +1,8 @@
 {
-    "version":  "1.4.1",
+    "version":  "1.4.2",
     "date":  "2026-11-26",
     "notes":  [
-                  "Гарячі кути не спрацьовують, якщо курсор просто лежить у куті, і на екрані блокування"
+                  "Оновлення беруться з одного знімка репозиторію — без затримки кешу GitHub і без хибних «підпис не збігається»"
               ],
     "files":  [
                   {
@@ -159,7 +159,7 @@
                   },
                   {
                       "path":  "pack/valo-update.ps1",
-                      "sha256":  "00d8106c8630bacf975b3c6ccb9c2e9dcf15634d505dd6260e8bdd356caa07e8"
+                      "sha256":  "05697983e9c645bf46b6385f4bad8575fd48ee1e37ec874402e8574cf2e101e9"
                   },
                   {
                       "path":  "pack/valo-wallpaper.ps1",
@@ -167,7 +167,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "e65a91914978c035967e9ea9eea7f75c51ff7dedc373a27bcfc3c5c0bb0420b9"
+                      "sha256":  "26dba5145e90ea869a9280d7f741e0e56c38a35757cadc0d3076ac6d23b856fa"
                   },
                   {
                       "path":  "pack/weather.js",

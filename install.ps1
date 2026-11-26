@@ -8,7 +8,10 @@
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $PUBLIC_KEY = '<RSAKeyValue><Modulus>5LKH9Sfzt9YqpaF4I3wMJChoOMfjRZYQRmCr4E4ioVCzuqq6phwMk78RfoUVhG0yCeo27SOsvYq1iTR3sk7LplLWTiGucwvXRf3Y3Lk9B0INo21HVA4jvpqrk5EuLgN0ZUItnhpfQEmoWWPisltx0+suXJB5Vc8p+tcq5k4sYBIuemEiEmWmm8NDXxMMpa/V2N5C6RlK/mB1NPK8YoSb1UzoetmzBOH5Tr9eimFLA8MUPmC7aGfebOJ3cmDwOHLDOqO5kLeWSR9y+rhpV5aWOGR8VfzBY2v6ai7JrjaW4hp1O9Awgi9dNkaf0v6tUp8coHpdui/Fslk891+nao7Pj/2ZhirngLo/VWQuqZWP7BiXDunNyD8MqM+tN4SuaULsHp6C9fk4o3ltHLZnOsq4Pzifyka1A3A2qpI7uVN6Uagk39rYs0+pGiWvM4BOzXlF8sHnT4+1cDBt24XN37X0JtEUlgxKSq2VXgYoB6/KNgm6Jaxge6JrgdtrwNFQ5qEp</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>'
-$base = if ($env:VALO_BASE) { $env:VALO_BASE.TrimEnd('/') } else { 'https://raw.githubusercontent.com/SOVALONE/valo-os/main' }
+$ref = 'main'
+if (-not $env:VALO_BASE) { try { $ref = [Text.Encoding]::ASCII.GetString((Invoke-WebRequest -Uri 'https://api.github.com/repos/SOVALONE/valo-os/commits/main' -Headers @{ Accept = 'application/vnd.github.sha'; 'User-Agent' = 'valo-os-installer' } -UseBasicParsing -TimeoutSec 15).RawContentStream.ToArray()).Trim() } catch { } }
+if ($ref -notmatch '^[0-9a-f]{40}$') { $ref = 'main' }
+$base = if ($env:VALO_BASE) { $env:VALO_BASE.TrimEnd('/') } else { "https://raw.githubusercontent.com/SOVALONE/valo-os/$ref" }
 $channel = if ($env:VALO_CHANNEL -eq 'beta') { 'beta' } else { 'stable' }
 $dry = $env:VALO_DRYRUN -eq '1'
 $pack = if ($env:VALO_TARGET) { Join-Path $env:VALO_TARGET 'quill' } else { "$env:USERPROFILE\.glzr\zebar\quill" }

@@ -54,7 +54,11 @@ if ($Rollback) {
 }
 
 # ---- signed channel manifests
-$base = if ($BaseUrl) { $BaseUrl.TrimEnd('/') } else { "https://raw.githubusercontent.com/$Repo/$Branch" }
+# pin one commit (GitHub API) so the manifest, its signature and the files come from the same snapshot; raw CDN caches branches for 5 min
+$ref = $Branch
+if (-not $BaseUrl) { try { $ref = [Text.Encoding]::ASCII.GetString((Invoke-WebRequest -Uri "https://api.github.com/repos/$Repo/commits/$Branch" -Headers @{ Accept = 'application/vnd.github.sha'; 'User-Agent' = 'valo-os-updater' } -UseBasicParsing -TimeoutSec 15).RawContentStream.ToArray()).Trim() } catch { $ref = $Branch } }
+if ($ref -notmatch '^[0-9a-f]{40}$') { $ref = $Branch }
+$base = if ($BaseUrl) { $BaseUrl.TrimEnd('/') } else { "https://raw.githubusercontent.com/$Repo/$ref" }
 $bust = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
 function Get-Bytes($url) { (Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 20).RawContentStream.ToArray() }
 function Get-Manifest($name) {

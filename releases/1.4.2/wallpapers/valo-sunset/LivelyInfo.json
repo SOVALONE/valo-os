@@ -1,0 +1,14 @@
+{
+    "AppVersion":  "1.0.0.0",
+    "Title":  "valo.os — Захід",
+    "Thumbnail":  "thumbnail.png",
+    "Preview":  null,
+    "Desc":  "Ретро-сонце над морем, гори й птахи.",
+    "Author":  "valo.os",
+    "License":  "MIT",
+    "Contact":  "",
+    "Type":  1,
+    "FileName":  "index.html",
+    "Arguments":  "--audio",
+    "IsAbsolutePath":  false
+}
