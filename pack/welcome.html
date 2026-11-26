@@ -50,6 +50,11 @@
   .nav button:hover { filter: brightness(1.08); }
   .nav button[hidden] { display: none; }
   .nav small { color: var(--muted); }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
 </style>
 </head>
 <body>

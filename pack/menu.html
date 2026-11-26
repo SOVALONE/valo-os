@@ -162,6 +162,11 @@
   .cities div:hover { background: var(--chip); color: var(--pink); }
   .cities small { color: var(--muted); }
   .btn.badge::after { content: ''; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
 </style>
 </head>
 <body>

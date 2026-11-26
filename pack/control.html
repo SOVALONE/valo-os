@@ -21,7 +21,6 @@
     transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1);
   }
   .cc.show { opacity: 1; transform: none; }
-  .cc::-webkit-scrollbar { width: 0; }
   .sticky body { padding: 0; }
   .sticky .cc { border-radius: 0; box-shadow: none; }
 
@@ -79,6 +78,24 @@
     color: var(--text); font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
   .ctl button:hover { background: var(--hi); color: var(--accent); }
   .ctl button.main { color: var(--accent); font-size: 18px; }
+
+  /* tabs: the control center is split into short pages instead of one long column */
+  .cctabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 4px; flex: none; }
+  .cctabs button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: var(--chipRadius);
+    color: var(--muted); font-size: 11px; font-weight: 600; transition: background .15s, color .15s; }
+  .cctabs button i { font-size: 16px; font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; font-weight: 400; }
+  .cctabs button:hover { color: var(--text); }
+  .cctabs button.on { background: var(--hi); color: var(--accent); }
+  .ccpage { display: flex; flex-direction: column; gap: 12px; animation: ccin .2s ease; }
+  .ccpage[hidden] { display: none; }
+  @keyframes ccin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .nets, .mix { max-height: 230px; overflow-y: auto; }
+
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--hi); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
   /* mixer */
   .mix { display: flex; flex-direction: column; gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
@@ -281,7 +298,7 @@
       render();
       refreshState();
       helperCmd('sysmon on'); helperCmd('bt'); if (!$('mix').hidden) helperCmd('audio list');
-      renderWeather(); loadCalendar(); renderCal();
+      renderWeather(); loadCalendar(); renderCal(); showCC('main');
       await showWin();
       requestAnimationFrame(() => $('cc').classList.add('show'));
     }
@@ -501,6 +518,38 @@
       tile.classList.remove('busy'); renderTravel(); refreshState();
     };
     renderTravel();
+
+    // ---------- pages: Головне / День / Нотатки / Система
+    const PAGES = [['main', 0xF02DC, 'Головне'], ['day', 0xF00ED, 'День'], ['notes', 0xF039A, 'Нотатки'], ['sys', 0xF012A, 'Система']];
+    (function buildPages() {
+      const cc = $('cc'), bar = document.createElement('div'); bar.className = 'cctabs'; bar.id = 'cctabs';
+      const page = {};
+      for (const [id, ic, name] of PAGES) {
+        const b = document.createElement('button'); b.dataset.p = id; b.innerHTML = '<i></i><span></span>';
+        b.querySelector('i').textContent = G(ic); b.querySelector('span').textContent = name;
+        b.onclick = () => showCC(id); bar.append(b);
+        page[id] = document.createElement('div'); page[id].className = 'ccpage'; page[id].dataset.p = id;
+      }
+      const boxes = [...cc.querySelectorAll(':scope > .box')];
+      const plan = {
+        main: [$('media'), cc.querySelector(':scope > .tiles'), $('nets'), $('mix'), $('sVol'), $('sWarm'), $('sBri')],
+        day: [$('wxCard'), $('clocks'), $('cal')],
+        notes: boxes,
+        sys: [$('mon'), $('batRow'), cc.querySelector(':scope > .links')],
+      };
+      for (const [id, els] of Object.entries(plan)) for (const el of els) if (el) page[id].append(el);
+      cc.innerHTML = '';
+      cc.append(bar, ...PAGES.map(([id]) => page[id]));
+    })();
+    let ccPage = 'main';
+    function showCC(id) {
+      ccPage = id;
+      for (const b of $('cctabs').children) b.classList.toggle('on', b.dataset.p === id);
+      for (const pg of document.querySelectorAll('.ccpage')) pg.hidden = pg.dataset.p !== id;
+      if (id === 'day') { renderWeather(); renderCal(); }
+      if (id === 'sys') helperCmd('bt');
+    }
+    showCC('main');
 
     // ---------- bridge to the dock's helper process (mixer, monitor, warm screen, Bluetooth batteries)
     function helperCmd(cmd) { localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd, ts: Date.now() + Math.random() })); }

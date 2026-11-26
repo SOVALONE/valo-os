@@ -89,6 +89,11 @@
   .wx[hidden], .pomo[hidden] { display: none; }
   .pomo b { font-weight: 700; font-variant-numeric: tabular-nums; }
   .pomo.brk i { color: var(--accent2); }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
 </style>
 </head>
 <body>

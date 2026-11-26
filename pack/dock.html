@@ -48,6 +48,11 @@
   .desks b:hover { color: var(--accent); background: var(--hi); }
   .gamehide .dock { transform: translateY(calc(100% + 14px)); opacity: 0; pointer-events: none; }
   .sep { width: 1px; height: 26px; background: var(--border); margin: 0 4px; flex: none; }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
 </style>
 </head>
 <body>
