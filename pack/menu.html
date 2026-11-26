@@ -766,7 +766,9 @@
       upd = { ...upd, busy: 'Завантажую й встановлюю ' + upd.latest + '… панель перезапуститься' }; renderUpdate();
       const r = await runUpdate('-Apply');
       upd = r.ok ? { current: r.version || upd.latest, available: false } : { ...upd, error: r.error || 'Не вдалося оновити' };
-      saveUpd();\n    };\n    renderUpdate();
+      saveUpd();
+    };
+    renderUpdate();
 
     // ---------- channel, rollback, what's new
     function renderChan() {

@@ -1,8 +1,8 @@
 {
-    "version":  "1.4.2",
+    "version":  "1.4.3",
     "date":  "2026-11-26",
     "notes":  [
-                  "Оновлення беруться з одного знімка репозиторію — без затримки кешу GitHub і без хибних «підпис не збігається»"
+                  "Виправлено: меню valo.os не відкривалося у версіях 1.4.0–1.4.2"
               ],
     "files":  [
                   {
@@ -31,7 +31,7 @@
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "9ea452bb76d6b02bbc5e08ce649d16bfe33cd77c1b38fc9f4f1689944c7b934d"
+                      "sha256":  "f251e816d85e9f9abb3a39717b16cf4893667b6f8eaa38cb14b37f9f54cf8f00"
                   },
                   {
                       "path":  "pack/saver.html",
@@ -167,7 +167,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "26dba5145e90ea869a9280d7f741e0e56c38a35757cadc0d3076ac6d23b856fa"
+                      "sha256":  "37f4a2fb21b96e6460d9e8b163750679bff9314b244b04e50c89bd709f7b9ab7"
                   },
                   {
                       "path":  "pack/weather.js",
