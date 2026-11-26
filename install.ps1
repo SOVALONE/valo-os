@@ -70,7 +70,7 @@ $cfg = if (Test-Path $settings) { Get-Content $settings -Raw | ConvertFrom-Json 
 $list = @(@($cfg.startupConfigs) | Where-Object { $_ -and $_.pack -ne 'quill' })
 $list += [pscustomobject]@{ pack = 'quill'; widget = 'bar'; preset = 'host' }
 $list += [pscustomobject]@{ pack = 'quill'; widget = 'dock'; preset = 'host' }
-foreach ($w in 'menu', 'control', 'welcome', 'emoji', 'saver') { $list += [pscustomobject]@{ pack = 'quill'; widget = $w; preset = 'default' } }
+foreach ($w in 'menu', 'control', 'welcome', 'emoji', 'saver', 'desk') { $list += [pscustomobject]@{ pack = 'quill'; widget = $w; preset = 'default' } }
 $cfg | Add-Member -NotePropertyName startupConfigs -NotePropertyValue $list -Force
 New-Item -ItemType Directory -Force (Split-Path $settings) | Out-Null
 [IO.File]::WriteAllText($settings, ($cfg | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))

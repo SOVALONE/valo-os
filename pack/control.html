@@ -97,6 +97,17 @@
   ::-webkit-scrollbar-thumb { background: var(--hi); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
+  /* modes */
+  .modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 4px; }
+  .modes[hidden] { display: none; }
+  .modes button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; border-radius: var(--chipRadius); font-size: 10.5px; color: var(--muted); text-align: center; }
+  .modes button i { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; font-size: 16px; }
+  .modes button:hover { color: var(--text); }
+  .modes button.on { background: var(--accent); color: var(--ink); font-weight: 600; }
+  .links2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .links2 button { all: unset; cursor: pointer; text-align: center; padding: 9px 4px; border-radius: var(--chipRadius); background: var(--chip); font-size: 12px; color: var(--text); }
+  .links2 button:hover { color: var(--accent); }
+
   /* mixer */
   .mix { display: flex; flex-direction: column; gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
   .mix[hidden] { display: none; }
@@ -212,6 +223,7 @@
       <div class="tile" id="tWarm" title="Теплий екран (менше синього світла)"><i class="nf">&#xF06E8;</i><b>Теплий екран</b><span id="tWarmSub">вимкнено</span></div>
     </div>
 
+    <div class="modes" id="modes" hidden></div>
     <div class="nets" id="nets" hidden></div>
     <div class="mix" id="mix" hidden></div>
 
@@ -239,6 +251,7 @@
       <textarea id="notes" placeholder="Швидкі нотатки — зберігаються самі"></textarea>
     </div>
 
+    <div class="links2"><button id="healthBtn">Здоров'я ПК</button><button id="dlBtn">Завантаження</button></div>
     <div class="row" id="batRow"><i class="nf" id="batIc"></i><div class="grow"><b id="batT"></b><span id="batS"></span></div></div>
 
     <div class="links">
@@ -255,6 +268,7 @@
     import './i18n.js';
     import { getTheme, saveTheme } from './themes.js';
     import { describe as wxDescribe, cached as wxCached } from './weather.js';
+    import { profiles, applyProfile } from './profiles.js';
 
     const $ = id => document.getElementById(id);
     const G = c => String.fromCodePoint(c);
@@ -520,6 +534,36 @@
     };
     renderTravel();
 
+    // ---------- modes (profiles) + Wi‑Fi auto
+    const pr = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    function modesEnabled() { return pr().modesOn !== false; }
+    function renderModes() {
+      const box = $('modes'); box.hidden = !modesEnabled(); box.innerHTML = '';
+      if (box.hidden) return;
+      const { active, list } = profiles();
+      for (const [id, m] of [[null, { name: 'Звичайний' }], ...Object.entries(list)]) {
+        const b = document.createElement('button'); b.className = (active || null) === id ? 'on' : '';
+        b.innerHTML = '<i></i><span></span>'; b.querySelector('i').textContent = G(id ? m.glyph : 0xF0AE4); b.querySelector('span').textContent = m.name;
+        b.title = id ? `${m.name}: тема ${m.theme || '—'}${m.dnd ? ', не турбувати' : ''}${m.wifi ? ', авто в мережі ' + m.wifi : ''}` : 'Без режиму';
+        b.onclick = async () => { await applyProfile(id, zebar.shellExec, dir); renderModes(); };
+        box.append(b);
+      }
+    }
+    let lastSsid = null;
+    function wifiAuto() {
+      const ssid = providers.outputMap.network?.defaultGateway?.ssid || '';
+      if (ssid === lastSsid) return;
+      lastSsid = ssid; localStorage.setItem('valo.ssid', ssid);
+      if (!ssid || !modesEnabled()) return;
+      const hit = Object.entries(profiles().list).find(([, m]) => m.wifi && m.wifi.trim().toLowerCase() === ssid.toLowerCase());
+      if (hit && profiles().active !== hit[0]) applyProfile(hit[0], zebar.shellExec, dir).then(renderModes);
+    }
+    setInterval(wifiAuto, 20000); setTimeout(wifiAuto, 5000);
+    window.addEventListener('storage', e => { if (e.key === 'valo.prefs') renderModes(); });
+    renderModes();
+    $('healthBtn').onclick = () => { localStorage.setItem('valo.menuToggle', 'health:' + Date.now()); close(); };
+    $('dlBtn').onclick = () => { zebar.shellExec('explorer', ['shell:Downloads']).catch(() => {}); close(); };
+
     // ---------- pages: Головне / День / Нотатки / Система
     const PAGES = [['main', 0xF02DC, 'Головне'], ['day', 0xF00ED, 'День'], ['notes', 0xF039A, 'Нотатки'], ['sys', 0xF012A, 'Система']];
     (function buildPages() {
@@ -533,10 +577,10 @@
       }
       const boxes = [...cc.querySelectorAll(':scope > .box')];
       const plan = {
-        main: [$('media'), cc.querySelector(':scope > .tiles'), $('nets'), $('mix'), $('sVol'), $('sWarm'), $('sBri')],
+        main: [$('media'), cc.querySelector(':scope > .tiles'), $('modes'), $('nets'), $('mix'), $('sVol'), $('sWarm'), $('sBri')],
         day: [$('wxCard'), $('clocks'), $('cal')],
         notes: boxes,
-        sys: [$('mon'), $('batRow'), cc.querySelector(':scope > .links')],
+        sys: [$('mon'), cc.querySelector(':scope > .links2'), $('batRow'), cc.querySelector(':scope > .links')],
       };
       for (const [id, els] of Object.entries(plan)) for (const el of els) if (el) page[id].append(el);
       cc.innerHTML = '';

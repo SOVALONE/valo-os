@@ -86,7 +86,13 @@
   .media .mb b { font-weight: 400; color: var(--pink); width: calc(var(--ic) + 6px); text-align: center; border-radius: 4px; font-size: var(--ic); }
   .media .mb b:hover { background: var(--chip-hi); }
   .media.paused i { color: var(--muted); }
-  .wx[hidden], .pomo[hidden] { display: none; }
+  .wx[hidden], .pomo[hidden], .lng[hidden], .priv[hidden], .netc[hidden], .recc[hidden] { display: none; }
+  .lng b { font-weight: 700; letter-spacing: .5px; }
+  .priv i { color: #ffb454 !important; }
+  .netc span { font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+  .recc { background: color-mix(in srgb, #ff4d6d 30%, var(--chip)); }
+  .recc i { color: #ff4d6d !important; animation: recblink 1s steps(2) infinite; }
+  @keyframes recblink { 50% { opacity: .25; } }
   .pomo b { font-weight: 700; font-variant-numeric: tabular-nums; }
   .pomo.brk i { color: var(--accent2); }
   /* themed scrollbars */
@@ -105,6 +111,10 @@
     </div>
     <div class="clock" id="clock">--:--</div>
     <div class="right">
+      <div class="chip recc" id="recc" hidden title="Запис екрана — клік, щоб зупинити (або Win+Shift+R)"><i>&#xF044A;</i><b id="recT">0:00</b></div>
+      <div class="chip priv" id="priv" hidden></div>
+      <div class="chip netc" id="netc" hidden title="Швидкість мережі"><i>&#xF06C0;</i><span id="netT"></span></div>
+      <div class="chip lng" id="lng" hidden title="Мова вводу — клік, щоб змінити"><b id="lngT">UA</b></div>
       <div class="chip pomo" id="pomo" hidden title="Фокус: клік — зупинити"><i>&#xF0517;</i><b id="pomoT"></b></div>
       <div class="chip wx" id="wx" hidden><i id="wxI"></i><span id="wxT"></span></div>
       <div class="chip media" id="media" hidden title="Клік — пауза / відтворення, ПКМ — центр керування"><i id="mIc"></i><span class="mt" id="mText"></span><span class="mb"><b id="mPrev">&#xF04AE;</b><b id="mNext">&#xF04AD;</b></span></div>
@@ -355,6 +365,36 @@
     }
     setInterval(pomoTick, 1000); pomoTick();
     $('pomo').onclick = () => { localStorage.removeItem('valo.pomo'); pomoTick(); };
+
+    // ---------- part 3 chips: keyboard layout, privacy (mic / camera / location), network speed, screen recording
+    const prefs3 = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const helperCmd = cmd => localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd, ts: Date.now() + Math.random() }));
+    const ev = k => { try { return JSON.parse(localStorage.getItem('valo.ev.' + k) || 'null'); } catch { return null; } };
+    const fmtRate = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' МБ/с' : b > 1024 ? Math.round(b / 1024) + ' КБ/с' : b + ' Б/с';
+    let recSince = 0;
+    function chips3() {
+      const p = prefs3();
+      const l = ev('lang'); $('lng').hidden = p.langChip === false || !l; if (l) $('lngT').textContent = l.code;
+      const pr = ev('privacy'), parts = [];
+      if (p.privacy !== false && pr) {
+        if (pr.mic?.length) parts.push(['&#xF036C;', 'Мікрофон: ' + pr.mic.join(', ')]);
+        if (pr.cam?.length) parts.push(['&#xF0100;', 'Камера: ' + pr.cam.join(', ')]);
+        if (pr.loc?.length) parts.push(['&#xF034E;', 'Місцезнаходження: ' + pr.loc.join(', ')]);
+      }
+      $('priv').hidden = !parts.length;
+      $('priv').innerHTML = parts.map(x => `<i>${x[0]}</i>`).join(''); $('priv').title = parts.map(x => x[1]).join('\n');
+      const n = ev('net'); $('netc').hidden = !p.netChip || !n || Date.now() - n.ts > 5000;
+      if (n) $('netT').textContent = '↓ ' + fmtRate(n.down) + '  ↑ ' + fmtRate(n.up);
+      const r = ev('rec'); const recOn = !!(r && r.on);
+      if (recOn && !recSince) recSince = r.ts; if (!recOn) recSince = 0;
+      $('recc').hidden = !recOn;
+      if (recOn) { const s = Math.floor((Date.now() - recSince) / 1000); $('recT').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+    }
+    setInterval(chips3, 1000); chips3();
+    window.addEventListener('storage', e => { if (/^valo\.ev\.(lang|privacy|net|rec)$/.test(e.key) || e.key === 'valo.prefs') chips3(); });
+    $('lng').onclick = () => helperCmd('nextlang');
+    $('recc').onclick = () => helperCmd('recstop');
+    $('priv').onclick = () => open('ms-settings:privacy');
 
     // ---------- game mode: hide the bar while a fullscreen app is in front
     const barWin = zebar.currentWidget().tauriWindow;

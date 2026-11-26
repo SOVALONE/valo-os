@@ -125,7 +125,7 @@
         else if (m.type === 'game') onGame(m.on);
         else if (m.type === 'desks') { desks = m; render(); }
         // results other widgets asked for (mixer, monitor, warm screen, idle) go through localStorage
-        if (['audio', 'sys', 'warm', 'idle', 'game', 'desks', 'bt'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
+        if (['audio', 'sys', 'warm', 'idle', 'game', 'desks', 'bt', 'lang', 'privacy', 'net', 'rec', 'backup', 'dlsort', 'ffmpeg'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
       });
       helper.onStderr(l => log('stderr: ' + l));
       helper.onExit(s => { log('helper exit ' + JSON.stringify(s)); helper = null; setTimeout(startHelper, 2000); });
@@ -157,6 +157,12 @@
     function syncPrefs() {
       const p = prefs(), c = p.corners || ['menu', 'none', 'none', 'desktop'];
       const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves')];
+      // part 3 switches (each feature can be turned off in the settings)
+      const on = (k, def) => (p[k] ?? def) ? 1 : 0;
+      lines.push(`feat2 lang=${on('langChip', true)} privacy=${on('privacy', true)} net=${on('netChip', false)} ocr=${on('ocr', true)} tr=${on('translate', true)} rec=${on('rec', true)} dlsort=${on('dlSort', false)} dlclean=${on('dlClean', false)}`);
+      lines.push('trtarget ' + (p.trTarget || 'en'), 'recfmt ' + (p.recFormat || 'mp4'));
+      const b = p.backup || {};
+      lines.push(`backup ${b.on ? 1 : 0} ${+b.hour || 20} ${(b.folders || ['Documents', 'Desktop', 'Pictures']).join('|')} ${b.target || ''}`);
       const sig = lines.join('|');
       if (sig !== lastPrefs && helper) { lastPrefs = sig; lines.forEach(send); }
       syncWarm();

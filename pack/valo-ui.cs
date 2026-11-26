@@ -371,8 +371,11 @@ public class ShotForm : WF.Form {
     }
     int S(float v) { return (int)Math.Round(v * s); }
 
-    public void Start() {
+    public string Mode = "shot";
+    public void Start() { Start("shot"); }
+    public void Start(string mode) {
         if (Visible) return;
+        Mode = mode;
         s = ValoUi.Scale(this);
         virt = WF.SystemInformation.VirtualScreen;
         if (shot != null) { shot.Dispose(); dim.Dispose(); }
@@ -399,7 +402,7 @@ public class ShotForm : WF.Form {
             using (SD.SolidBrush b = new SD.SolidBrush(ValoUi.Bg)) g.FillRectangle(b, lr);
             WF.TextRenderer.DrawText(g, label, font, lr, ValoUi.Fg, WF.TextFormatFlags.HorizontalCenter | WF.TextFormatFlags.VerticalCenter);
         } else {
-            string t = "Виділіть область · Enter — увесь екран · Esc — скасувати";
+            string t = (Mode == "ocr" ? "Текст з екрана: виділіть область" : Mode == "rec" ? "Запис екрана: виділіть область" : "Виділіть область") + " · Enter — увесь екран · Esc — скасувати";
             SD.Size ts = WF.TextRenderer.MeasureText(t, font);
             WF.Screen scr = WF.Screen.PrimaryScreen;
             SD.Rectangle lr = new SD.Rectangle(scr.Bounds.Left - virt.Left + (scr.Bounds.Width - ts.Width) / 2 - S(12), scr.Bounds.Top - virt.Top + S(80), ts.Width + S(24), ts.Height + S(14));
@@ -432,6 +435,8 @@ public class ShotForm : WF.Form {
     }
     void Close_() { Hide(); if (shot != null) { shot.Dispose(); dim.Dispose(); shot = null; dim = null; } }
     void Save(SD.Rectangle r) {
+        if (Mode == "rec") { SD.Rectangle sr = new SD.Rectangle(r.X + virt.Left, r.Y + virt.Top, r.Width, r.Height); Close_(); Recorder.Start(sr); return; }
+        if (Mode == "ocr") { SD.Bitmap c = null; try { c = shot.Clone(r, shot.PixelFormat); } catch { } Close_(); if (c != null) Ocr.Run(c); return; }
         string path = null;
         SD.Bitmap crop = null;
         try {

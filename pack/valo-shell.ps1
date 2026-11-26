@@ -169,7 +169,7 @@ public static class ValoShell {
     public static volatile bool CaptureWin = true;
     static HookProc hookProc;
     static bool winDown, otherKey, altTabbing, vSwallow;
-    static uint dotSwallow;
+    static uint dotSwallow, tSwallow;
     [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
     // also: Alt+Tab -> valo switcher, Win+V -> clipboard history, PrintScreen -> area screenshot
     static IntPtr Hook(int code, IntPtr w, IntPtr l) {
@@ -201,6 +201,7 @@ public static class ValoShell {
                 }
                 if (vk == 0x56 && !down && vSwallow) { vSwallow = false; return new IntPtr(1); }
                 if (!down && dotSwallow != 0 && vk == dotSwallow) { dotSwallow = 0; return new IntPtr(1); }
+                if (!down && tSwallow != 0 && vk == tSwallow) { tSwallow = 0; return new IntPtr(1); }
             }
             if (CaptureWin) {
                 bool isWin = vk == 0x5B || vk == 0x5C;
@@ -210,6 +211,14 @@ public static class ValoShell {
                 } else if (down && winDown && !injected) {
                     otherKey = true;
                     if (vk == 0x56 && ValoUi.ClipOn && ClipForm.Inst != null) { vSwallow = true; ValoUi.Post(delegate { ClipForm.Inst.Toggle(); }); return new IntPtr(1); }
+                    bool shiftDown = (GetAsyncKeyState(0x10) & 0x8000) != 0;
+                    if (shiftDown && vk == 0x54 && Feat.Ocr && ShotForm.Inst != null) { tSwallow = vk; ValoUi.Post(delegate { ShotForm.Inst.Start("ocr"); }); return new IntPtr(1); }
+                    if (shiftDown && vk == 0x59 && Feat.Tr) { tSwallow = vk; Thread tt = new Thread(delegate () { Thread.Sleep(150); Translate.Run(); }); tt.IsBackground = true; tt.Start(); return new IntPtr(1); }
+                    if (shiftDown && vk == 0x52 && Feat.Rec && Recorder.FFmpeg() != null && ShotForm.Inst != null) {
+                        tSwallow = vk;
+                        if (Recorder.Busy) Recorder.Stop(); else ValoUi.Post(delegate { ShotForm.Inst.Start("rec"); });
+                        return new IntPtr(1);
+                    }
                     if ((vk == 0xBE || vk == 0xBA) && ValoUi.EmojiOn) { dotSwallow = vk; Typer.Remember(); Emit.Line("{\"type\":\"emoji\"}"); return new IntPtr(1); }
                 }
             }
@@ -403,6 +412,16 @@ public static class ValoShell {
                         if (c.StartsWith("desk ")) { int d; if (int.TryParse(c.Substring(5), out d)) ValoWatch.GoDesk(d); continue; }
                         if (c == "desknew") { ValoWatch.NewDesk(); continue; }
                         if (c == "bt") { Emit.Line(BtBattery.List()); continue; }
+                        // part 3
+                        if (c.StartsWith("feat2 ")) { Feat.Set(c.Substring(6)); continue; }
+                        if (c.StartsWith("trtarget ")) { Feat.TrTarget = c.Substring(9).Trim(); continue; }
+                        if (c.StartsWith("recfmt ")) { Feat.RecFormat = c.Substring(7).Trim(); continue; }
+                        if (c == "nextlang") { Watch3.NextLang(); continue; }
+                        if (c == "recstop") { Recorder.Stop(); continue; }
+                        if (c == "dlsortnow") { int n = Downloads.SortNow(); Emit.Line("{\"type\":\"dlsort\",\"moved\":" + n + "}"); continue; }
+                        if (c.StartsWith("backup ")) { Backup.Set(c.Substring(7)); continue; }
+                        if (c == "backupnow") { Backup.Run(); continue; }
+                        if (c == "ffmpeg?") { Emit.Line("{\"type\":\"ffmpeg\",\"ok\":" + (Recorder.FFmpeg() != null ? "true" : "false") + "}"); continue; }
                         if (c.StartsWith("barstyle ")) { BarSticky = c.EndsWith("1"); Commands.Enqueue("popups"); continue; }
                         if (c.StartsWith("dock ")) {
                             string[] a = c.Split(' ');
@@ -642,7 +661,8 @@ public class PreviewForm : WF.Form {
 '@
 # UI parts (Alt+Tab, clipboard history, screenshots) live in valo-ui.cs next to this script
 foreach ($ui in Get-ChildItem (Join-Path $PSScriptRoot 'valo-ui*.cs') | Sort-Object Name) { $valoCs += "`n" + [IO.File]::ReadAllText($ui.FullName) }
-Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms -TypeDefinition $valoCs
+Add-Type -ReferencedAssemblies System.Drawing, System.Windows.Forms, Microsoft.VisualBasic -TypeDefinition $valoCs
+[Feat]::Pack = $PSScriptRoot
 
 if ($RestoreTaskbar) { [ValoShell]::ShowTaskbar(); return }
 if ($HideTaskbar) { for ($i = 0; $i -lt 20; $i++) { if ([ValoShell]::TaskbarVisible()) { [ValoShell]::HideTaskbar() }; Start-Sleep -Milliseconds 500 }; return }
@@ -666,7 +686,7 @@ Log 'hook...'; [ValoShell]::StartKeyHook(); Log 'hook ok'
 [PreviewForm]::Start(); Log 'preview ok'
 [ValoShell]::StartStdinReader()
 [ValoShell]::StartDockWatch()
-[ValoWatch]::Start(); [ValoShell]::StartSysMon()
+[ValoWatch]::Start(); [ValoShell]::StartSysMon(); [Watch3]::Start()
 $last = ''
 $iconsSent = @{}
 $tick = 0
@@ -709,6 +729,7 @@ while ($true) {
     if ($hideTaskbar -and ($tick % 10 -eq 0) -and [ValoShell]::EnsureAutoHide()) { Log 'auto-hide re-enabled' }
     if ($tick % 3 -eq 0) { $ab = [ValoShell]::EnsureDock(); if ($ab) { Log ('dock ' + $ab) } }
     if ($tick % 3 -eq 1) { $pp = [ValoShell]::EnsurePopups(); if ($pp) { Log ('popups ' + $pp) } }
+    if ($tick % 150 -eq 7) { [Backup]::Tick() }
     if ($tick % 25 -eq 0 -and [Gamma]::Warm -gt 0) { [void][Gamma]::Apply([Gamma]::Warm) }   # displays reset the ramp after sleep
     if ($false -and $hideTaskbar -and ($tick % 4 -eq 0)) { $wa = [ValoShell]::EnsureWorkArea(); if ($wa) { Log ('work area ' + $wa) } }
 

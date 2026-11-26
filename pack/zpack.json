@@ -505,6 +505,63 @@
                                                            }
                                         }
                                     ]
+                    },
+                    {
+                        "name":  "desk",
+                        "htmlPath":  "./desk.html",
+                        "zOrder":  "bottom_most",
+                        "shownInTaskbar":  false,
+                        "focused":  false,
+                        "resizable":  false,
+                        "transparent":  true,
+                        "includeFiles":  [
+                                             "*.html",
+                                             "*.js"
+                                         ],
+                        "caching":  {
+                                        "rules":  [
+
+                                                  ],
+                                        "defaultDuration":  604800
+                                    },
+                        "privileges":  {
+                                           "shellCommands":  [
+                                                                 {
+                                                                     "program":  "powershell",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "explorer",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "rundll32",
+                                                                     "argsRegex":  ".*"
+                                                                 },
+                                                                 {
+                                                                     "program":  "shutdown",
+                                                                     "argsRegex":  ".*"
+                                                                 }
+                                                             ]
+                                       },
+                        "presets":  [
+                                        {
+                                            "name":  "default",
+                                            "anchor":  "top_right",
+                                            "offsetX":  "-30px",
+                                            "offsetY":  "70px",
+                                            "width":  "340px",
+                                            "height":  "560px",
+                                            "monitorSelection":  {
+                                                                     "type":  "primary"
+                                                                 },
+                                            "dockToEdge":  {
+                                                               "edge":  null,
+                                                               "windowMargin":  "0px",
+                                                               "enabled":  false
+                                                           }
+                                        }
+                                    ]
                     }
                 ]
 }
