@@ -32,6 +32,12 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Латте|Latte|Latte
 Графіт|Graphite|Grafit
 Захід|Sunset|Apus
+Алюміній|Aluminium|Aluminiu
+світла, чиста, як у Mac|light and clean, Mac-like|luminoasă și curată, ca pe Mac
+Космос|Space|Spațiu
+темний алюміній, синій акцент|dark aluminium, blue accent|aluminiu închis, accent albastru
+Скло|Glass|Sticlă
+матове скло, світлі краї|frosted glass, light edges|sticlă mată, margini luminoase
 Своя|Custom|Personalizată
 рожевий на темному, м’які кути|pink on dark, soft corners|roz pe închis, colțuri moi
 синьо-фіолетовий неон|blue-violet neon|neon albastru-violet

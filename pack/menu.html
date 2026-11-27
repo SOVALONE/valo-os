@@ -348,7 +348,7 @@
   <script type="module">
     import * as zebar from './zebar.js';
     import { translate, locale, source } from './i18n.js';
-    import { THEMES, getTheme, saveTheme, applyTheme, customVars, CUSTOM_DEFAULT } from './themes.js';
+    import { THEMES, getTheme, saveTheme, applyTheme, customVars, CUSTOM_DEFAULT, wallOf } from './themes.js';
     import { calc, currencyQuery, rates, convert, matchSettings, fmt, convertUnits, command } from './search.js';
     import { findCity } from './weather.js';
     import { profiles as modeList, setProfile, DEFAULTS as MODE_DEFAULTS } from './profiles.js';
@@ -1021,9 +1021,9 @@
     function syncWallpaper() {
       const t = getTheme();
       if (t.id === 'custom') return;
-      if (t.lockSync) zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id, '-Lock']).catch(() => {});
+      if (t.lockSync) zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', wallOf(t.id), '-Lock']).catch(() => {});
       if (t.wallSync === false) return;
-      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id]).then(r => {
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', wallOf(t.id)]).then(r => {
         let o = null; try { o = JSON.parse((r.stdout || '').trim()); } catch { }
         $('wpHint').textContent = o?.ok ? 'Шпалери змінено на тему «' + (THEMES[t.id]?.name || t.id) + '».' : (o?.error || 'Не вдалося змінити шпалери') + '.';
       }).catch(() => {});

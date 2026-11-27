@@ -119,7 +119,7 @@
   <script type="module">
     import * as zebar from './zebar.js';
     import './i18n.js';
-    import { THEMES, getTheme, saveTheme, customVars } from './themes.js';
+    import { THEMES, getTheme, saveTheme, customVars, wallOf } from './themes.js';
 
     const $ = id => document.getElementById(id);
     const widget = zebar.currentWidget();
@@ -170,7 +170,7 @@
     function wallpaper() {
       const t = getTheme();
       if (t.wallSync === false || t.id === 'custom') return;
-      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', t.id]).catch(() => {});
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', wallOf(t.id)]).catch(() => {});
     }
 
     async function show() {

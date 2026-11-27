@@ -21,11 +21,11 @@
   <script type="module">
     // valo.os screensaver: the theme's live wallpaper scene with a clock, shown by the helper after N idle minutes
     import * as zebar from './zebar.js';
-    import { getTheme } from './themes.js';
+    import { getTheme, wallOf } from './themes.js';
     const win = zebar.currentWidget().tauriWindow;
     const IDS = ['sakura', 'night', 'matcha', 'latte', 'graphite', 'sunset'];
     let loaded = false, on = false;
-    function themeIndex() { const i = IDS.indexOf(getTheme().id); return i < 0 ? 0 : i; }
+    function themeIndex() { const i = IDS.indexOf(wallOf(getTheme().id)); return i < 0 ? 0 : i; }
     function load() {
       if (loaded) return;
       loaded = true;

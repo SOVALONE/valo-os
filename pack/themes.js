@@ -33,7 +33,35 @@ export const THEMES = {
     vars: { bg: 'rgba(36,22,28,.92)', solid: '#24161c', chip: '#3a2229', hi: '#4a2c34', accent: '#ff9e64', accent2: '#f7768e',
             text: '#ffe8d6', muted: '#b08a80', ink: '#24161c', border: 'rgba(255,158,100,.3)', radius: '20px', chipRadius: '13px', shadow: '0 6px 20px rgba(255,120,80,.15)' },
   },
+  // light and dark "aluminium" in a clean Mac-like style; glass = glassmorphism (frosted translucent panels)
+  // wall: which live wallpaper / screensaver scene the theme uses
+  aluminium: {
+    name: 'Алюміній', desc: 'світла, чиста, як у Mac', wall: 'latte',
+    vars: { bg: 'rgba(246,246,248,.86)', solid: '#f5f5f7', chip: '#e8e8ed', hi: '#dcdce2', accent: '#0a84ff', accent2: '#5e5ce6',
+            text: '#1d1d1f', muted: '#86868b', ink: '#ffffff', border: 'rgba(0,0,0,.08)', radius: '14px', chipRadius: '9px', shadow: '0 8px 30px rgba(0,0,0,.12)' },
+  },
+  space: {
+    name: 'Космос', desc: 'темний алюміній, синій акцент', wall: 'graphite',
+    vars: { bg: 'rgba(28,28,30,.88)', solid: '#1c1c1e', chip: '#2c2c2e', hi: '#3a3a3c', accent: '#0a84ff', accent2: '#bf5af2',
+            text: '#f5f5f7', muted: '#98989d', ink: '#ffffff', border: 'rgba(255,255,255,.1)', radius: '14px', chipRadius: '9px', shadow: '0 10px 32px rgba(0,0,0,.4)' },
+  },
+  glass: {
+    name: 'Скло', desc: 'матове скло, світлі краї', wall: 'night', glass: true,
+    vars: { bg: 'rgba(30,34,52,.42)', solid: '#1f2336', chip: 'rgba(255,255,255,.10)', hi: 'rgba(255,255,255,.2)', accent: '#a5b4fc', accent2: '#f0abfc',
+            text: '#ffffff', muted: 'rgba(255,255,255,.66)', ink: '#1b1d33', border: 'rgba(255,255,255,.32)', radius: '18px', chipRadius: '12px', shadow: '0 8px 32px rgba(10,14,40,.35)' },
+  },
 };
+// live wallpaper / screensaver scene of a theme (the new themes reuse one of the six scenes)
+export const wallOf = id => THEMES[id]?.wall || id;
+
+// glassmorphism: the panels of every widget get a frosted gradient, a light edge and an inner highlight
+const GLASS_CSS = `
+html.glass .bar, html.glass .dock { background: linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.06)), var(--bg) !important;
+  border-color: var(--border) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), var(--shadow) !important; backdrop-filter: blur(20px) saturate(160%); }
+html.glass .menu, html.glass .cc, html.glass .em { background: linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 45%), rgba(28,32,50,.78) !important;
+  border-color: var(--border) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 18px 50px rgba(10,14,40,.45) !important; backdrop-filter: blur(24px) saturate(160%); }
+html.glass .chip, html.glass .btn { border: 1px solid rgba(255,255,255,.14); }
+`;
 
 export const DEFAULT = { id: 'sakura', sticky: false, size: 100, dockSticky: false, dockOverlap: false, dockHide: false, dockTrash: true, wallSync: true };
 export const SIZES = [100, 75, 50];
@@ -82,6 +110,9 @@ export function applyTheme() {
   root.classList.toggle('sticky', isDock ? !!t.dockSticky : !!t.sticky);
   root.classList.toggle('overlap', isDock && !!t.dockOverlap);
   root.classList.toggle('light', lum(vars.solid) > 0.5);
+  const glass = !!(THEMES[t.id] || {}).glass;
+  root.classList.toggle('glass', glass);
+  if (glass && !document.getElementById('valo-glass')) { const st = document.createElement('style'); st.id = 'valo-glass'; st.textContent = GLASS_CSS; document.head.append(st); }
   for (const z of SIZES) root.classList.toggle('s' + z, !isDock && !!t.sticky && t.size === z);
 }
 

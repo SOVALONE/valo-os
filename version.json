@@ -1,9 +1,9 @@
 {
-    "version":  "1.10.0",
+    "version":  "1.11.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "Консоль valo — повноекранний ігровий режим для геймпада й телевізора: бібліотека Steam, Epic, GOG та «Ігор valo» з обкладинками й фоном гри, «Ігри valo», гучність, сон і вимкнення",
-                  "Відкривається Win+Shift+G, кнопкою Xbox або View+Menu на геймпаді, кнопкою з геймпадом у меню; після гри консоль повертається сама; вимикається в «Функціях»"
+                  "Нові теми: «Алюміній» (світла, чиста, як у Mac), «Космос» (темний алюміній) і «Скло» (glassmorphism: матові напівпрозорі панелі зі світлими краями)",
+                  "Нові теми беруть живі шпалери й заставку з наявних сцен"
               ],
     "files":  [
                   {
@@ -36,11 +36,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "3b97a4d4cd76d988e0ababebc189880c2b5d419bc6cf9742141d372ef9d5989d"
+                      "sha256":  "efb89940e364a535580e5409d30a9bc57aae57649f7a9de178688e25d94b4ca6"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "cc2017dbf8acc6bfe258de922885a0d24301002212372ddd64f8067fffee2aac"
+                      "sha256":  "f1c6d94512d25ea2f6dad61b3ce071eb5b1585fc3bb9fd8a640b2f424521a75a"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -48,7 +48,7 @@
                   },
                   {
                       "path":  "pack/saver.html",
-                      "sha256":  "a265f625c71d78c23d765600aade71e519821d4cb9ee1c6f995d9a37a31949cd"
+                      "sha256":  "4726ee1821be557d3629badc67a69a173282b07180ed0c2344dc339753e56d47"
                   },
                   {
                       "path":  "pack/saver-scene.js",
@@ -60,7 +60,7 @@
                   },
                   {
                       "path":  "pack/themes.js",
-                      "sha256":  "2ec65ad59c03d79daa2a89f40ec2d86328fd074a71776ae2bf7235e6e6556acc"
+                      "sha256":  "5bac57fe1eea4472d4e68505b9c6e6d5b36261d808e47733fd1d2e5f65473263"
                   },
                   {
                       "path":  "pack/valo-apps.ps1",
@@ -228,7 +228,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "68eaf8661ef69ff9bb96d09fc33b9bebdfd2c5d7deba6ccdb7651ba8614674ed"
+                      "sha256":  "dbb04d1e70287cb81ce10e119cf262f025866c63db7107a8cd31aad9c35dd8c0"
                   },
                   {
                       "path":  "pack/weather.js",
@@ -236,7 +236,7 @@
                   },
                   {
                       "path":  "pack/welcome.html",
-                      "sha256":  "a43cee73510fde17975bfb745540f312da51978543a237e12533424f789e021c"
+                      "sha256":  "244aa5903ea83b9feabd04523ada82f0c40c69bf1a5d660ea98827f584901531"
                   },
                   {
                       "path":  "pack/zebar.js",
