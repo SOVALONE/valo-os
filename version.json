@@ -1,9 +1,9 @@
 {
-    "version":  "1.14.0",
+    "version":  "1.14.1",
     "date":  "2026-11-27",
     "notes":  [
-                  "Files — провідник за замовчуванням: папки, Win+E і «показати в папці» відкриваються у Files (новий valo.os ставить Files сам)",
-                  "Перемикач: меню → Панель і теми → Система → Функції → «Files — провідник за замовчуванням» (вимкнути — знову Провідник Windows)"
+                  "Win+E відкриває Files (Windows 11 26H2 перестав слухатися налаштування Files для Win+E)",
+                  "Значок «Провідник» у доку й меню відкриває Files, коли він провідник за замовчуванням"
               ],
     "files":  [
                   {
@@ -24,7 +24,7 @@
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "8e11d98cb2ec94d4c1697e5803fd17db3777cea4be782e1feb860c6ec87fcc15"
+                      "sha256":  "4bfee4295d76a75b1aa5cc3c24c91414f90bc2775caa65a4bda5919b05aa710e"
                   },
                   {
                       "path":  "pack/emoji.html",
@@ -40,7 +40,7 @@
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "2bab6604d78d96ffa0d557797c1c8d60d39437f51544525d8ee0aa3168401f82"
+                      "sha256":  "6cbe55ff1b7e40baa51e857414e4c42caa6f582ffe4bfb612f02f214fff30f09"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -156,7 +156,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "1d5257f94e0baab9db8d208decd006c1a797dd07f29b24f7ceefde6316b01e7c"
+                      "sha256":  "10f6ee0512403f0e2664502cb57b68680b22d36049529739a959d30b29e5b316"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -216,7 +216,7 @@
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "5406531d97dd0bc8a61842589027d18b090d5917fb7a6067b775a1a533270d4a"
+                      "sha256":  "8f2953a547bb6bfcd7fde7780f63b113b13a2b660b3a417a18a3028ef6dc05f1"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
@@ -232,7 +232,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "aae6e21ae17561f66a2a931131e2b5a8b66314a77171856f2788cf43c29f9b75"
+                      "sha256":  "668876490b3859ceb593a3b1902f89e1686e6138ce7d07766603a77d70cb4e73"
                   },
                   {
                       "path":  "pack/weather.js",

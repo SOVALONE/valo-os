@@ -229,7 +229,8 @@
     }
 
     function launch(g) {
-      if (g.app) zebar.shellExec('explorer', ['shell:AppsFolder\\' + g.app.id]).catch(() => {});
+      if (g.app) { if (g.app.id === 'Microsoft.Windows.Explorer' && localStorage.getItem('valo.filesDefault') === '1') zebar.shellExec('powershell', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', 'Start-Process "$env:LOCALAPPDATA\\Microsoft\\WindowsApps\\files-stable.exe"']).catch(() => {});
+      else zebar.shellExec('explorer', ['shell:AppsFolder\\' + g.app.id]).catch(() => {}); }
       else if (g.exe) zebar.shellExec('explorer', [g.exe]).catch(() => {});
     }
 

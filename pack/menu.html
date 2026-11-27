@@ -677,6 +677,7 @@
     const openFolder = p => zebar.shellExec('powershell', [...PS, '-Command', `Start-Process -LiteralPath '${String(p).replace(/'/g, "''")}'`]).catch(() => {});
     const filesPs = (...a) => zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-files.ps1', ...a]).then(r => { try { return JSON.parse((r?.stdout || '').trim()); } catch { return null; } }).catch(() => null);
     let filesSt = null;
+    filesPs('-Status').then(r => { if (r) { filesSt = r; localStorage.setItem('valo.filesDefault', r.default ? '1' : '0'); } });
     async function renderFiles(box) {
       const el = document.createElement('div'); el.className = 'sw' + (filesSt?.default ? ' on' : '');
       el.innerHTML = '<div class="tx"><span>Files — провідник за замовчуванням</span><small></small></div><i class="tg"></i>';
@@ -1192,7 +1193,8 @@
       const t = document.createElement('div'); t.className = 'ic tile ' + cls; t.textContent = (a.n[0] || '?').toUpperCase(); return t;
     }
     function launch(a) {
-      zebar.shellExec('explorer', ['shell:AppsFolder\\' + a.id]).catch(() => {});
+      if (a.id === 'Microsoft.Windows.Explorer' && localStorage.getItem('valo.filesDefault') === '1') zebar.shellExec('powershell', [...PS, '-Command', 'Start-Process "$env:LOCALAPPDATA\\Microsoft\\WindowsApps\\files-stable.exe"']).catch(() => {});
+      else zebar.shellExec('explorer', ['shell:AppsFolder\\' + a.id]).catch(() => {});
       close();
     }
     function togglePin(a) {

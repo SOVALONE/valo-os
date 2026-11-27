@@ -219,6 +219,7 @@ public static class ValoShell {
                         if (Recorder.Busy) Recorder.Stop(); else ValoUi.Post(delegate { ShotForm.Inst.Start("rec"); });
                         return new IntPtr(1);
                     }
+                    if (vk == 0x45 && !shiftDown && (GetAsyncKeyState(0x12) & 0x8000) == 0 && (GetAsyncKeyState(0x11) & 0x8000) == 0 && ValoFiles.IsDefault()) { tSwallow = vk; Thread ft = new Thread(ValoFiles.OpenNew); ft.IsBackground = true; ft.Start(); return new IntPtr(1); }   // Win+E: Files when it is the default file manager
                     if (vk == 0x4B && (GetAsyncKeyState(0x12) & 0x8000) != 0) { tSwallow = vk; Thread mt = new Thread(delegate () { AudioMix.MicToggle(); ValoWatch.MicLast = AudioMix.MicMuteState(); Emit.Line(AudioMix.MicList()); }); mt.IsBackground = true; mt.Start(); return new IntPtr(1); }   // Win+Alt+K: microphone on / off
                     if (shiftDown && vk == 0x47 && Feat.ConsoleOn) { tSwallow = vk; Emit.Line("{\"type\":\"console\"}"); return new IntPtr(1); }   // Win+Shift+G: valo console
                     if ((vk == 0xBE || vk == 0xBA) && ValoUi.EmojiOn) { dotSwallow = vk; Typer.Remember(); Emit.Line("{\"type\":\"emoji\"}"); return new IntPtr(1); }

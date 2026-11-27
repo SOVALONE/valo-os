@@ -10,6 +10,17 @@
 // ------------------------------------------------------------------ "show in folder"
 // In Files when it is the default file manager (valo-files.ps1 wrote the per-user Folder\shell\open key), otherwise in Explorer.
 public static class ValoFiles {
+    static string Alias() { return Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\WindowsApps\files-stable.exe"); }
+    public static bool IsDefault() {
+        try {
+            using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\Folder\shell\open\command")) {
+                string cmd = k == null ? null : k.GetValue("", "", Microsoft.Win32.RegistryValueOptions.DoNotExpandEnvironmentNames) as string;
+                return cmd != null && cmd.Contains("Files.App.Launcher.exe") && System.IO.File.Exists(Alias());
+            }
+        } catch { return false; }
+    }
+    // Win+E: Windows 11 26H2 no longer follows the per-user Win+E key, so the helper's hook opens Files itself
+    public static void OpenNew() { try { System.Diagnostics.Process.Start(Alias()); } catch { } }
     public static void Reveal(string path) {
         try {
             string cmd = null;
