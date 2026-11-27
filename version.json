@@ -1,8 +1,8 @@
 {
-    "version":  "1.13.1",
+    "version":  "1.13.2",
     "date":  "2026-11-27",
     "notes":  [
-                  "Панель задач Windows більше не вискакує, коли мишка торкається низу екрана: valo ховає її одразу, а не через секунду-дві"
+                  "Консоль: вибрана гра піднімається й більше не обрізається згори"
               ],
     "files":  [
                   {
@@ -11,7 +11,7 @@
                   },
                   {
                       "path":  "pack/console.html",
-                      "sha256":  "9e5c8f5bf9c69f501392450b610c7de30cacbdfe5e1dd26c0eddf14821ab2acb"
+                      "sha256":  "12d486d1bd4cfff5c6307bb93cb302bc60d40071bcf262f9ffbf8c6bea60f1db"
                   },
                   {
                       "path":  "pack/control.html",
@@ -227,7 +227,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "a9bcdb6759d036bae8a69d9cf6a49c61637ca2e5da5723753f7bd649943c5515"
+                      "sha256":  "84fed3e6310e43466571717582185b0300bce46d788ed096794cc77a2f3a996a"
                   },
                   {
                       "path":  "pack/weather.js",
