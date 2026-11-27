@@ -122,6 +122,7 @@
         else if (m.type === 'trash') { trashN = m.n; render(); }
         else if (m.type === 'cc') toggleWidget('cc', 'control');
         else if (m.type === 'emoji') toggleWidget('emoji', 'emoji');
+        else if (m.type === 'console') toggleWidget('console', 'console');
         else if (m.type === 'game') onGame(m.on);
         else if (m.type === 'desks') { desks = m; render(); }
         // results other widgets asked for (mixer, monitor, warm screen, idle) go through localStorage
@@ -159,7 +160,7 @@
       const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves')];
       // part 3 switches (each feature can be turned off in the settings)
       const on = (k, def) => (p[k] ?? def) ? 1 : 0;
-      lines.push(`feat2 lang=${on('langChip', true)} privacy=${on('privacy', true)} net=${on('netChip', false)} ocr=${on('ocr', true)} tr=${on('translate', true)} rec=${on('rec', true)} dlsort=${on('dlSort', false)} dlclean=${on('dlClean', false)}`);
+      lines.push(`feat2 lang=${on('langChip', true)} privacy=${on('privacy', true)} net=${on('netChip', false)} ocr=${on('ocr', true)} tr=${on('translate', true)} rec=${on('rec', true)} dlsort=${on('dlSort', false)} dlclean=${on('dlClean', false)} console=${on('console', true)}`);
       lines.push('trtarget ' + (p.trTarget || 'en'), 'recfmt ' + (p.recFormat || 'mp4'));
       const b = p.backup || {};
       lines.push(`backup ${b.on ? 1 : 0} ${+b.hour || 20} ${(b.folders || ['Documents', 'Desktop', 'Pictures']).join('|')} ${b.target || ''}`);
@@ -362,6 +363,7 @@
       else if (e.key === 'valo.appsAt') loadApps();
       else if (e.key === 'valo.taskbarHide') send('taskbar ' + (e.newValue === '0' ? 'show' : 'hide'));
       else if (e.key === 'valo.focusMenu') send('activatetitle Zebar - quill / menu');
+      else if (e.key === 'valo.consoleOpen' && e.newValue) toggleWidget('console', 'console');
       else if (e.key === 'valo.focusWin' && e.newValue) send('activatetitle ' + e.newValue.split('|')[0]);
       else if (e.key === 'valo.theme') { lastSig = ''; render(); setTimeout(syncDock, 350); }
       else if (e.key === 'valo.features') syncDock();

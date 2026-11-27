@@ -333,6 +333,7 @@
       <div class="user"><div class="av" id="av">?</div><span id="user"></span></div>
       <button class="btn nf" data-act="update" data-tip="Перевірити оновлення">&#xF0162;</button>
       <button class="btn nf" data-act="store" data-tip="Магазин програм">&#xF0110;</button>
+      <button class="btn nf" data-act="console" data-tip="Консоль — ігри на весь екран (Win+Shift+G)">&#xF0297;</button>
       <button class="btn nf" data-act="panel" data-tip="Панель і теми">&#xF03D8;</button>
       <button class="btn nf" data-act="settings" data-tip="Налаштування Windows">&#xF0493;</button>
       <button class="btn nf" data-act="lock" data-tip="Заблокувати">&#xF033E;</button>
@@ -605,6 +606,7 @@
       ['dlClean', false, 'Старі інсталятори в кошик', 'з «Завантаження\\Інсталятори», старші за 30 днів'],
       ['deskWidgets', false, 'Віджети на робочому столі', 'годинник, погода, нотатка й календар поверх шпалер'],
       ['modesOn', true, 'Режими (Робота, Ігри, Відпочинок, В дорозі)', 'рядок у центрі керування, авто за Wi‑Fi'],
+      ['console', true, 'Консоль — Win+Shift+G або кнопка Xbox', 'повноекранна бібліотека ігор для геймпада й телевізора'],
     ];
     function swRow(key, def, title, sub, onChange) {
       const el = document.createElement('div'); el.className = 'sw' + ((P()[key] ?? def) ? ' on' : '');
@@ -1339,6 +1341,7 @@
         if (b.dataset.act === 'panel') { showPage(page === 'settings' ? 'main' : 'settings'); return; }
         if (b.dataset.act === 'update') { showPage('settings'); showTab('data'); checkUpdate(); setTimeout(() => $('updBtn').scrollIntoView({ block: 'center', behavior: 'smooth' }), 80); return; }
         if (b.dataset.act === 'store') { if (page === 'store') showPage('main'); else openStore(); return; }
+        if (b.dataset.act === 'console') { localStorage.setItem('valo.consoleOpen', String(Date.now())); close(); return; }
         if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; return; }
         ACT[b.dataset.act]()?.catch?.(() => {});
         close();

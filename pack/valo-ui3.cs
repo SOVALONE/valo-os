@@ -1,5 +1,5 @@
-// valo.os helper, part 3 (compiled with valo-shell.ps1 + valo-ui.cs + valo-ui2.cs). Every feature here can be switched off.
-//   Feat         - on/off flags (command: feat2 lang=1 privacy=1 net=0 ocr=1 tr=1 rec=1 dlsort=0 dlclean=0)
+﻿// valo.os helper, part 3 (compiled with valo-shell.ps1 + valo-ui.cs + valo-ui2.cs). Every feature here can be switched off.
+//   Feat         - on/off flags (command: feat2 lang=1 privacy=1 net=0 ocr=1 tr=1 rec=1 dlsort=0 dlclean=0 console=1)
 //   Watch3       - keyboard layout of the active window, microphone / camera / location in use, network speed
 //   Ocr          - Win+Shift+T: select an area -> text (Windows OCR, offline) -> clipboard
 //   Translate    - Win+Shift+Y: translate the selected text (MyMemory) in a small window
@@ -8,11 +8,11 @@
 //   Backup       - daily copy of chosen folders to a drive (robocopy, nothing is deleted at the target)
 
 public static class Feat {
-    public static volatile bool Lang = true, Privacy = true, Net = false, Ocr = true, Tr = true, Rec = true, DlSort = false, DlClean = false;
+    public static volatile bool Lang = true, Privacy = true, Net = false, Ocr = true, Tr = true, Rec = true, DlSort = false, DlClean = false, ConsoleOn = true;
     public static volatile string TrTarget = "en", RecFormat = "mp4";
     public static void Set(string s) {
         Lang = !s.Contains("lang=0"); Privacy = !s.Contains("privacy=0"); Net = s.Contains("net=1"); Ocr = !s.Contains("ocr=0");
-        Tr = !s.Contains("tr=0"); Rec = !s.Contains("rec=0"); DlSort = s.Contains("dlsort=1"); DlClean = s.Contains("dlclean=1");
+        Tr = !s.Contains("tr=0"); Rec = !s.Contains("rec=0"); DlSort = s.Contains("dlsort=1"); DlClean = s.Contains("dlclean=1"); ConsoleOn = !s.Contains("console=0");
         Downloads.Apply();
     }
     public static string Pack = "";

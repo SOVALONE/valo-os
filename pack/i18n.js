@@ -146,6 +146,27 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Утиліти|Utilities|Utilitare
 Рекомендує valo.os|Recommended by valo.os|Recomandat de valo.os
 Ігри|Games|Jocuri
+консоль|console|consolă
+Бібліотека|Library|Bibliotecă
+Сховати / показати|Hide / show|Ascunde / arată
+Вибрати|Select|Alege
+Розділи|Sections|Secțiuni
+Гучність|Volume|Volum
+На робочий стіл|To the desktop|La desktop
+вийти з консолі|leave the console|ieși din consolă
+Сховані ігри|Hidden games|Jocuri ascunse
+Оновити бібліотеку|Refresh library|Reîmprospătează biblioteca
+знайти нові ігри|find new games|găsește jocuri noi
+Так|Yes|Da
+Ні|No|Nu
+запускаю…|starting…|pornesc…
+геймпад підключено|gamepad connected|gamepad conectat
+геймпад не підключено|no gamepad|niciun gamepad
+Ігор не знайдено|No games found|Niciun joc găsit
+Усі ігри сховані|All games are hidden|Toate jocurile sunt ascunse
+Консоль — ігри на весь екран (Win+Shift+G)|Console — fullscreen games (Win+Shift+G)|Consolă — jocuri pe tot ecranul (Win+Shift+G)
+Консоль — Win+Shift+G або кнопка Xbox|Console — Win+Shift+G or the Xbox button|Consolă — Win+Shift+G sau butonul Xbox
+повноекранна бібліотека ігор для геймпада й телевізора|fullscreen game library for a gamepad and the TV|bibliotecă de jocuri pe tot ecranul pentru gamepad și TV
 Ігрові магазини|Game stores|Magazine de jocuri
 Ігри valo|valo games|Jocuri valo
 Завантажити|Download|Descarcă
@@ -206,6 +227,7 @@ Bluetooth|Bluetooth|Bluetooth
 Почнімо|Let's start|Să începem
 Далі|Next|Înainte
 Назад|Back|Înapoi
+Закрити|Close|Închide
 Пропустити|Skip|Omite
 Почати роботу|Get started|Începe
 Оберіть тему|Choose a theme|Alege o temă

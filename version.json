@@ -1,14 +1,18 @@
 {
-    "version":  "1.9.0",
+    "version":  "1.10.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "Магазин: розділ «Ігри valo» — наші ігри, ігри друзів і дозволені до поширення з репозиторію SOVALONE/valo-games (завантаження з GitHub з перевіркою SHA-256 або торентом на вибір, ярлик у меню, «Грати» і «Видалити»; платні ігри — посиланням на офіційний сайт)",
-                  "Колишній розділ «Ігри» тепер «Ігрові магазини»"
+                  "Консоль valo — повноекранний ігровий режим для геймпада й телевізора: бібліотека Steam, Epic, GOG та «Ігор valo» з обкладинками й фоном гри, «Ігри valo», гучність, сон і вимкнення",
+                  "Відкривається Win+Shift+G, кнопкою Xbox або View+Menu на геймпаді, кнопкою з геймпадом у меню; після гри консоль повертається сама; вимикається в «Функціях»"
               ],
     "files":  [
                   {
                       "path":  "pack/bar.html",
                       "sha256":  "969e44012b28d32d55f7720264110707de177f8e7945d9b9fdf6b5aca433dc29"
+                  },
+                  {
+                      "path":  "pack/console.html",
+                      "sha256":  "e494e18dea85c3f6bc3201b43933cbe7086510f6995014bcc1926f8978a8a448"
                   },
                   {
                       "path":  "pack/control.html",
@@ -20,7 +24,7 @@
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "c4b14eb5f99a8875d257d39545b448b3763586ea716d1e22f298a71f2effbf7c"
+                      "sha256":  "a65ed8b54a27aca768ac6a215db4722e4000d3ef681889c3406f59fdc623092a"
                   },
                   {
                       "path":  "pack/emoji.html",
@@ -32,11 +36,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "4fecf0fe85a0d77d095d7393985a58c6a136aa3e51e294ef8788b574bfc820cf"
+                      "sha256":  "3b97a4d4cd76d988e0ababebc189880c2b5d419bc6cf9742141d372ef9d5989d"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "771afcf174c519cc742f858ae3064cb8da17f634612b2adf2a7d14001248fd8e"
+                      "sha256":  "cc2017dbf8acc6bfe258de922885a0d24301002212372ddd64f8067fffee2aac"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -77,6 +81,10 @@
                   {
                       "path":  "pack/valo-cmd.ps1",
                       "sha256":  "5c3689651e8763484259ba0375e37254c2b9e1bba75411fb9bad3daeaf2441bb"
+                  },
+                  {
+                      "path":  "pack/valo-console.ps1",
+                      "sha256":  "933eed402ff8e7879b93f7300d3aedfc492d5d0fd0593244e212c871e936acbf"
                   },
                   {
                       "path":  "pack/valo-game.ps1",
@@ -144,7 +152,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "6d275ab80c3e4445b9f070bb9a3d41e6c67222133865888964509debf1306758"
+                      "sha256":  "edab2d6ce7e2a7f64b5101971ddfdb285f0626dcf1d2fd6aac0be1a026753a3b"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -204,11 +212,11 @@
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "39bbe23eefd62789971ad6f8014018de76fb4dfe80cf008515b0e502e86b293b"
+                      "sha256":  "9cad81809441c716860ce737e1074fd44da7235b6d900c29fc0dbd8bbaa72e6d"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
-                      "sha256":  "461154749ca1f7435c34d86ca3f0b4abeda159f0f89fb6295fea4c5452443469"
+                      "sha256":  "04dae10d57fc9215587261ae3571d55783c5ebd441d4801720be74c7c4e1afca"
                   },
                   {
                       "path":  "pack/valo-update.ps1",
@@ -220,7 +228,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "ce053122fa9da1454f804091d36d2448b5a775f05653b4d792419f01ef77cdb7"
+                      "sha256":  "68eaf8661ef69ff9bb96d09fc33b9bebdfd2c5d7deba6ccdb7651ba8614674ed"
                   },
                   {
                       "path":  "pack/weather.js",
@@ -236,7 +244,7 @@
                   },
                   {
                       "path":  "pack/zpack.json",
-                      "sha256":  "a304aea55b15ecf71638fd74e620de46c2112c5fcdffd928d93a6d90ce85d7dd"
+                      "sha256":  "04feb7fa5683f314347e17be579d2697388c71a3cff847d7df0c43ddf22d2ef6"
                   },
                   {
                       "path":  "wallpapers/valo-graphite/index.html",

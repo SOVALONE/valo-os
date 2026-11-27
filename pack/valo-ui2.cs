@@ -463,3 +463,35 @@ public static class BtBattery {
         return b.Append("]}").ToString();
     }
 }
+
+// ---- gamepad: the Xbox button, or View + Menu held together, opens / closes the valo console (Feat.ConsoleOn)
+public static class PadWatch {
+    [StructLayout(LayoutKind.Sequential)] struct XState { public uint packet; public ushort buttons; public byte lt, rt; public short lx, ly, rx, ry; }
+    [DllImport("xinput1_4.dll", EntryPoint = "#100")] static extern uint GetStateEx(uint i, ref XState s);   // also reports the Xbox (guide) button
+    [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState")] static extern uint GetState(uint i, ref XState s);
+    public static void Start() { Thread t = new Thread(Loop); t.IsBackground = true; t.Start(); }
+    static void Loop() {
+        bool[] connected = new bool[4]; long[] nextProbe = new long[4]; ushort[] last = new ushort[4]; long comboSince = 0; bool comboFired = false, ex = true;
+        while (true) {
+            Thread.Sleep(50);
+            try {
+                if (!Feat.ConsoleOn) { Thread.Sleep(1000); continue; }
+                long now = Environment.TickCount; bool combo = false;
+                for (uint i = 0; i < 4; i++) {
+                    if (!connected[i] && now < nextProbe[i]) continue;      // probing an empty slot is slow: once every 2 s
+                    XState s = new XState(); uint r;
+                    if (ex) { try { r = GetStateEx(i, ref s); } catch (EntryPointNotFoundException) { ex = false; r = GetState(i, ref s); } } else r = GetState(i, ref s);
+                    connected[i] = r == 0;
+                    if (r != 0) { nextProbe[i] = now + 2000; last[i] = 0; continue; }
+                    ushort b = s.buttons;
+                    if ((b & 0x0400) != 0 && (last[i] & 0x0400) == 0 && !ValoWatch.Game) Emit.Line("{\"type\":\"console\"}");
+                    if ((b & 0x0030) == 0x0030) combo = true;              // View (Back) + Menu (Start)
+                    last[i] = b;
+                }
+                if (!combo) { comboSince = 0; comboFired = false; }
+                else if (comboSince == 0) comboSince = now;
+                else if (!comboFired && now - comboSince > 500 && !ValoWatch.Game) { comboFired = true; Emit.Line("{\"type\":\"console\"}"); }
+            } catch { Thread.Sleep(2000); }
+        }
+    }
+}

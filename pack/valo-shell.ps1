@@ -219,6 +219,7 @@ public static class ValoShell {
                         if (Recorder.Busy) Recorder.Stop(); else ValoUi.Post(delegate { ShotForm.Inst.Start("rec"); });
                         return new IntPtr(1);
                     }
+                    if (shiftDown && vk == 0x47 && Feat.ConsoleOn) { tSwallow = vk; Emit.Line("{\"type\":\"console\"}"); return new IntPtr(1); }   // Win+Shift+G: valo console
                     if ((vk == 0xBE || vk == 0xBA) && ValoUi.EmojiOn) { dotSwallow = vk; Typer.Remember(); Emit.Line("{\"type\":\"emoji\"}"); return new IntPtr(1); }
                 }
             }
@@ -686,7 +687,7 @@ Log 'hook...'; [ValoShell]::StartKeyHook(); Log 'hook ok'
 [PreviewForm]::Start(); Log 'preview ok'
 [ValoShell]::StartStdinReader()
 [ValoShell]::StartDockWatch()
-[ValoWatch]::Start(); [ValoShell]::StartSysMon(); [Watch3]::Start()
+[ValoWatch]::Start(); [ValoShell]::StartSysMon(); [Watch3]::Start(); [PadWatch]::Start()
 $last = ''
 $iconsSent = @{}
 $tick = 0

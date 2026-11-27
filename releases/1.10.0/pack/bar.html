@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  /* theme variables come from themes.js; these are the Sakura defaults */
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+    --chip-hi: var(--hi); --pink: var(--accent); --rose: var(--accent2);
+    --chipH: 26px; --fs: 12px; --ic: 15px; --logo: 26px; --logoSvg: 23px; --padX: 10px; --gap: 8px; --clock: 13px;
+  }
+  .s75 { --chipH: 23px; --fs: 11px; --ic: 13px; --logo: 23px; --logoSvg: 20px; --padX: 8px; --gap: 6px; --clock: 12px; }
+  .s50 { --chipH: 17px; --fs: 10px; --ic: 11px; --logo: 17px; --logoSvg: 15px; --padX: 6px; --gap: 4px; --clock: 11px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; user-select: none; }
+  body {
+    font-family: 'JetBrainsMono Nerd Font', 'JetBrainsMono NF', Consolas, monospace;
+    font-size: var(--fs); color: var(--text);
+    padding: 8px 18px 0;
+  }
+  body, .bar, .chip, .tray, .logo { transition: background .3s, color .3s, border-radius .3s, padding .3s, height .3s; }
+  .bar {
+    height: 36px; border-radius: var(--radius); background: var(--bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 0 10px;
+  }
+  .left, .right { display: flex; align-items: center; gap: var(--gap); min-width: 0; }
+  .right { justify-content: flex-end; }
+  .logo {
+    width: var(--logo); height: var(--logo); border-radius: min(calc(var(--chipRadius) - 1px), 7px); background: var(--pink);
+    cursor: pointer; transition: transform .2s; display: grid; place-items: center;
+  }
+  .logo svg { width: var(--logoSvg); height: var(--logoSvg); }
+  .logo svg g[fill] { fill: var(--ink); }
+  .logo svg [stroke] { stroke: var(--accent); }
+
+  /* sticky: the bar sticks to the screen edges, no rounding */
+  .sticky body { padding: 0; }
+  .sticky .bar { height: 100vh; border-radius: 0; border-width: 0 0 1px 0; box-shadow: none; padding: 0 14px; }
+  .logo:hover { transform: scale(1.06); }
+  .ws { display: flex; gap: 6px; align-items: center; margin-left: 4px; }
+  .ws button {
+    all: unset; cursor: pointer; width: 9px; height: 9px; border-radius: 99px;
+    background: var(--hi); transition: all .25s ease;
+  }
+  .ws button.displayed { background: var(--muted); }
+  .ws button.focused { width: 24px; background: var(--pink); }
+  .app { color: var(--muted); margin-left: 8px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+  .app i { font-style: normal; color: var(--pink); font-size: 14px; }
+
+  .chip {
+    display: flex; align-items: center; gap: 6px; height: var(--chipH); padding: 0 var(--padX);
+    border-radius: var(--chipRadius); background: var(--chip); cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip:hover { background: var(--chip-hi); }
+  .chip i { font-style: normal; color: var(--pink); font-size: var(--ic); line-height: 1; }
+  .chip.off i { color: var(--muted); }
+  .clock { font-weight: 700; letter-spacing: .5px; font-size: var(--clock); }
+  .clock span { color: var(--pink); }
+  .low { color: var(--rose) !important; }
+
+  /* hidden icons (system tray), like the Windows "^" flyout but inline */
+  .tray { display: flex; align-items: center; height: var(--chipH); border-radius: var(--chipRadius); background: var(--chip); }
+  .tray .toggle { all: unset; cursor: pointer; width: var(--chipH); height: var(--chipH); font-family: inherit; display: grid; place-items: center;
+    color: var(--pink); font-size: var(--ic); border-radius: var(--chipRadius); transition: transform .25s, background .2s; }
+  .tray .toggle:hover { background: var(--chip-hi); }
+  .tray.open .toggle { transform: rotate(180deg); }
+  .icons { display: flex; align-items: center; gap: 4px; max-width: 0; overflow: hidden;
+    transition: max-width .35s ease, padding .35s ease; }
+  .tray.open .icons { max-width: 420px; padding: 0 6px 0 2px; }
+  .icons img { width: calc(var(--ic) + 1px); height: calc(var(--ic) + 1px); cursor: pointer; border-radius: 4px; padding: 1px; transition: background .15s; }
+  .icons img:hover { background: var(--chip-hi); }
+
+  /* now playing */
+  .media { max-width: 260px; }
+  .media[hidden] { display: none; }
+  .media .mt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .media .mt em { font-style: normal; color: var(--muted); }
+  .media .mb { display: flex; gap: 2px; max-width: 0; overflow: hidden; transition: max-width .25s ease; }
+  .media:hover .mb { max-width: 60px; }
+  .media .mb b { font-weight: 400; color: var(--pink); width: calc(var(--ic) + 6px); text-align: center; border-radius: 4px; font-size: var(--ic); }
+  .media .mb b:hover { background: var(--chip-hi); }
+  .media.paused i { color: var(--muted); }
+  .wx[hidden], .pomo[hidden], .lng[hidden], .priv[hidden], .netc[hidden], .recc[hidden] { display: none; }
+  .lng b { font-weight: 700; letter-spacing: .5px; }
+  .priv i { color: #ffb454 !important; }
+  .netc span { font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+  .recc { background: color-mix(in srgb, #ff4d6d 30%, var(--chip)); }
+  .recc i { color: #ff4d6d !important; animation: recblink 1s steps(2) infinite; }
+  @keyframes recblink { 50% { opacity: .25; } }
+  .pomo b { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pomo.brk i { color: var(--accent2); }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="left">
+      <div class="logo" id="logo" title="valo.os"><svg viewBox="-118 -150 236 236"><defs><path id="bl" d="M0 -130 C 1 -62, 3 -38, 23 -23 C 17 -27, 12 -29, 9 -29 A 14 14 0 0 0 0 -23 A 14 14 0 0 0 -9 -29 C -12 -29, -17 -27, -23 -23 C -3 -38, -1 -62, 0 -130 Z"/><g id="lb"><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g></defs><g fill="#1e1a1f"><use href="#bl"/><use href="#bl" transform="rotate(120)"/><use href="#bl" transform="rotate(240)"/><use href="#lb" stroke="#f2a7bb" stroke-width="3.5"/><use href="#lb"/></g><g stroke="#f2a7bb" stroke-width="3" stroke-linecap="round"><line x1="0" y1="0" x2="0" y2="-14"/><line x1="0" y1="0" x2="12.1" y2="7"/><line x1="0" y1="0" x2="-12.1" y2="7"/></g></svg></div>
+      <div class="ws" id="ws"></div>
+      <div class="app" id="app"></div>
+    </div>
+    <div class="clock" id="clock">--:--</div>
+    <div class="right">
+      <div class="chip recc" id="recc" hidden title="Запис екрана — клік, щоб зупинити (або Win+Shift+R)"><i>&#xF044A;</i><b id="recT">0:00</b></div>
+      <div class="chip priv" id="priv" hidden></div>
+      <div class="chip netc" id="netc" hidden title="Швидкість мережі"><i>&#xF06C0;</i><span id="netT"></span></div>
+      <div class="chip lng" id="lng" hidden title="Мова вводу — клік, щоб змінити"><b id="lngT">UA</b></div>
+      <div class="chip pomo" id="pomo" hidden title="Фокус: клік — зупинити"><i>&#xF0517;</i><b id="pomoT"></b></div>
+      <div class="chip wx" id="wx" hidden><i id="wxI"></i><span id="wxT"></span></div>
+      <div class="chip media" id="media" hidden title="Клік — пауза / відтворення, ПКМ — центр керування"><i id="mIc"></i><span class="mt" id="mText"></span><span class="mb"><b id="mPrev">&#xF04AE;</b><b id="mNext">&#xF04AD;</b></span></div>
+      <div class="tray" id="tray" title="Приховані піктограми">
+        <div class="icons" id="icons"></div>
+        <button class="toggle" id="trayToggle">&#xF0141;</button>
+      </div>
+      <div class="chip" id="net" title="Центр керування"><i id="netIcon"></i><span id="netText"></span></div>
+      <div class="chip" id="vol" title="Звук: коліщатко — гучність, клік — центр керування, середня кнопка — вимкнути"><i id="volIcon"></i><span id="volText">--</span></div>
+      <div class="chip" id="bat" title="Центр керування"><i id="batIcon"></i><span id="batText">--</span></div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import './themes.js';
+    import { refresh as weatherRefresh, cached as weatherCached, describe } from './weather.js';
+
+    const $ = id => document.getElementById(id);
+    const days = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    const G = s => String.fromCodePoint(s);
+
+    // friendly names instead of window titles
+    const T = ['термінал', 0xF018D], W = ['браузер', 0xF0239], S = ['steam', 0xF04D3];
+    const APPS = {
+      windowsterminal: T, wezterm: T, 'wezterm-gui': T, powershell: T, pwsh: T, cmd: T, openconsole: T,
+      firefox: W, chrome: W, msedge: W, brave: W,
+      explorer: ['файли', 0xF024B], code: ['код', 0xF0A1E], spotify: ['музика', 0xF04C7], vlc: ['відео', 0xF057C],
+      telegram: ['telegram', 0xF0501], discord: ['discord', 0xF066F], steam: S, steamwebhelper: S,
+      notepad: ['нотатки', 0xF0219], taskmgr: ['диспетчер', 0xF0128], systemsettings: ['налаштування', 0xF0493],
+    };
+
+    const providers = zebar.createProviderGroup({
+      glazewm: { type: 'glazewm' },
+      battery: { type: 'battery', refreshInterval: 10000 },
+      audio: { type: 'audio' },
+      network: { type: 'network', refreshInterval: 5000 },
+      systray: { type: 'systray' },
+      media: { type: 'media' },
+    });
+
+    const run = cmd => providers.outputMap.glazewm?.runCommand(cmd);
+    const ps = cmd => zebar.shellExec('powershell', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', cmd]).catch(() => {});
+    const open = target => ps(`Start-Process '${target}'`);
+
+    function tick() {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      $('clock').innerHTML = `${hh}<span>:</span>${mm}`;
+      // world clocks on hover (same list as the control center)
+      let cl = null; try { cl = JSON.parse(localStorage.getItem('valo.clocks') || 'null'); } catch { }
+      cl = cl || [['Київ', 'Europe/Kyiv'], ['Бухарест', 'Europe/Bucharest'], ['Прага', 'Europe/Prague'], ['Варшава', 'Europe/Warsaw']];
+      $('clock').title = cl.map(([n, tz]) => { try { return n + '  ' + new Intl.DateTimeFormat('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(d); } catch { return n; } }).join('\n')
+        + '\n\nклік — центр керування';
+
+    }
+    tick(); setInterval(tick, 2000);
+
+    let trayHash = '';
+    function renderTray(st) {
+      const hash = st.icons.map(i => i.id + i.iconHash).join('|');
+      if (hash === trayHash) {
+        for (const i of st.icons) {
+          const el = document.querySelector(`[data-id="${CSS.escape(i.id)}"]`);
+          if (el) el.title = i.tooltip || '';
+        }
+        return;
+      }
+      trayHash = hash;
+      const box = $('icons');
+      box.innerHTML = '';
+      for (const i of st.icons) {
+        const img = document.createElement('img');
+        img.src = i.iconUrl; img.title = i.tooltip || ''; img.dataset.id = i.id;
+        img.onclick = e => { e.preventDefault(); st.onLeftClick(i.id); };
+        img.oncontextmenu = e => { e.preventDefault(); st.onRightClick(i.id); };
+        img.onauxclick = e => { if (e.button === 1) st.onMiddleClick(i.id); };
+        img.ondblclick = () => st.onLeftDoubleClick(i.id);
+        box.appendChild(img);
+      }
+    }
+
+    function render() {
+      const o = providers.outputMap;
+
+      // battery (always shown; desktop PCs show a plug)
+      const b = o.battery;
+      if (b && b.chargePercent != null) {
+        const p = Math.round(b.chargePercent);
+        const lvl = Math.max(1, Math.min(9, Math.round(p / 10)));
+        $('batIcon').textContent = b.isCharging ? G(0xF0084) : (p >= 95 ? G(0xF0079) : G(0xF007A + lvl - 1));
+        $('batText').textContent = p + '%';
+        $('batText').className = (!b.isCharging && p <= 15) ? 'low' : '';
+      } else {
+        $('batIcon').textContent = G(0xF06A5);
+        $('batText').textContent = 'мережа';
+      }
+
+      // sound
+      const a = o.audio?.defaultPlaybackDevice;
+      if (a) {
+        const v = Math.round(a.volume);
+        $('volIcon').textContent = a.isMuted || v === 0 ? G(0xF0581) : v < 34 ? G(0xF057F) : v < 67 ? G(0xF0580) : G(0xF057E);
+        $('volText').textContent = a.isMuted ? 'тихо' : v + '%';
+        $('vol').classList.toggle('off', a.isMuted);
+      } else {
+        $('volIcon').textContent = G(0xF0581); $('volText').textContent = '--';
+      }
+
+      // network
+      const n = o.network;
+      const ifc = n?.defaultInterface;
+      if (!ifc) {
+        $('netIcon').textContent = G(0xF05AA); $('netText').textContent = 'офлайн'; $('net').classList.add('off');
+      } else if (ifc.type === 'wifi') {
+        const s = n.defaultGateway?.signalStrength ?? 100;
+        $('netIcon').textContent = s < 25 ? G(0xF091F) : s < 50 ? G(0xF0922) : s < 75 ? G(0xF0925) : G(0xF0928);
+        $('netText').textContent = n.defaultGateway?.ssid || 'wi-fi';
+        $('net').classList.remove('off');
+      } else {
+        $('netIcon').textContent = G(0xF0200); $('netText').textContent = 'ethernet'; $('net').classList.remove('off');
+      }
+
+      if (o.systray) renderTray(o.systray);
+
+      // now playing
+      const m = o.media?.session ?? o.media?.currentSession;
+      $('media').hidden = !m || !(m.title || m.artist);
+      if (m && (m.title || m.artist)) {
+        $('mIc').textContent = G(m.isPlaying ? 0xF075A : 0xF03E4);
+        $('media').classList.toggle('paused', !m.isPlaying);
+        const t = $('mText'); t.textContent = m.title || '';
+        if (m.artist) { const em = document.createElement('em'); em.textContent = (m.title ? ' · ' : '') + m.artist; t.append(em); }
+      }
+
+      // workspaces + focused app (short name, not the window title)
+      if (o.glazewm) {
+        const ws = $('ws');
+        ws.innerHTML = '';
+        for (const w of o.glazewm.currentWorkspaces) {
+          const btn = document.createElement('button');
+          btn.title = w.displayName ?? w.name;
+          if (w.isDisplayed) btn.classList.add('displayed');
+          if (w.hasFocus) btn.classList.add('focused');
+          btn.onclick = () => run(`focus --workspace ${w.name}`);
+          ws.appendChild(btn);
+        }
+        const f = o.glazewm.focusedContainer;
+        const app = $('app');
+        app.innerHTML = '';
+        if (f && f.type === 'window') {
+          const proc = String(f.processName || '').toLowerCase().replace(/\.exe$/, '');
+          const [name, icon] = APPS[proc] || [proc || 'вікно', 0xF05B6];
+          const i = document.createElement('i'); i.textContent = G(icon);
+          const s = document.createElement('span'); s.textContent = name;
+          app.append(i, s);
+        }
+      }
+    }
+
+    // valo menu (custom start menu): a persistent widget toggled through localStorage
+    $('logo').onclick = () => {
+      const ls = localStorage, now = Date.now();
+      if (now - (+ls.getItem('valo.menuClosed') || 0) < 350) return;   // this click just closed it (blur)
+      const token = String(now);
+      ls.setItem('valo.menuToggle', token);
+      setTimeout(() => {   // menu not running (first start / crashed) -> start it
+        if (ls.getItem('valo.menuAck') !== token) zebar.startWidgetPreset('menu', 'default').catch(() => {});
+      }, 600);
+    };
+    // right click on the button -> panel settings (themes) inside the menu
+    $('logo').oncontextmenu = e => {
+      e.preventDefault();
+      const ls = localStorage, token = 'settings:' + Date.now();
+      ls.setItem('valo.menuToggle', token);
+      setTimeout(() => { if (ls.getItem('valo.menuAck') !== token) zebar.startWidgetPreset('menu', 'default').catch(() => {}); }, 600);
+    };
+    $('trayToggle').onclick = () => $('tray').classList.toggle('open');
+    // control center (Wi-Fi, Bluetooth, sound, brightness, media, battery): persistent widget toggled like the menu
+    function toggleCC() {
+      const ls = localStorage, now = Date.now();
+      if (now - (+ls.getItem('valo.ccClosed') || 0) < 350) return;   // this click just closed it (blur)
+      const token = String(now);
+      ls.setItem('valo.ccToggle', token);
+      setTimeout(() => { if (ls.getItem('valo.ccAck') !== token) zebar.startWidgetPreset('control', 'default').catch(() => {}); }, 600);
+    }
+    $('net').onclick = toggleCC;
+    $('clock').onclick = toggleCC;
+    $('clock').style.cursor = 'pointer';
+    $('bat').onclick = toggleCC;
+    $('net').oncontextmenu = e => { e.preventDefault(); open('ms-availablenetworks:'); };
+    $('bat').oncontextmenu = e => { e.preventDefault(); open('ms-settings:powersleep'); };
+
+    $('media').onclick = e => {
+      const m = providers.outputMap.media; if (!m) return;
+      if (e.target.id === 'mPrev') m.previous(); else if (e.target.id === 'mNext') m.next(); else m.togglePlayPause();
+    };
+    $('media').oncontextmenu = e => { e.preventDefault(); toggleCC(); };
+
+    $('vol').onclick = toggleCC;
+    $('vol').onauxclick = e => { if (e.button !== 1) return; const a = providers.outputMap.audio; const d = a?.defaultPlaybackDevice; if (d) a.setMute(!d.isMuted); };
+    $('vol').oncontextmenu = e => { e.preventDefault(); open('ms-settings:sound'); };
+    $('vol').addEventListener('wheel', e => {
+      const a = providers.outputMap.audio; const d = a?.defaultPlaybackDevice; if (!d) return;
+      e.preventDefault();
+      a.setVolume(Math.max(0, Math.min(100, Math.round(d.volume) + (e.deltaY < 0 ? 5 : -5))));
+    }, { passive: false });
+
+    providers.onOutput(render);
+    render();
+
+    // ---------- weather chip (the bar is the one that refreshes it; the control center shows the forecast)
+    function showWeather(w) {
+      if (!w || !w.cur) { $('wx').hidden = true; return; }
+      const d = describe(w.cur.weather_code, !!w.cur.is_day);
+      $('wx').hidden = false; $('wxI').textContent = d.glyph; $('wxT').textContent = Math.round(w.cur.temperature_2m) + '°';
+      $('wx').title = `${w.place || ''}: ${d.text}, ${Math.round(w.cur.temperature_2m)}° (відчувається ${Math.round(w.cur.apparent_temperature)}°)\nклік — прогноз`;
+    }
+    showWeather(weatherCached());
+    const wxTick = async () => showWeather(await weatherRefresh());
+    wxTick(); setInterval(wxTick, 5 * 60e3);
+    $('wx').onclick = toggleCC;
+
+    // ---------- focus timer (pomodoro): state in valo.pomo = { phase: 'work' | 'break', endAt, work, brk }
+    const pomo = () => { try { return JSON.parse(localStorage.getItem('valo.pomo') || 'null'); } catch { return null; } };
+    const toast = (t, x) => zebar.shellExec('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', dir + '\\valo-toast.ps1', '-Title', t, '-Text', x]).catch(() => {});
+    const dnd = on => zebar.shellExec('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', dir + '\\valo-game.ps1', '-Dnd', on ? '1' : '0']).catch(() => {});
+    const dir = zebar.currentWidget().htmlPath.replace(/[\\/][^\\/]+$/, '');
+    let pomoPhase = null;
+    function pomoTick() {
+      const p = pomo();
+      if (!p) { $('pomo').hidden = true; if (pomoPhase) { pomoPhase = null; dnd(false); } return; }
+      let left = p.endAt - Date.now();
+      if (left <= 0) {     // phase finished -> next one
+        const next = p.phase === 'work' ? 'break' : 'work';
+        const mins = next === 'work' ? (p.work || 25) : (p.brk || 5);
+        localStorage.setItem('valo.pomo', JSON.stringify({ ...p, phase: next, endAt: Date.now() + mins * 60e3 }));
+        toast('valo.os · фокус', next === 'break' ? `Час перерви — ${mins} хв` : `Перерва закінчилась — фокус ${mins} хв`);
+        return pomoTick();
+      }
+      if (p.phase !== pomoPhase) { pomoPhase = p.phase; dnd(p.phase === 'work'); }
+      const m = Math.floor(left / 60e3), sec = Math.floor(left / 1000) % 60;
+      $('pomo').hidden = false; $('pomo').classList.toggle('brk', p.phase === 'break');
+      $('pomoT').textContent = (p.phase === 'break' ? 'перерва ' : '') + m + ':' + String(sec).padStart(2, '0');
+    }
+    setInterval(pomoTick, 1000); pomoTick();
+    $('pomo').onclick = () => { localStorage.removeItem('valo.pomo'); pomoTick(); };
+
+    // ---------- part 3 chips: keyboard layout, privacy (mic / camera / location), network speed, screen recording
+    const prefs3 = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const helperCmd = cmd => localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd, ts: Date.now() + Math.random() }));
+    const ev = k => { try { return JSON.parse(localStorage.getItem('valo.ev.' + k) || 'null'); } catch { return null; } };
+    const fmtRate = b => b > 1048576 ? (b / 1048576).toFixed(1) + ' МБ/с' : b > 1024 ? Math.round(b / 1024) + ' КБ/с' : b + ' Б/с';
+    let recSince = 0;
+    function chips3() {
+      const p = prefs3();
+      const l = ev('lang'); $('lng').hidden = p.langChip === false || !l; if (l) $('lngT').textContent = l.code;
+      const pr = ev('privacy'), parts = [];
+      if (p.privacy !== false && pr) {
+        if (pr.mic?.length) parts.push(['&#xF036C;', 'Мікрофон: ' + pr.mic.join(', ')]);
+        if (pr.cam?.length) parts.push(['&#xF0100;', 'Камера: ' + pr.cam.join(', ')]);
+        if (pr.loc?.length) parts.push(['&#xF034E;', 'Місцезнаходження: ' + pr.loc.join(', ')]);
+      }
+      $('priv').hidden = !parts.length;
+      $('priv').innerHTML = parts.map(x => `<i>${x[0]}</i>`).join(''); $('priv').title = parts.map(x => x[1]).join('\n');
+      const n = ev('net'); $('netc').hidden = !p.netChip || !n || Date.now() - n.ts > 5000;
+      if (n) $('netT').textContent = '↓ ' + fmtRate(n.down) + '  ↑ ' + fmtRate(n.up);
+      const r = ev('rec'); const recOn = !!(r && r.on);
+      if (recOn && !recSince) recSince = r.ts; if (!recOn) recSince = 0;
+      $('recc').hidden = !recOn;
+      if (recOn) { const s = Math.floor((Date.now() - recSince) / 1000); $('recT').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+    }
+    setInterval(chips3, 1000); chips3();
+    window.addEventListener('storage', e => { if (/^valo\.ev\.(lang|privacy|net|rec)$/.test(e.key) || e.key === 'valo.prefs') chips3(); });
+    $('lng').onclick = () => helperCmd('nextlang');
+    $('recc').onclick = () => helperCmd('recstop');
+    $('priv').onclick = () => open('ms-settings:privacy');
+
+    // ---------- game mode: hide the bar while a fullscreen app is in front
+    const barWin = zebar.currentWidget().tauriWindow;
+    window.addEventListener('storage', e => {
+      if (e.key === 'valo.ev.game' && e.newValue) {
+        try { const on = JSON.parse(e.newValue).on; on ? barWin?.hide() : barWin?.show(); } catch { }
+      }
+      if (e.key === 'valo.weather' && e.newValue) { try { showWeather(JSON.parse(e.newValue)); } catch { } }
+      if (e.key === 'valo.prefs') wxTickForce();
+      if (e.key === 'valo.pomo') pomoTick();
+    });
+    let lastWxPrefs = JSON.stringify((JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}).weather || {});
+    async function wxTickForce() {
+      const now = JSON.stringify((JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}).weather || {});
+      if (now === lastWxPrefs) return;
+      lastWxPrefs = now; showWeather(await weatherRefresh(true));
+    }
+  </script>
+</body>
+</html>
