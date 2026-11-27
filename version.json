@@ -1,14 +1,14 @@
 {
-    "version":  "1.12.2",
+    "version":  "1.13.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "Меню: внизу лише Магазин, Панель і теми, «⋯» і ⏻ — замість десяти значків",
-                  "«⋯»: Перевірити оновлення, Консоль, Налаштування Windows; ⏻: Заблокувати, Сон, Вийти, Перезавантажити, Вимкнути — з підписами"
+                  "Мікрофон у центрі керування: гучність, вимкнути / увімкнути, вибір мікрофона, посилання на налаштування Windows",
+                  "Win+Alt+K — вимкнути / увімкнути мікрофон будь-де; коли мікрофон вимкнено, на панелі видно закреслений мікрофон (клік — увімкнути)"
               ],
     "files":  [
                   {
                       "path":  "pack/bar.html",
-                      "sha256":  "969e44012b28d32d55f7720264110707de177f8e7945d9b9fdf6b5aca433dc29"
+                      "sha256":  "c1b2e2b60fa37a06988f4afe2f8e95540a0e7895565112e5fbdd0f4a281e23cd"
                   },
                   {
                       "path":  "pack/console.html",
@@ -16,7 +16,7 @@
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "72fac43354f25f28bf63974587ec7048bcf15ffcbf7d08d9ee75115e55195185"
+                      "sha256":  "8d24bbe7b22b64107827c4f9959094589439bc0aa927952371aab386bce48ad7"
                   },
                   {
                       "path":  "pack/desk.html",
@@ -24,7 +24,7 @@
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "a65ed8b54a27aca768ac6a215db4722e4000d3ef681889c3406f59fdc623092a"
+                      "sha256":  "8e11d98cb2ec94d4c1697e5803fd17db3777cea4be782e1feb860c6ec87fcc15"
                   },
                   {
                       "path":  "pack/emoji.html",
@@ -36,7 +36,7 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "9b6adc0a231ed06c44e1ff98dedb3b551da8d12474d0965cf0aa118ef8adce35"
+                      "sha256":  "48c800e00ec9bb7703afe9aa9879e3c25fc547335db5bb966786d497e7c6c5dc"
                   },
                   {
                       "path":  "pack/menu.html",
@@ -152,7 +152,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "edab2d6ce7e2a7f64b5101971ddfdb285f0626dcf1d2fd6aac0be1a026753a3b"
+                      "sha256":  "81ed9428b2d395fdddb58477dc74b6ed032802e799db05831c503bc1cc687129"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -212,7 +212,7 @@
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "9cad81809441c716860ce737e1074fd44da7235b6d900c29fc0dbd8bbaa72e6d"
+                      "sha256":  "0fdd9119fe545efa68c2d68749b143f0754061f04ba752fadea12dbd77a4c208"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
@@ -228,7 +228,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "6bab8737a0ab6823d17987ac6e0ac9d3362b6c903c5cbdea45042c18601bafb5"
+                      "sha256":  "56ed52ec0a649983c41adf4d2dce762f52579965a1467eba95a1ca8be2e6c6a7"
                   },
                   {
                       "path":  "pack/weather.js",

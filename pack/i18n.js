@@ -135,6 +135,12 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Магазин valo|valo store|Magazin valo
 Магазин програм|App store|Magazin de aplicații
 Більше|More|Mai mult
+Мікрофон — Win+Alt+K вмикає / вимикає|Microphone — Win+Alt+K turns it on / off|Microfon — Win+Alt+K îl pornește / oprește
+Вибрати мікрофон|Choose microphone|Alege microfonul
+Мікрофон|Microphone|Microfon
+Налаштування мікрофона Windows|Windows microphone settings|Setările microfonului Windows
+вимк.|off|opr.
+Мікрофон вимкнено — клік або Win+Alt+K, щоб увімкнути|Microphone muted — click or Win+Alt+K to turn it on|Microfon oprit — clic sau Win+Alt+K pentru a-l porni
 Перевірити оновлення|Check for updates|Caută actualizări
 Живлення|Power|Alimentare
 Консоль (Win+Shift+G)|Console (Win+Shift+G)|Consolă (Win+Shift+G)

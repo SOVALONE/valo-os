@@ -219,6 +219,7 @@ public static class ValoShell {
                         if (Recorder.Busy) Recorder.Stop(); else ValoUi.Post(delegate { ShotForm.Inst.Start("rec"); });
                         return new IntPtr(1);
                     }
+                    if (vk == 0x4B && (GetAsyncKeyState(0x12) & 0x8000) != 0) { tSwallow = vk; Thread mt = new Thread(delegate () { AudioMix.MicToggle(); ValoWatch.MicLast = AudioMix.MicMuteState(); Emit.Line(AudioMix.MicList()); }); mt.IsBackground = true; mt.Start(); return new IntPtr(1); }   // Win+Alt+K: microphone on / off
                     if (shiftDown && vk == 0x47 && Feat.ConsoleOn) { tSwallow = vk; Emit.Line("{\"type\":\"console\"}"); return new IntPtr(1); }   // Win+Shift+G: valo console
                     if ((vk == 0xBE || vk == 0xBA) && ValoUi.EmojiOn) { dotSwallow = vk; Typer.Remember(); Emit.Line("{\"type\":\"emoji\"}"); return new IntPtr(1); }
                 }
@@ -401,6 +402,15 @@ public static class ValoShell {
                             else if (a[1] == "mute" && a.Length > 3) AudioMix.SetMute(uint.Parse(a[2]), a[3] == "1");
                             else if (a[1] == "default" && a.Length > 2) AudioMix.SetDefault(c.Substring(14));
                             Emit.Line(AudioMix.List());
+                            continue;
+                        }
+                        if (c.StartsWith("mic ")) {   // mic list | vol N | mute 0/1 | toggle | default <id>
+                            string[] a = c.Split(new char[] { ' ' }, 3);
+                            if (a[1] == "vol" && a.Length > 2) AudioMix.MicSetVol(int.Parse(a[2]));
+                            else if (a[1] == "mute" && a.Length > 2) AudioMix.MicSetMute(a[2] == "1");
+                            else if (a[1] == "toggle") AudioMix.MicToggle();
+                            else if (a[1] == "default" && a.Length > 2) AudioMix.SetDefault(a[2]);
+                            ValoWatch.MicLast = AudioMix.MicMuteState(); Emit.Line(AudioMix.MicList());
                             continue;
                         }
                         if (c.StartsWith("sysmon ")) { SysMon.On = c.EndsWith("on"); continue; }

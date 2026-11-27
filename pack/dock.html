@@ -126,7 +126,7 @@
         else if (m.type === 'game') onGame(m.on);
         else if (m.type === 'desks') { desks = m; render(); }
         // results other widgets asked for (mixer, monitor, warm screen, idle) go through localStorage
-        if (['audio', 'sys', 'warm', 'idle', 'game', 'desks', 'bt', 'lang', 'privacy', 'net', 'rec', 'backup', 'dlsort', 'ffmpeg'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
+        if (['audio', 'mic', 'sys', 'warm', 'idle', 'game', 'desks', 'bt', 'lang', 'privacy', 'net', 'rec', 'backup', 'dlsort', 'ffmpeg'].includes(m.type)) localStorage.setItem('valo.ev.' + m.type, JSON.stringify({ ...m, ts: Date.now() }));
       });
       helper.onStderr(l => log('stderr: ' + l));
       helper.onExit(s => { log('helper exit ' + JSON.stringify(s)); helper = null; setTimeout(startHelper, 2000); });

@@ -381,6 +381,7 @@
         if (pr.cam?.length) parts.push(['&#xF0100;', 'Камера: ' + pr.cam.join(', ')]);
         if (pr.loc?.length) parts.push(['&#xF034E;', 'Місцезнаходження: ' + pr.loc.join(', ')]);
       }
+      const mic = ev('mic'); if (mic?.mute) parts.unshift(['&#xF036D;', 'Мікрофон вимкнено — клік або Win+Alt+K, щоб увімкнути']);
       $('priv').hidden = !parts.length;
       $('priv').innerHTML = parts.map(x => `<i>${x[0]}</i>`).join(''); $('priv').title = parts.map(x => x[1]).join('\n');
       const n = ev('net'); $('netc').hidden = !p.netChip || !n || Date.now() - n.ts > 5000;
@@ -391,10 +392,10 @@
       if (recOn) { const s = Math.floor((Date.now() - recSince) / 1000); $('recT').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
     }
     setInterval(chips3, 1000); chips3();
-    window.addEventListener('storage', e => { if (/^valo\.ev\.(lang|privacy|net|rec)$/.test(e.key) || e.key === 'valo.prefs') chips3(); });
+    window.addEventListener('storage', e => { if (/^valo\.ev\.(lang|privacy|net|rec|mic)$/.test(e.key) || e.key === 'valo.prefs') chips3(); });
     $('lng').onclick = () => helperCmd('nextlang');
     $('recc').onclick = () => helperCmd('recstop');
-    $('priv').onclick = () => open('ms-settings:privacy');
+    $('priv').onclick = () => { if (ev('mic')?.mute) helperCmd('mic mute 0'); else open('ms-settings:privacy'); };
 
     // ---------- game mode: hide the bar while a fullscreen app is in front
     const barWin = zebar.currentWidget().tauriWindow;

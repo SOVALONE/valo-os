@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>valo.os wallpaper</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1e1a1f; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #clock { position: fixed; left: 7vw; bottom: 16vh; font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif; font-weight: 200;
+    line-height: 1; letter-spacing: -2px; pointer-events: none; transition: opacity .6s; text-shadow: 0 2px 30px rgba(0,0,0,.25); }
+  #clock b { display: block; font-weight: 200; font-size: 15vh; }
+  #clock span { display: block; font-size: 2.6vh; letter-spacing: 3px; margin-top: 1.4vh; opacity: .75; text-transform: lowercase; }
+  #clock.off { opacity: 0; }
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="clock" class="off"><b id="time"></b><span id="date"></span></div>
+  <script src="theme.js"></script>
+  <script src="wallpaper.js"></script>
+</body>
+</html>

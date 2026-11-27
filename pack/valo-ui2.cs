@@ -83,6 +83,15 @@ public static class AudioMix {
         int SetEndpointVisibility(string id, bool v);
     }
 
+    [ComImport, Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    interface IAudioEndpointVolume {
+        int RegisterControlChangeNotify(IntPtr n); int UnregisterControlChangeNotify(IntPtr n); int GetChannelCount(out uint c);
+        int SetMasterVolumeLevel(float db, ref Guid ctx); int SetMasterVolumeLevelScalar(float v, ref Guid ctx);
+        int GetMasterVolumeLevel(out float db); int GetMasterVolumeLevelScalar(out float v);
+        int SetChannelVolumeLevel(uint ch, float db, ref Guid ctx); int SetChannelVolumeLevelScalar(uint ch, float v, ref Guid ctx);
+        int GetChannelVolumeLevel(uint ch, out float db); int GetChannelVolumeLevelScalar(uint ch, out float v);
+        int SetMute([MarshalAs(UnmanagedType.Bool)] bool m, ref Guid ctx); int GetMute([MarshalAs(UnmanagedType.Bool)] out bool m);
+    }
     static Guid ctxGuid = Guid.Empty;
     static IMMDeviceEnumerator En() { return (IMMDeviceEnumerator)new MMDeviceEnumeratorCo(); }
 
@@ -159,6 +168,40 @@ public static class AudioMix {
         try { List<uint> pids; List<string> names; List<ISimpleAudioVolume> v = Sessions(out pids, out names);
               for (int i = 0; i < v.Count; i++) if (pids[i] == pid) v[i].SetMute(mute, ref ctxGuid); } catch { }
     }
+    // ---- microphone: the default capture device (dataFlow 1 = eCapture)
+    static IAudioEndpointVolume MicVolume() {
+        IMMDevice d; if (En().GetDefaultAudioEndpoint(1, 1, out d) != 0 || d == null) return null;
+        Guid iid = typeof(IAudioEndpointVolume).GUID; object o; d.Activate(ref iid, 23, IntPtr.Zero, out o);
+        return (IAudioEndpointVolume)o;
+    }
+    public static int MicMuteState() {   // -1 = no microphone, 0 = on, 1 = muted
+        try { IAudioEndpointVolume v = MicVolume(); if (v == null) return -1; bool m; v.GetMute(out m); return m ? 1 : 0; } catch { return -1; }
+    }
+    public static string MicList() {
+        StringBuilder b = new StringBuilder("{\"type\":\"mic\"");
+        try {
+            IMMDeviceEnumerator en = En();
+            IMMDevice def; string defId = null;
+            if (en.GetDefaultAudioEndpoint(1, 1, out def) == 0 && def != null) {
+                def.GetId(out defId);
+                IAudioEndpointVolume v = MicVolume(); float f; bool m; v.GetMasterVolumeLevelScalar(out f); v.GetMute(out m);
+                b.Append(",\"vol\":").Append((int)Math.Round(f * 100)).Append(",\"mute\":").Append(m ? "true" : "false").Append(",\"name\":").Append(Emit.Q(FriendlyName(def) ?? ""));
+            }
+            b.Append(",\"devices\":[");
+            IMMDeviceCollection col; en.EnumAudioEndpoints(1, 1, out col);
+            int n; col.GetCount(out n);
+            for (int i = 0; i < n; i++) {
+                IMMDevice d; col.Item(i, out d); string id; d.GetId(out id);
+                if (i > 0) b.Append(',');
+                b.Append("{\"id\":").Append(Emit.Q(id)).Append(",\"name\":").Append(Emit.Q(FriendlyName(d) ?? id)).Append(",\"def\":").Append(id == defId ? "true" : "false").Append('}');
+            }
+            b.Append(']');
+        } catch { }
+        return b.Append('}').ToString();
+    }
+    public static void MicSetVol(int vol) { try { MicVolume().SetMasterVolumeLevelScalar(Math.Max(0, Math.Min(100, vol)) / 100f, ref ctxGuid); } catch { } }
+    public static void MicSetMute(bool mute) { try { MicVolume().SetMute(mute, ref ctxGuid); } catch { } }
+    public static void MicToggle() { int s = MicMuteState(); if (s >= 0) MicSetMute(s == 0); }
     public static void SetDefault(string id) {
         try { IPolicyConfig pc = (IPolicyConfig)new PolicyConfigCo(); for (int r = 0; r < 3; r++) pc.SetDefaultEndpoint(id, r); } catch { }
     }
@@ -259,6 +302,7 @@ public static class ValoWatch {
     public static volatile bool GameAuto = true;
     public static volatile int SaverMin = 0;                              // 0 = screensaver off
     public static volatile bool Game = false, Idle = false;
+    public static int MicLast = -2; static int micTick = 0;
     static int lastDeskN = -1, lastDeskCur = -1;
 
     public static void Start() {
@@ -312,6 +356,8 @@ public static class ValoWatch {
                     }
                 }
                 if (g != Game) { Game = g; Emit.Line("{\"type\":\"game\",\"on\":" + (g ? "true" : "false") + "}"); }
+                // ---- microphone muted / unmuted elsewhere (Windows settings, a headset button) -> the bar's indicator
+                if (++micTick % 3 == 0) { int ms = AudioMix.MicMuteState(); if (ms != MicLast) { MicLast = ms; Emit.Line(AudioMix.MicList()); } }
                 // ---- idle -> screensaver
                 LII li = new LII(); li.cb = (uint)Marshal.SizeOf(typeof(LII)); GetLastInputInfo(ref li);
                 long idleMs = (uint)Environment.TickCount - li.time;

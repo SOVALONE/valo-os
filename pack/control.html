@@ -56,6 +56,10 @@
   .slider { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 9px 12px; }
   .slider[hidden] { display: none; }
   .slider i { color: var(--accent); font-size: 17px; width: 20px; text-align: center; cursor: pointer; }
+  .slider i.off { color: var(--muted); }
+  .slider .more2 { font-size: 15px; width: 16px; color: var(--muted); }
+  .slider .more2:hover { color: var(--accent); }
+  #sMic.muted input { opacity: .45; }
   .slider b { font-size: 11px; color: var(--muted); width: 34px; text-align: right; font-weight: 600; }
   input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 6px; border-radius: 3px; outline: none; cursor: pointer;
     background: linear-gradient(to right, var(--accent) var(--p, 50%), var(--hi) var(--p, 50%)); }
@@ -229,6 +233,8 @@
     <div class="mix" id="mix" hidden></div>
 
     <div class="slider" id="sVol"><i class="nf" id="volIc">&#xF057E;</i><input type="range" id="vol" min="0" max="100" /><b id="volV"></b></div>
+    <div class="slider" id="sMic" hidden title="Мікрофон — Win+Alt+K вмикає / вимикає"><i class="nf" id="micIc">&#xF036C;</i><input type="range" id="mic" min="0" max="100" /><b id="micV"></b><i class="nf more2" id="micMore" title="Вибрати мікрофон">&#xF0140;</i></div>
+    <div class="mix" id="micBox" hidden></div>
     <div class="slider" id="sWarm" hidden><i class="nf">&#xF06E8;</i><input type="range" id="warm" min="10" max="100" /><b id="warmV"></b></div>
     <div class="slider" id="sBri" hidden><i class="nf">&#xF00DF;</i><input type="range" id="bri" min="0" max="100" /><b id="briV"></b></div>
 
@@ -313,7 +319,7 @@
       visible = true;
       render();
       refreshState();
-      helperCmd('sysmon on'); helperCmd('bt'); if (!$('mix').hidden) helperCmd('audio list');
+      helperCmd('sysmon on'); helperCmd('bt'); helperCmd('mic list'); if (!$('mix').hidden) helperCmd('audio list');
       renderWeather(); loadCalendar(); renderCal(); showCC('main');
       await showWin();
       requestAnimationFrame(() => $('cc').classList.add('show'));
@@ -578,7 +584,7 @@
       }
       const boxes = [...cc.querySelectorAll(':scope > .box')];
       const plan = {
-        main: [$('media'), cc.querySelector(':scope > .tiles'), $('modes'), $('nets'), $('mix'), $('sVol'), $('sWarm'), $('sBri')],
+        main: [$('media'), cc.querySelector(':scope > .tiles'), $('modes'), $('nets'), $('mix'), $('sVol'), $('sMic'), $('micBox'), $('sWarm'), $('sBri')],
         day: [$('wxCard'), $('clocks'), $('cal')],
         notes: boxes,
         sys: [$('mon'), cc.querySelector(':scope > .links2'), $('batRow'), cc.querySelector(':scope > .links')],
@@ -603,12 +609,45 @@
     window.addEventListener('storage', e => {
       if (!e.newValue) return;
       if (e.key === 'valo.ev.audio') renderMix(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.mic') renderMic(JSON.parse(e.newValue));
       else if (e.key === 'valo.ev.sys') renderMon(JSON.parse(e.newValue));
       else if (e.key === 'valo.ev.bt') renderBt(JSON.parse(e.newValue));
       else if (e.key === 'valo.weather') renderWeather();
       else if (e.key === 'valo.prefs') { renderWarm(); loadCalendar(true); }
       else if (e.key === 'valo.pomo') renderFocus();
     });
+
+    // ---------- microphone: volume, on / off (Win+Alt+K), which microphone
+    let micDrag = false, micT = null;
+    $('mic').oninput = () => {
+      micDrag = true; const v = +$('mic').value; setRange($('mic'), v, $('micV'));
+      clearTimeout(micT); micT = setTimeout(() => helperCmd('mic vol ' + v), 60);
+    };
+    $('mic').onchange = () => { setTimeout(() => { micDrag = false; }, 400); };
+    $('micIc').onclick = () => helperCmd('mic toggle');
+    $('micMore').onclick = () => { $('micBox').hidden = !$('micBox').hidden; $('micMore').textContent = G($('micBox').hidden ? 0xF0140 : 0xF0143); helperCmd('mic list'); };
+    function renderMic(m) {
+      if (!m) return;
+      $('sMic').hidden = m.vol == null;
+      if (m.vol == null) return;
+      if (!micDrag) setRange($('mic'), m.vol, $('micV'));
+      $('micIc').textContent = G(m.mute ? 0xF036D : 0xF036C); $('micIc').classList.toggle('off', !!m.mute);
+      $('sMic').classList.toggle('muted', !!m.mute);
+      if (m.mute) $('micV').textContent = 'вимк.';
+      const box = $('micBox'); box.innerHTML = '';
+      const h = document.createElement('h5'); h.textContent = 'Мікрофон'; box.append(h);
+      for (const d of m.devices || []) {
+        const row = document.createElement('div'); row.className = 'dev' + (d.def ? ' on' : '');
+        row.innerHTML = '<i class="nf"></i><span></span>';
+        row.querySelector('i').textContent = G(d.def ? 0xF0134 : 0xF0130); row.querySelector('span').textContent = d.name;
+        row.onclick = () => { if (!d.def) helperCmd('mic default ' + d.id); };
+        box.append(row);
+      }
+      const set = document.createElement('div'); set.className = 'dev';
+      set.innerHTML = '<i class="nf"></i><span>Налаштування мікрофона Windows</span>'; set.querySelector('i').textContent = G(0xF0493);
+      set.onclick = () => open('ms-settings:sound'); box.append(set);
+    }
+    renderMic(evOf('mic'));
 
     // ---------- mixer: per-app volume + output device
     $('mixMore').onclick = e => {

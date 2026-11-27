@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); padding: 6px; }
+  .nf { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; }
+
+  .cc {
+    max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 14px;
+    background: color-mix(in srgb, var(--solid) 97%, transparent); border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    opacity: 0; transform: translateY(-10px) scale(.98); transform-origin: top right;
+    transition: opacity .18s ease, transform .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .cc.show { opacity: 1; transform: none; }
+  .sticky body { padding: 0; }
+  .sticky .cc { border-radius: 0; box-shadow: none; }
+
+  /* quick toggles */
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { position: relative; cursor: pointer; border-radius: calc(var(--chipRadius) + 2px); background: var(--chip); padding: 10px 10px 9px;
+    display: flex; flex-direction: column; gap: 6px; min-width: 0; transition: background .15s, color .15s; }
+  .tile:hover { background: var(--hi); }
+  .tile i { font-size: 19px; color: var(--accent); line-height: 1; }
+  .tile b { font-size: 12px; font-weight: 600; }
+  .tile span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile.on { background: var(--accent); color: var(--ink); }
+  .tile.on i, .tile.on span { color: var(--ink); }
+  .tile.on span { opacity: .75; }
+  .tile.busy { opacity: .6; pointer-events: none; }
+  .tile .more { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 13px; color: inherit; }
+  .tile .more:hover { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+
+  /* networks */
+  .nets { display: flex; flex-direction: column; gap: 2px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 6px; }
+  .nets[hidden] { display: none; }
+  .net { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--chipRadius); cursor: pointer; }
+  .net:hover { background: var(--hi); }
+  .net i { color: var(--accent); font-size: 15px; width: 18px; text-align: center; }
+  .net span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .net em { font-style: normal; font-size: 11px; color: var(--muted); }
+  .net.cur span { color: var(--accent); font-weight: 600; }
+  .nets .foot { color: var(--muted); font-size: 11px; padding: 6px 8px 2px; cursor: pointer; }
+  .nets .foot:hover { color: var(--text); }
+
+  /* sliders */
+  .slider { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 9px 12px; }
+  .slider[hidden] { display: none; }
+  .slider i { color: var(--accent); font-size: 17px; width: 20px; text-align: center; cursor: pointer; }
+  .slider i.off { color: var(--muted); }
+  .slider .more2 { font-size: 15px; width: 16px; color: var(--muted); }
+  .slider .more2:hover { color: var(--accent); }
+  #sMic.muted input { opacity: .45; }
+  .slider b { font-size: 11px; color: var(--muted); width: 34px; text-align: right; font-weight: 600; }
+  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; height: 6px; border-radius: 3px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, var(--accent) var(--p, 50%), var(--hi) var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text);
+    border: 3px solid var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+
+  /* media */
+  .media { display: flex; gap: 12px; align-items: center; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px; }
+  .media[hidden] { display: none; }
+  .art { width: 64px; height: 64px; border-radius: var(--chipRadius); flex: none; background: var(--hi) center/cover no-repeat;
+    display: grid; place-items: center; color: var(--accent); font-size: 26px; }
+  .art.img { font-size: 0; }
+  .mi { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .mi b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mi span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prog { height: 3px; border-radius: 2px; background: var(--hi); margin-top: 4px; overflow: hidden; }
+  .prog div { height: 100%; width: 0; background: var(--accent); transition: width .9s linear; }
+  .ctl { display: flex; gap: 2px; margin-top: 4px; }
+  .ctl button { all: unset; cursor: pointer; width: 30px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 15px;
+    color: var(--text); font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; }
+  .ctl button:hover { background: var(--hi); color: var(--accent); }
+  .ctl button.main { color: var(--accent); font-size: 18px; }
+
+  /* tabs: the control center is split into short pages instead of one long column */
+  .cctabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 4px; flex: none; }
+  .cctabs button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: var(--chipRadius);
+    color: var(--muted); font-size: 11px; font-weight: 600; transition: background .15s, color .15s; }
+  .cctabs button i { font-size: 16px; font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; font-weight: 400; }
+  .cctabs button:hover { color: var(--text); }
+  .cctabs button.on { background: var(--hi); color: var(--accent); }
+  .ccpage { display: flex; flex-direction: column; gap: 12px; animation: ccin .2s ease; }
+  .ccpage[hidden] { display: none; }
+  @keyframes ccin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .nets, .mix { max-height: 230px; overflow-y: auto; }
+
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--hi); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* modes */
+  .modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 4px; }
+  .modes[hidden] { display: none; }
+  .modes button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; border-radius: var(--chipRadius); font-size: 10.5px; color: var(--muted); text-align: center; }
+  .modes button i { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; font-size: 16px; }
+  .modes button:hover { color: var(--text); }
+  .modes button.on { background: var(--accent); color: var(--ink); font-weight: 600; }
+  .links2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .links2 button { all: unset; cursor: pointer; text-align: center; padding: 9px 4px; border-radius: var(--chipRadius); background: var(--chip); font-size: 12px; color: var(--text); }
+  .links2 button:hover { color: var(--accent); }
+
+  /* mixer */
+  .mix { display: flex; flex-direction: column; gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .mix[hidden] { display: none; }
+  .mix .app { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .mix .app span { width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mix .app i { cursor: pointer; color: var(--accent); width: 16px; text-align: center; }
+  .mix .app i.off { color: var(--muted); }
+  .mix .app input { flex: 1; }
+  .mix .dev { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  .mix .dev:hover { background: var(--hi); }
+  .mix .dev i { color: var(--muted); }
+  .mix .dev.on { color: var(--accent); font-weight: 600; }
+  .mix .dev.on i { color: var(--accent); }
+  .mix h5 { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+  /* weather */
+  .wxc { display: flex; flex-direction: column; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 12px; }
+  .wxc[hidden] { display: none; }
+  .wxc .now { display: flex; align-items: center; gap: 12px; }
+  .wxc .now i { font-size: 34px; color: var(--accent); }
+  .wxc .now b { font-size: 26px; font-weight: 300; }
+  .wxc .now div { display: flex; flex-direction: column; min-width: 0; }
+  .wxc .now span { font-size: 11px; color: var(--muted); }
+  .wxc .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; text-align: center; }
+  .wxc .days div { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--muted); }
+  .wxc .days i { font-size: 17px; color: var(--accent); }
+  .wxc .days b { color: var(--text); font-weight: 600; font-size: 12px; }
+
+  /* calendar */
+  .cal { background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cal .hd { display: flex; align-items: center; font-weight: 600; }
+  .cal .hd span { flex: 1; text-transform: capitalize; }
+  .cal .hd i { cursor: pointer; color: var(--muted); padding: 0 6px; }
+  .cal .hd i:hover { color: var(--accent); }
+  .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 11px; }
+  .cal .grid .dw { color: var(--muted); font-size: 10px; padding-bottom: 2px; }
+  .cal .grid .d { position: relative; padding: 4px 0; border-radius: 6px; font-variant-numeric: tabular-nums; }
+  .cal .grid .d.out { color: var(--muted); opacity: .45; }
+  .cal .grid .d.today { background: var(--accent); color: var(--ink); font-weight: 700; }
+  .cal .grid .d.ev::after { content: ''; position: absolute; left: 50%; bottom: 1px; width: 4px; height: 4px; margin-left: -2px; border-radius: 2px; background: var(--accent2); }
+  .cal .ev { display: flex; gap: 8px; font-size: 12px; }
+  .cal .ev b { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .cal .ev span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal .hint { font-size: 11px; color: var(--muted); }
+
+  /* system monitor */
+  .mon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .mon div { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--muted); }
+  .mon b { color: var(--text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .mon canvas { width: 100%; height: 26px; }
+
+  /* world clocks */
+  .clocks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 8px; }
+  .clocks div { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .clocks b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .clocks span { font-size: 10px; color: var(--muted); }
+  .clocks em { font-style: normal; font-size: 10px; color: var(--accent); }
+
+  /* notes + reminders */
+  .box { background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .box h4 { font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .box h4 i { color: var(--accent); font-size: 13px; letter-spacing: 0; }
+  textarea { all: unset; box-sizing: border-box; width: 100%; min-height: 64px; max-height: 140px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; line-height: 1.45;
+    color: var(--text); background: var(--hi); border-radius: var(--chipRadius); padding: 8px 10px; user-select: text; }
+  .rin { display: flex; gap: 6px; }
+  .rin input { all: unset; box-sizing: border-box; min-width: 0; font-size: 12px; color: var(--text); background: var(--hi); border-radius: var(--chipRadius); padding: 6px 9px; user-select: text; }
+  .rin input[type=text] { flex: 1; }
+  .rin input[type=time] { width: 92px; color-scheme: dark; }
+  .light .rin input[type=time] { color-scheme: light; }
+  .quick { display: flex; gap: 6px; }
+  .quick button, .rin button { all: unset; cursor: pointer; padding: 5px 9px; border-radius: 6px; background: var(--hi); color: var(--muted); font-size: 11px; }
+  .quick button:hover, .rin button:hover { color: var(--accent); }
+  .rin button { background: var(--accent); color: var(--ink); font-weight: 600; }
+  .rem { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .rem b { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .rem span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rem i { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .rem i:hover { color: var(--accent2); }
+
+  /* battery + footer */
+  .row { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: calc(var(--chipRadius) + 2px); padding: 10px 12px; }
+  .row i { color: var(--accent); font-size: 18px; }
+  .row .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .row .grow span { font-size: 11px; color: var(--muted); }
+  .links { display: flex; gap: 6px; }
+  .links button { all: unset; flex: 1; cursor: pointer; text-align: center; padding: 8px 4px; border-radius: var(--chipRadius); background: var(--chip);
+    font-size: 11px; color: var(--muted); transition: background .15s, color .15s; }
+  .links button:hover { background: var(--hi); color: var(--text); }
+  .links button[hidden] { display: none; }
+  .links button i { display: block; font-size: 16px; color: var(--accent); margin-bottom: 3px; }
+</style>
+</head>
+<body>
+  <div class="cc" id="cc">
+    <div class="media" id="media" hidden>
+      <div class="art nf" id="art">&#xF075A;</div>
+      <div class="mi">
+        <b id="mTitle"></b><span id="mArtist"></span>
+        <div class="prog"><div id="mProg"></div></div>
+        <div class="ctl">
+          <button id="mPrev" title="Попередній">&#xF04AE;</button>
+          <button id="mPlay" class="main" title="Пауза / відтворення">&#xF040A;</button>
+          <button id="mNext" title="Наступний">&#xF04AD;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile" id="tWifi"><i class="nf">&#xF05A9;</i><b>Wi‑Fi</b><span id="tWifiSub">…</span><div class="more nf" id="wifiMore" title="Мережі">&#xF0140;</div></div>
+      <div class="tile" id="tBt"><i class="nf">&#xF00AF;</i><b>Bluetooth</b><span id="tBtSub">…</span></div>
+      <div class="tile" id="tMute"><i class="nf" id="tMuteIc">&#xF057E;</i><b>Звук</b><span id="tMuteSub"></span><div class="more nf" id="mixMore" title="Мікшер і пристрої">&#xF0140;</div></div>
+      <div class="tile" id="tTravel" title="Економія живлення, пауза живих шпалер, приглушений екран, док ховається"><i class="nf">&#xF001D;</i><b>В дорозі</b><span id="tTravelSub">вимкнено</span></div>
+      <div class="tile" id="tFocus" title="Фокус 25 хв / перерва 5 хв, сповіщення вимкнені під час фокусу"><i class="nf">&#xF0517;</i><b>Фокус</b><span id="tFocusSub">25 / 5 хв</span></div>
+      <div class="tile" id="tWarm" title="Теплий екран (менше синього світла)"><i class="nf">&#xF06E8;</i><b>Теплий екран</b><span id="tWarmSub">вимкнено</span></div>
+    </div>
+
+    <div class="modes" id="modes" hidden></div>
+    <div class="nets" id="nets" hidden></div>
+    <div class="mix" id="mix" hidden></div>
+
+    <div class="slider" id="sVol"><i class="nf" id="volIc">&#xF057E;</i><input type="range" id="vol" min="0" max="100" /><b id="volV"></b></div>
+    <div class="slider" id="sMic" hidden title="Мікрофон — Win+Alt+K вмикає / вимикає"><i class="nf" id="micIc">&#xF036C;</i><input type="range" id="mic" min="0" max="100" /><b id="micV"></b><i class="nf more2" id="micMore" title="Вибрати мікрофон">&#xF0140;</i></div>
+    <div class="mix" id="micBox" hidden></div>
+    <div class="slider" id="sWarm" hidden><i class="nf">&#xF06E8;</i><input type="range" id="warm" min="10" max="100" /><b id="warmV"></b></div>
+    <div class="slider" id="sBri" hidden><i class="nf">&#xF00DF;</i><input type="range" id="bri" min="0" max="100" /><b id="briV"></b></div>
+
+    <div class="wxc" id="wxCard" hidden><div class="now"><i class="nf" id="wxI"></i><b id="wxT"></b><div><span id="wxD"></span><span id="wxP"></span></div></div><div class="days" id="wxDays"></div></div>
+
+    <div class="clocks" id="clocks" title="Світовий час"></div>
+
+    <div class="cal" id="cal"><div class="hd"><i class="nf" id="calPrev">&#xF0141;</i><span id="calM"></span><i class="nf" id="calNext">&#xF0142;</i></div><div class="grid" id="calG"></div><div id="calEv"></div></div>
+
+    <div class="mon" id="mon"><div>Процесор<b id="monCpu">–</b><canvas id="monCpuC" width="100" height="26"></canvas></div><div>Пам'ять<b id="monRam">–</b><canvas id="monRamC" width="100" height="26"></canvas></div><div>Температура<b id="monTemp">–</b><span id="monBt"></span></div></div>
+
+    <div class="box">
+      <h4><i class="nf">&#xF009A;</i>Нагадування</h4>
+      <div class="rin"><input type="text" id="remText" placeholder="Про що нагадати?" /><input type="time" id="remAt" /><button id="remAdd">+</button></div>
+      <div class="quick"><button data-min="10">через 10 хв</button><button data-min="30">30 хв</button><button data-min="60">1 год</button><button data-min="180">3 год</button></div>
+      <div id="remList"></div>
+    </div>
+
+    <div class="box">
+      <h4><i class="nf">&#xF039A;</i>Нотатки</h4>
+      <textarea id="notes" placeholder="Швидкі нотатки — зберігаються самі"></textarea>
+    </div>
+
+    <div class="links2"><button id="healthBtn">Здоров'я ПК</button><button id="dlBtn">Завантаження</button></div>
+    <div class="row" id="batRow"><i class="nf" id="batIc"></i><div class="grow"><b id="batT"></b><span id="batS"></span></div></div>
+
+    <div class="links">
+      <button data-open="ms-settings:network"><i class="nf">&#xF0318;</i>Мережа</button>
+      <button data-open="ms-settings:sound"><i class="nf">&#xF04C3;</i>Звук</button>
+      <button data-open="ms-settings:bluetooth"><i class="nf">&#xF00AF;</i>Пристрої</button>
+      <button id="linkBtn"><i class="nf">&#xF011C;</i>Телефон</button>
+      <button data-open="ms-settings:"><i class="nf">&#xF0493;</i>Усі</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import { getTheme, saveTheme } from './themes.js';
+    import { describe as wxDescribe, cached as wxCached } from './weather.js';
+    import { profiles, applyProfile } from './profiles.js';
+
+    const $ = id => document.getElementById(id);
+    const G = c => String.fromCodePoint(c);
+    const widget = zebar.currentWidget();
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    const cc = async (...args) => {
+      try { const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-cc.ps1', ...args]); return JSON.parse((r.stdout || '').trim() || 'null'); }
+      catch (e) { log('cc ' + args[1] + ' failed: ' + e); return null; }
+    };
+    const open = target => zebar.shellExec('powershell', [...PS, '-Command', `Start-Process '${target}'`]).catch(() => {});
+    const log = msg => zebar.shellExec('powershell', [...PS, '-Command',
+      `Add-Content -LiteralPath "$env:TEMP\\valo-cc.log" -Value ('${new Date().toISOString()} ' + '${String(msg).replace(/'/g, '')}')`]).catch(() => {});
+
+    const providers = zebar.createProviderGroup({
+      audio: { type: 'audio' },
+      battery: { type: 'battery', refreshInterval: 10000 },
+      network: { type: 'network', refreshInterval: 5000 },
+      media: { type: 'media' },
+    });
+
+    // ---------- show / hide: persistent window like the menu, toggled by the bar through localStorage
+    const win = widget.tauriWindow ?? widget.window?.tauri;
+    let visible = true;
+    async function hideWin() { try { await win.hide(); } catch (e) { log('hide failed: ' + e); } }
+    async function showWin() {
+      try { await win.show(); } catch (e) { log('show failed: ' + e); }
+      localStorage.setItem('valo.focusWin', 'Zebar - quill / control|' + Date.now());
+      zebar.shellExec('powershell', [...PS, '-Command', "(New-Object -ComObject WScript.Shell).AppActivate('Zebar - quill / control') | Out-Null"]).catch(() => {});
+    }
+    function close() {
+      if (!visible) return;
+      visible = false;
+      localStorage.setItem('valo.ccClosed', String(Date.now()));
+      helperCmd('sysmon off');
+      $('cc').classList.remove('show');
+      setTimeout(hideWin, 150);
+    }
+    async function openCC() {
+      if (visible) return;
+      visible = true;
+      render();
+      refreshState();
+      helperCmd('sysmon on'); helperCmd('bt'); helperCmd('mic list'); if (!$('mix').hidden) helperCmd('audio list');
+      renderWeather(); loadCalendar(); renderCal(); showCC('main');
+      await showWin();
+      requestAnimationFrame(() => $('cc').classList.add('show'));
+    }
+    window.addEventListener('blur', () => setTimeout(() => { if (visible && !document.hasFocus()) close(); }, 80));
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    window.addEventListener('storage', e => {
+      if (e.key !== 'valo.ccToggle' || !e.newValue) return;
+      localStorage.setItem('valo.ccAck', e.newValue);
+      visible ? close() : openCC();
+    });
+
+    // ---------- radios, networks, brightness (valo-cc.ps1)
+    let st = null, busy = false;
+    async function refreshState() {
+      const s = await cc('-Action', 'state');
+      if (s) { st = s; renderState(); }
+    }
+    function radio(kind) { return st?.radios?.find(r => r.kind === kind); }
+    function renderState() {
+      const w = radio('WiFi'), b = radio('Bluetooth');
+      $('tWifi').classList.toggle('on', !!w?.on);
+      $('tWifiSub').textContent = !w ? 'немає' : !w.on ? 'вимкнено' : (st.connected || 'не підключено');
+      $('tBt').classList.toggle('on', !!b?.on);
+      $('tBtSub').textContent = !b ? 'немає' : b.on ? 'увімкнено' : 'вимкнено';
+      $('sBri').hidden = st.bright == null;
+      if (st.bright != null && !briDrag) setRange($('bri'), st.bright, $('briV'));
+      renderNets();
+    }
+    function sigIcon(s) { return G(s < 25 ? 0xF091F : s < 50 ? 0xF0922 : s < 75 ? 0xF0925 : 0xF0928); }
+    function renderNets() {
+      const box = $('nets'); box.innerHTML = '';
+      for (const n of st?.wifi || []) {
+        const el = document.createElement('div'); el.className = 'net' + (n.connected ? ' cur' : '');
+        const i = document.createElement('i'); i.className = 'nf'; i.textContent = sigIcon(n.signal);
+        const s = document.createElement('span'); s.textContent = n.ssid;
+        const em = document.createElement('em'); em.textContent = n.connected ? 'підключено' : n.known ? 'збережена' : '';
+        el.append(i, s, em);
+        el.onclick = async () => {
+          if (n.connected) return;
+          if (!n.known) return open('ms-availablenetworks:');
+          em.textContent = 'підключення…';
+          const r = await cc('-Action', 'connect', '-Ssid', n.ssid);
+          if (!r?.ok) em.textContent = 'не вдалося';
+          setTimeout(refreshState, 2500);
+        };
+        box.append(el);
+      }
+      if (!(st?.wifi || []).length) { const e = document.createElement('div'); e.className = 'foot'; e.textContent = 'Мереж не знайдено'; box.append(e); }
+      const f = document.createElement('div'); f.className = 'foot'; f.textContent = 'Інші мережі Windows…'; f.onclick = () => open('ms-availablenetworks:'); box.append(f);
+    }
+    async function toggleRadio(kind, tile) {
+      const r = radio(kind); if (!r || busy) return;
+      busy = true; tile.classList.add('busy');
+      const res = await cc('-Action', 'radio', '-Kind', kind, '-On', r.on ? '0' : '1');
+      if (!res?.ok) log('radio ' + kind + ': ' + JSON.stringify(res));
+      await refreshState();
+      tile.classList.remove('busy'); busy = false;
+    }
+    $('tWifi').onclick = e => { if (e.target.closest('.more')) return; toggleRadio('WiFi', $('tWifi')); };
+    $('wifiMore').onclick = () => { $('nets').hidden = !$('nets').hidden; $('wifiMore').textContent = G($('nets').hidden ? 0xF0140 : 0xF0143); };
+    $('tBt').onclick = () => toggleRadio('Bluetooth', $('tBt'));
+    $('tBt').oncontextmenu = e => { e.preventDefault(); open('ms-settings:bluetooth'); };
+    $('tWifi').oncontextmenu = e => { e.preventDefault(); open('ms-availablenetworks:'); };
+
+    // ---------- sliders
+    function setRange(el, v, label) { el.value = v; el.style.setProperty('--p', v + '%'); if (label) label.textContent = v + '%'; }
+    let volDrag = false, briDrag = false, briTimer = null;
+    $('vol').oninput = () => {
+      volDrag = true; const v = +$('vol').value; setRange($('vol'), v, $('volV'));
+      providers.outputMap.audio?.setVolume(v);
+    };
+    $('vol').onchange = () => { volDrag = false; };
+    $('volIc').onclick = () => { const a = providers.outputMap.audio, d = a?.defaultPlaybackDevice; if (d) a.setMute(!d.isMuted); };
+    $('bri').oninput = () => {
+      briDrag = true; const v = +$('bri').value; setRange($('bri'), v, $('briV'));
+      clearTimeout(briTimer); briTimer = setTimeout(() => cc('-Action', 'bright', '-Value', String(v)), 120);
+    };
+    $('bri').onchange = () => { briDrag = false; };
+    $('tMute').onclick = () => $('volIc').click();
+
+    // ---------- media
+    let artKey = '';
+    async function loadArt(key) {
+      const r = await cc('-Action', 'art');
+      if (key !== artKey) return;
+      const a = $('art');
+      if (r?.art) { a.style.backgroundImage = `url(data:image/png;base64,${r.art})`; a.classList.add('img'); }
+      else { a.style.backgroundImage = ''; a.classList.remove('img'); }
+    }
+    $('mPrev').onclick = () => providers.outputMap.media?.previous();
+    $('mNext').onclick = () => providers.outputMap.media?.next();
+    $('mPlay').onclick = () => providers.outputMap.media?.togglePlayPause();
+
+    function fmtTime(sec) {
+      const h = Math.floor(sec / 3600), m = Math.round((sec % 3600) / 60);
+      return h ? `${h} год ${m} хв` : `${m} хв`;
+    }
+
+    function render() {
+      const o = providers.outputMap;
+      // sound
+      const d = o.audio?.defaultPlaybackDevice;
+      if (d) {
+        const v = Math.round(d.volume);
+        if (!volDrag) setRange($('vol'), v, $('volV'));
+        const ic = G(d.isMuted || v === 0 ? 0xF0581 : v < 34 ? 0xF057F : v < 67 ? 0xF0580 : 0xF057E);
+        $('volIc').textContent = ic; $('tMuteIc').textContent = ic;
+        $('tMute').classList.toggle('on', !d.isMuted);
+        $('tMuteSub').textContent = d.isMuted ? 'вимкнено' : (d.name || 'увімкнено');
+      }
+      // media
+      const m = o.media?.session ?? o.media?.currentSession;
+      $('media').hidden = !m || !(m.title || m.artist);
+      if (m && (m.title || m.artist)) {
+        $('mTitle').textContent = m.title || 'Без назви';
+        $('mArtist').textContent = [m.artist, m.albumTitle].filter(Boolean).join(' · ');
+        $('mPlay').textContent = G(m.isPlaying ? 0xF03E4 : 0xF040A);
+        const len = (m.endTime ?? 0) - (m.startTime ?? 0);
+        $('mProg').style.width = len > 0 ? Math.min(100, (m.position / len) * 100) + '%' : '0';
+        const key = (m.title || '') + '|' + (m.artist || '');
+        if (key !== artKey && visible) { artKey = key; loadArt(key); }
+      }
+      // battery
+      const b = o.battery;
+      if (b && b.chargePercent != null) {
+        const p = Math.round(b.chargePercent);
+        $('batIc').textContent = b.isCharging ? G(0xF0084) : G(p >= 95 ? 0xF0079 : 0xF007A + Math.max(0, Math.min(8, Math.round(p / 10) - 1)));
+        $('batT').textContent = 'Батарея ' + p + '%';
+        $('batS').textContent = b.isCharging
+          ? (b.timeTillFull ? 'заряджається, до повного ~' + fmtTime(b.timeTillFull / 1000) : 'заряджається')
+          : (b.timeTillEmpty ? 'залишилось ~' + fmtTime(b.timeTillEmpty / 1000) : 'від батареї');
+      } else {
+        $('batIc').textContent = G(0xF06A5); $('batT').textContent = 'Живлення від мережі'; $('batS').textContent = 'батареї немає';
+      }
+    }
+    $('batRow').onclick = () => open('ms-settings:powersleep');
+
+    // ---------- world clocks (valo.clocks: [[name, IANA zone], ...])
+    const CLOCKS = (() => { try { return JSON.parse(localStorage.getItem('valo.clocks') || 'null'); } catch { return null; } })()
+      || [['Київ', 'Europe/Kyiv'], ['Бухарест', 'Europe/Bucharest'], ['Прага', 'Europe/Prague'], ['Варшава', 'Europe/Warsaw']];
+    function renderClocks() {
+      const box = $('clocks'); box.innerHTML = '';
+      const now = new Date(), here = now.getTimezoneOffset();
+      for (const [name, tz] of CLOCKS) {
+        let t = '--:--', diff = '';
+        try {
+          t = new Intl.DateTimeFormat('uk-UA', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(now);
+          const loc = new Date(now.toLocaleString('en-US', { timeZone: tz })), off = Math.round((loc - new Date(now.toLocaleString('en-US'))) / 3600e3);
+          diff = off === 0 ? 'як тут' : (off > 0 ? '+' : '') + off + ' год';
+        } catch { }
+        const d = document.createElement('div');
+        d.innerHTML = '<b></b><span></span><em></em>';
+        d.querySelector('b').textContent = t; d.querySelector('span').textContent = name; d.querySelector('em').textContent = diff;
+        box.append(d);
+      }
+    }
+    renderClocks(); setInterval(renderClocks, 15000);
+
+    // ---------- notes
+    $('notes').value = localStorage.getItem('valo.notes') || '';
+    let notesTimer = null;
+    $('notes').addEventListener('input', () => { clearTimeout(notesTimer); notesTimer = setTimeout(() => localStorage.setItem('valo.notes', $('notes').value), 300); });
+    window.addEventListener('storage', e => { if (e.key === 'valo.notes' && document.activeElement !== $('notes')) $('notes').value = e.newValue || ''; });
+
+    // ---------- reminders (valo.reminders: [{id, text, at(ms)}]); this widget runs all the time, so it rings them
+    const rems = () => { try { return JSON.parse(localStorage.getItem('valo.reminders') || '[]') || []; } catch { return []; } };
+    const saveRems = r => { localStorage.setItem('valo.reminders', JSON.stringify(r)); renderRems(); };
+    function addRem(at) {
+      const text = $('remText').value.trim() || 'Нагадування';
+      saveRems([...rems(), { id: Date.now(), text, at }].sort((a, b) => a.at - b.at));
+      $('remText').value = '';
+    }
+    $('remAdd').onclick = () => {
+      const v = $('remAt').value; if (!v) { $('remAt').focus(); return; }
+      const [h, m] = v.split(':').map(Number), d = new Date(); d.setHours(h, m, 0, 0);
+      if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+      addRem(d.getTime()); $('remAt').value = '';
+    };
+    $('remText').addEventListener('keydown', e => { if (e.key === 'Enter') $('remAdd').click(); });
+    for (const b of document.querySelectorAll('.quick button')) b.onclick = () => addRem(Date.now() + (+b.dataset.min) * 60000);
+    function renderRems() {
+      const box = $('remList'); box.innerHTML = '';
+      for (const r of rems()) {
+        const d = new Date(r.at), el = document.createElement('div'); el.className = 'rem';
+        const today = d.toDateString() === new Date().toDateString();
+        el.innerHTML = '<b></b><span></span><i class="nf" title="Видалити">&#xF0156;</i>';
+        el.querySelector('b').textContent = (today ? '' : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' }) + ' ') + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        el.querySelector('span').textContent = r.text;
+        el.querySelector('i').onclick = () => saveRems(rems().filter(x => x.id !== r.id));
+        box.append(el);
+      }
+    }
+    function ringDue() {
+      const now = Date.now(), all = rems(), due = all.filter(r => r.at <= now);
+      if (!due.length) return;
+      saveRems(all.filter(r => r.at > now));
+      for (const r of due) zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-toast.ps1', '-Title', 'valo.os · нагадування', '-Text', r.text]).catch(() => {});
+    }
+    window.addEventListener('storage', e => { if (e.key === 'valo.reminders') renderRems(); });
+    renderRems(); setInterval(ringDue, 15000); setTimeout(ringDue, 4000);
+
+    // ---------- travel mode
+    const travelOn = () => localStorage.getItem('valo.travel') === '1';
+    function renderTravel() { $('tTravel').classList.toggle('on', travelOn()); $('tTravelSub').textContent = travelOn() ? 'увімкнено' : 'вимкнено'; }
+    $('tTravel').onclick = async () => {
+      const on = !travelOn(), tile = $('tTravel');
+      tile.classList.add('busy');
+      if (on) {
+        const t = getTheme();
+        localStorage.setItem('valo.travelPrev', JSON.stringify({ dockOverlap: !!t.dockOverlap, dockHide: !!t.dockHide }));
+        saveTheme({ dockOverlap: true, dockHide: true });
+      } else {
+        try { saveTheme(JSON.parse(localStorage.getItem('valo.travelPrev') || '{}')); } catch { }
+      }
+      localStorage.setItem('valo.travel', on ? '1' : '0');
+      await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-travel.ps1', on ? '-On' : '-Off']).catch(() => {});
+      tile.classList.remove('busy'); renderTravel(); refreshState();
+    };
+    renderTravel();
+
+    // ---------- modes (profiles) + Wi‑Fi auto
+    const pr = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    function modesEnabled() { return pr().modesOn !== false; }
+    function renderModes() {
+      const box = $('modes'); box.hidden = !modesEnabled(); box.innerHTML = '';
+      if (box.hidden) return;
+      const { active, list } = profiles();
+      for (const [id, m] of [[null, { name: 'Звичайний' }], ...Object.entries(list)]) {
+        const b = document.createElement('button'); b.className = (active || null) === id ? 'on' : '';
+        b.innerHTML = '<i></i><span></span>'; b.querySelector('i').textContent = G(id ? m.glyph : 0xF0AE4); b.querySelector('span').textContent = m.name;
+        b.title = id ? `${m.name}: тема ${m.theme || '—'}${m.dnd ? ', не турбувати' : ''}${m.wifi ? ', авто в мережі ' + m.wifi : ''}` : 'Без режиму';
+        b.onclick = async () => { await applyProfile(id, zebar.shellExec, dir); renderModes(); };
+        box.append(b);
+      }
+    }
+    let lastSsid = null;
+    function wifiAuto() {
+      const ssid = providers.outputMap.network?.defaultGateway?.ssid || '';
+      if (ssid === lastSsid) return;
+      lastSsid = ssid; localStorage.setItem('valo.ssid', ssid);
+      if (!ssid || !modesEnabled()) return;
+      const hit = Object.entries(profiles().list).find(([, m]) => m.wifi && m.wifi.trim().toLowerCase() === ssid.toLowerCase());
+      if (hit && profiles().active !== hit[0]) applyProfile(hit[0], zebar.shellExec, dir).then(renderModes);
+    }
+    setInterval(wifiAuto, 20000); setTimeout(wifiAuto, 5000);
+    window.addEventListener('storage', e => { if (e.key === 'valo.prefs') renderModes(); });
+    renderModes();
+    $('healthBtn').onclick = () => { localStorage.setItem('valo.menuToggle', 'health:' + Date.now()); close(); };
+    $('dlBtn').onclick = () => { zebar.shellExec('explorer', ['shell:Downloads']).catch(() => {}); close(); };
+
+    // ---------- pages: Головне / День / Нотатки / Система
+    const PAGES = [['main', 0xF02DC, 'Головне'], ['day', 0xF00ED, 'День'], ['notes', 0xF039A, 'Нотатки'], ['sys', 0xF012A, 'Система']];
+    (function buildPages() {
+      const cc = $('cc'), bar = document.createElement('div'); bar.className = 'cctabs'; bar.id = 'cctabs';
+      const page = {};
+      for (const [id, ic, name] of PAGES) {
+        const b = document.createElement('button'); b.dataset.p = id; b.innerHTML = '<i></i><span></span>';
+        b.querySelector('i').textContent = G(ic); b.querySelector('span').textContent = name;
+        b.onclick = () => showCC(id); bar.append(b);
+        page[id] = document.createElement('div'); page[id].className = 'ccpage'; page[id].dataset.p = id;
+      }
+      const boxes = [...cc.querySelectorAll(':scope > .box')];
+      const plan = {
+        main: [$('media'), cc.querySelector(':scope > .tiles'), $('modes'), $('nets'), $('mix'), $('sVol'), $('sMic'), $('micBox'), $('sWarm'), $('sBri')],
+        day: [$('wxCard'), $('clocks'), $('cal')],
+        notes: boxes,
+        sys: [$('mon'), cc.querySelector(':scope > .links2'), $('batRow'), cc.querySelector(':scope > .links')],
+      };
+      for (const [id, els] of Object.entries(plan)) for (const el of els) if (el) page[id].append(el);
+      cc.innerHTML = '';
+      cc.append(bar, ...PAGES.map(([id]) => page[id]));
+    })();
+    let ccPage = 'main';
+    function showCC(id) {
+      ccPage = id;
+      for (const b of $('cctabs').children) b.classList.toggle('on', b.dataset.p === id);
+      for (const pg of document.querySelectorAll('.ccpage')) pg.hidden = pg.dataset.p !== id;
+      if (id === 'day') { renderWeather(); renderCal(); }
+      if (id === 'sys') helperCmd('bt');
+    }
+    showCC('main');
+
+    // ---------- bridge to the dock's helper process (mixer, monitor, warm screen, Bluetooth batteries)
+    function helperCmd(cmd) { localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd, ts: Date.now() + Math.random() })); }
+    const evOf = k => { try { return JSON.parse(localStorage.getItem('valo.ev.' + k) || 'null'); } catch { return null; } };
+    window.addEventListener('storage', e => {
+      if (!e.newValue) return;
+      if (e.key === 'valo.ev.audio') renderMix(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.mic') renderMic(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.sys') renderMon(JSON.parse(e.newValue));
+      else if (e.key === 'valo.ev.bt') renderBt(JSON.parse(e.newValue));
+      else if (e.key === 'valo.weather') renderWeather();
+      else if (e.key === 'valo.prefs') { renderWarm(); loadCalendar(true); }
+      else if (e.key === 'valo.pomo') renderFocus();
+    });
+
+    // ---------- microphone: volume, on / off (Win+Alt+K), which microphone
+    let micDrag = false, micT = null;
+    $('mic').oninput = () => {
+      micDrag = true; const v = +$('mic').value; setRange($('mic'), v, $('micV'));
+      clearTimeout(micT); micT = setTimeout(() => helperCmd('mic vol ' + v), 60);
+    };
+    $('mic').onchange = () => { setTimeout(() => { micDrag = false; }, 400); };
+    $('micIc').onclick = () => helperCmd('mic toggle');
+    $('micMore').onclick = () => { $('micBox').hidden = !$('micBox').hidden; $('micMore').textContent = G($('micBox').hidden ? 0xF0140 : 0xF0143); helperCmd('mic list'); };
+    function renderMic(m) {
+      if (!m) return;
+      $('sMic').hidden = m.vol == null;
+      if (m.vol == null) return;
+      if (!micDrag) setRange($('mic'), m.vol, $('micV'));
+      $('micIc').textContent = G(m.mute ? 0xF036D : 0xF036C); $('micIc').classList.toggle('off', !!m.mute);
+      $('sMic').classList.toggle('muted', !!m.mute);
+      if (m.mute) $('micV').textContent = 'вимк.';
+      const box = $('micBox'); box.innerHTML = '';
+      const h = document.createElement('h5'); h.textContent = 'Мікрофон'; box.append(h);
+      for (const d of m.devices || []) {
+        const row = document.createElement('div'); row.className = 'dev' + (d.def ? ' on' : '');
+        row.innerHTML = '<i class="nf"></i><span></span>';
+        row.querySelector('i').textContent = G(d.def ? 0xF0134 : 0xF0130); row.querySelector('span').textContent = d.name;
+        row.onclick = () => { if (!d.def) helperCmd('mic default ' + d.id); };
+        box.append(row);
+      }
+      const set = document.createElement('div'); set.className = 'dev';
+      set.innerHTML = '<i class="nf"></i><span>Налаштування мікрофона Windows</span>'; set.querySelector('i').textContent = G(0xF0493);
+      set.onclick = () => open('ms-settings:sound'); box.append(set);
+    }
+    renderMic(evOf('mic'));
+
+    // ---------- mixer: per-app volume + output device
+    $('mixMore').onclick = e => {
+      e.stopPropagation();
+      $('mix').hidden = !$('mix').hidden; $('mixMore').textContent = G($('mix').hidden ? 0xF0140 : 0xF0143);
+      if (!$('mix').hidden) helperCmd('audio list');
+    };
+    let mixDrag = false;
+    function renderMix(m) {
+      if (mixDrag || !m) return;
+      const box = $('mix'); box.innerHTML = '';
+      const h1 = document.createElement('h5'); h1.textContent = 'Програми'; box.append(h1);
+      if (!(m.apps || []).length) { const e = document.createElement('div'); e.className = 'hint'; e.textContent = 'Зараз нічого не відтворює звук'; box.append(e); }
+      for (const a of m.apps || []) {
+        const row = document.createElement('div'); row.className = 'app';
+        const ic = document.createElement('i'); ic.className = 'nf' + (a.mute ? ' off' : ''); ic.textContent = G(a.mute ? 0xF0581 : 0xF057E);
+        ic.onclick = () => helperCmd(`audio mute ${a.pid} ${a.mute ? 0 : 1}`);
+        const nm = document.createElement('span'); nm.textContent = a.name;
+        const r = document.createElement('input'); r.type = 'range'; r.min = 0; r.max = 100; setRange(r, a.vol);
+        let t = null;
+        r.oninput = () => { mixDrag = true; setRange(r, +r.value); clearTimeout(t); t = setTimeout(() => helperCmd(`audio vol ${a.pid} ${r.value}`), 60); };
+        r.onchange = () => { setTimeout(() => { mixDrag = false; }, 400); };
+        row.append(ic, nm, r); box.append(row);
+      }
+      const h2 = document.createElement('h5'); h2.textContent = 'Вихід звуку'; box.append(h2);
+      for (const d of m.devices || []) {
+        const row = document.createElement('div'); row.className = 'dev' + (d.def ? ' on' : '');
+        row.innerHTML = '<i class="nf"></i><span></span>';
+        row.querySelector('i').textContent = G(d.def ? 0xF0134 : 0xF0130); row.querySelector('span').textContent = d.name;
+        row.onclick = () => { if (!d.def) helperCmd('audio default ' + d.id); };
+        box.append(row);
+      }
+    }
+
+    // ---------- system monitor
+    const hist = { cpu: [], ram: [] };
+    function spark(id, arr) {
+      const c = $(id), g = c.getContext('2d'), w = c.width, h = c.height, cs = getComputedStyle(document.documentElement);
+      g.clearRect(0, 0, w, h);
+      if (arr.length < 2) return;
+      g.beginPath();
+      arr.forEach((v, i) => { const x = i / 39 * w, y = h - 2 - v / 100 * (h - 4); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+      g.strokeStyle = cs.getPropertyValue('--accent'); g.lineWidth = 1.5; g.stroke();
+      g.lineTo((arr.length - 1) / 39 * w, h); g.lineTo(0, h); g.closePath();
+      g.globalAlpha = .15; g.fillStyle = cs.getPropertyValue('--accent'); g.fill(); g.globalAlpha = 1;
+    }
+    function renderMon(m) {
+      if (!m) return;
+      hist.cpu = [...hist.cpu, m.cpu].slice(-40); hist.ram = [...hist.ram, m.ram].slice(-40);
+      $('monCpu').textContent = m.cpu + '%'; $('monRam').textContent = `${m.ramUsed} / ${m.ramTotal} ГБ`;
+      $('monTemp').textContent = m.temp != null ? m.temp + '°' : '—';
+      spark('monCpuC', hist.cpu); spark('monRamC', hist.ram);
+    }
+    function renderBt(m) {
+      const l = (m && m.list) || [];
+      $('monBt').textContent = l.map(d => `${d.name}: ${d.pct}%`).join(' · ');
+      if (l.length) $('tBtSub').textContent = l.map(d => d.pct + '%').join(' · ');
+    }
+
+    // ---------- focus timer (the bar counts it down and switches phases)
+    const pomo = () => { try { return JSON.parse(localStorage.getItem('valo.pomo') || 'null'); } catch { return null; } };
+    function renderFocus() {
+      const p = pomo();
+      $('tFocus').classList.toggle('on', !!p);
+      $('tFocusSub').textContent = !p ? '25 / 5 хв' : p.phase === 'work' ? 'фокус до ' + new Date(p.endAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) : 'перерва';
+    }
+    $('tFocus').onclick = () => {
+      if (pomo()) localStorage.removeItem('valo.pomo');
+      else localStorage.setItem('valo.pomo', JSON.stringify({ phase: 'work', endAt: Date.now() + 25 * 60e3, work: 25, brk: 5 }));
+      renderFocus();
+    };
+    renderFocus();
+
+    // ---------- warm screen (the dock applies it; schedule lives in valo.prefs.warm)
+    const cprefs = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const savePrefs = patch => localStorage.setItem('valo.prefs', JSON.stringify({ ...cprefs(), ...patch }));
+    function renderWarm() {
+      const w = { mode: 'off', value: 40, ...(cprefs().warm || {}) };
+      $('tWarm').classList.toggle('on', w.mode !== 'off');
+      $('tWarmSub').textContent = w.mode === 'on' ? 'увімкнено' : w.mode === 'schedule' ? `з ${w.from || '21:00'} до ${w.to || '07:00'}` : 'вимкнено';
+      $('sWarm').hidden = w.mode === 'off';
+      if (!warmDrag) setRange($('warm'), w.value, $('warmV'));
+    }
+    let warmDrag = false;
+    $('tWarm').onclick = () => { const w = { mode: 'off', value: 40, ...(cprefs().warm || {}) }; savePrefs({ warm: { ...w, mode: w.mode === 'off' ? 'on' : 'off' } }); renderWarm(); };
+    $('warm').oninput = () => { warmDrag = true; setRange($('warm'), +$('warm').value, $('warmV')); };
+    $('warm').onchange = () => { warmDrag = false; const w = { mode: 'on', ...(cprefs().warm || {}) }; savePrefs({ warm: { ...w, value: +$('warm').value } }); };
+    renderWarm();
+
+    // ---------- weather (the bar refreshes it)
+    const wd = ['нд', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+    function renderWeather() {
+      const w = wxCached();
+      $('wxCard').hidden = !w || !w.cur;
+      if (!w || !w.cur) return;
+      const d = wxDescribe(w.cur.weather_code, !!w.cur.is_day);
+      $('wxI').textContent = d.glyph; $('wxT').textContent = Math.round(w.cur.temperature_2m) + '°';
+      $('wxD').textContent = `${w.place || ''} · ${d.text}`;
+      $('wxP').textContent = `відчувається ${Math.round(w.cur.apparent_temperature)}° · вітер ${Math.round(w.cur.wind_speed_10m)} км/год · вологість ${w.cur.relative_humidity_2m}%`;
+      const box = $('wxDays'); box.innerHTML = '';
+      (w.daily?.time || []).forEach((t, i) => {
+        const dd = wxDescribe(w.daily.weather_code[i], true), el = document.createElement('div');
+        el.innerHTML = '<span></span><i class="nf"></i><b></b><span></span>';
+        const sp = el.querySelectorAll('span');
+        sp[0].textContent = i === 0 ? 'сьогодні' : wd[new Date(t).getDay()];
+        el.querySelector('i').textContent = dd.glyph; el.querySelector('i').title = dd.text;
+        el.querySelector('b').textContent = Math.round(w.daily.temperature_2m_max[i]) + '° ' + Math.round(w.daily.temperature_2m_min[i]) + '°';
+        sp[1].textContent = (w.daily.precipitation_probability_max?.[i] ?? 0) + '%';
+        box.append(el);
+      });
+    }
+    renderWeather();
+
+    // ---------- calendar: month grid + events from an .ics link (valo.prefs.ics)
+    let calMonth = new Date(); calMonth.setDate(1);
+    const calCache = () => { try { return JSON.parse(localStorage.getItem('valo.ics') || 'null'); } catch { return null; } };
+    function icsDate(v) {
+      const m = String(v).match(/(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?/);
+      if (!m) return null;
+      if (!m[4]) return { t: new Date(+m[1], m[2] - 1, +m[3]).getTime(), allDay: true };
+      return { t: m[7] ? Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(), allDay: false };
+    }
+    function parseIcs(text) {
+      const lines = text.replace(/\r?\n[ \t]/g, '').split(/\r?\n/), out = [];
+      let ev = null;
+      for (const l of lines) {
+        if (l === 'BEGIN:VEVENT') ev = {};
+        else if (l === 'END:VEVENT') { if (ev && ev.s) out.push(ev); ev = null; }
+        else if (ev) {
+          const i = l.indexOf(':'), key = l.slice(0, i).split(';')[0], val = l.slice(i + 1);
+          if (key === 'DTSTART') { const d = icsDate(val); if (d) { ev.s = d.t; ev.allDay = d.allDay; } }
+          else if (key === 'SUMMARY') ev.t = val.replace(/\\,/g, ',').replace(/\\n/g, ' ').replace(/\\;/g, ';');
+          else if (key === 'RRULE') ev.r = val;
+        }
+      }
+      // weekly / yearly repeats: put the next occurrences into the coming 60 days
+      const now = Date.now(), until = now + 60 * 864e5, res = [];
+      for (const e of out) {
+        if (!e.r) { if (e.s > now - 864e5 * 40 && e.s < until) res.push(e); continue; }
+        const step = /FREQ=WEEKLY/.test(e.r) ? 7 * 864e5 : /FREQ=DAILY/.test(e.r) ? 864e5 : /FREQ=YEARLY/.test(e.r) ? 0 : -1;
+        if (step > 0) { for (let t = e.s; t < until; t += step) if (t > now - 864e5 * 40) res.push({ ...e, s: t }); }
+        else if (step === 0) { const d = new Date(e.s); for (let y = new Date().getFullYear(); y <= new Date().getFullYear() + 1; y++) { d.setFullYear(y); if (d.getTime() < until) res.push({ ...e, s: d.getTime() }); } }
+      }
+      return res.sort((a, b) => a.s - b.s).slice(0, 400);
+    }
+    async function loadCalendar(force) {
+      const url = cprefs().ics;
+      if (!url) return;
+      const c = calCache();
+      if (!force && c && c.url === url && Date.now() - c.at < 30 * 60e3) return;
+      try {
+        const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-ics.ps1', '-Url', url]);
+        const text = r.stdout || '';
+        if (text.startsWith('ERROR')) throw new Error(text);
+        localStorage.setItem('valo.ics', JSON.stringify({ at: Date.now(), url, events: parseIcs(text) }));
+      } catch (e) { log('ics ' + e); }
+      renderCal();
+    }
+    function renderCal() {
+      const y = calMonth.getFullYear(), m = calMonth.getMonth();
+      $('calM').textContent = calMonth.toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' });
+      const g = $('calG'); g.innerHTML = '';
+      for (const d of ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд']) { const e = document.createElement('div'); e.className = 'dw'; e.textContent = d; g.append(e); }
+      const evs = (calCache()?.events) || [];
+      const evDays = new Set(evs.map(e => new Date(e.s).toDateString()));
+      const first = new Date(y, m, 1), start = new Date(y, m, 1 - ((first.getDay() + 6) % 7));
+      const today = new Date().toDateString();
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        if (i >= 35 && d.getMonth() !== m) break;
+        const e = document.createElement('div');
+        e.className = 'd' + (d.getMonth() !== m ? ' out' : '') + (d.toDateString() === today ? ' today' : '') + (evDays.has(d.toDateString()) ? ' ev' : '');
+        e.textContent = d.getDate(); g.append(e);
+      }
+      const box = $('calEv'); box.innerHTML = '';
+      if (!cprefs().ics) { const h = document.createElement('div'); h.className = 'hint'; h.textContent = 'Події з Google Calendar: додайте посилання .ics у «Налаштуваннях панелі» → «Календар».'; box.append(h); return; }
+      const now = Date.now() - 3600e3;
+      for (const e of evs.filter(e => e.s >= now).slice(0, 4)) {
+        const d = new Date(e.s), row = document.createElement('div'); row.className = 'ev';
+        row.innerHTML = '<b></b><span></span>';
+        const same = d.toDateString() === new Date().toDateString();
+        row.querySelector('b').textContent = (same ? 'сьогодні' : d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })) + (e.allDay ? '' : ' ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
+        row.querySelector('span').textContent = e.t || 'Подія';
+        box.append(row);
+      }
+    }
+    $('calPrev').onclick = () => { calMonth.setMonth(calMonth.getMonth() - 1); renderCal(); };
+    $('calNext').onclick = () => { calMonth.setMonth(calMonth.getMonth() + 1); renderCal(); };
+    renderCal();
+    // valo Link is optional (valo Store): the button shows only where it is installed
+    $('linkBtn').hidden = true;
+    zebar.shellExec('powershell', [...PS, '-Command', "Test-Path (Join-Path $env:LOCALAPPDATA 'valo\\link\\installed')"]).then(r => { $('linkBtn').hidden = !/True/.test(r?.stdout || ''); }).catch(() => {});
+    $('linkBtn').onclick = () => { zebar.shellExec('powershell', [...PS, '-Command', `Start-Process powershell -WindowStyle Hidden -ArgumentList '-NoProfile','-STA','-ExecutionPolicy','Bypass','-File','${dir}\\valo-link.ps1'`]).catch(() => {}); close(); };
+    for (const btn of document.querySelectorAll('[data-open]')) btn.onclick = () => { open(btn.dataset.open); close(); };
+
+    providers.onOutput(render);
+    render();
+
+    // start hidden, unless the bar started us just now to open (first click)
+    const t0 = +(localStorage.getItem('valo.ccToggle') || 0);
+    if (Date.now() - t0 < 3000) { localStorage.setItem('valo.ccAck', String(t0)); visible = false; openCC(); }
+    else { visible = true; close(); }
+    log('control ready');
+  </script>
+</body>
+</html>
