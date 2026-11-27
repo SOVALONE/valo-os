@@ -134,6 +134,10 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Перевіряю…|Checking…|Verific…
 Магазин valo|valo store|Magazin valo
 Магазин програм|App store|Magazin de aplicații
+Більше|More|Mai mult
+Перевірити оновлення|Check for updates|Caută actualizări
+Живлення|Power|Alimentare
+Консоль (Win+Shift+G)|Console (Win+Shift+G)|Consolă (Win+Shift+G)
 Панель і теми|Panel and themes|Panou și teme
 Налаштування Windows|Windows settings|Setări Windows
 Заблокувати|Lock|Blochează

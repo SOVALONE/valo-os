@@ -110,6 +110,14 @@
   .tip { position: fixed; left: 50%; bottom: 66px; transform: translateX(-50%); background: var(--chip-hi); color: var(--text);
     padding: 5px 10px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .15s; pointer-events: none; white-space: nowrap; }
   .tip.on { opacity: 1; }
+  /* footer pop-ups: "more" and power */
+  .popw { position: relative; }
+  .pop { position: absolute; right: 0; bottom: 42px; min-width: 210px; display: none; flex-direction: column; gap: 2px; padding: 6px;
+    background: var(--chip); border: 1px solid var(--border); border-radius: var(--chipRadius); box-shadow: 0 10px 30px rgba(0,0,0,.35); z-index: 20; }
+  .pop.on { display: flex; }
+  .btn.pi { width: auto; height: 34px; padding: 0 10px; display: flex; gap: 10px; justify-content: flex-start; font-size: 16px; }
+  .btn.pi span { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; }
+  .btn.open { background: var(--chip-hi); color: var(--pink); }
 
   /* updates */
   .upd { display: flex; align-items: center; gap: 10px; background: var(--chip); border-radius: var(--chipRadius); padding: 10px 12px; }
@@ -335,16 +343,26 @@
 
     <footer>
       <div class="user"><div class="av" id="av">?</div><span id="user"></span></div>
-      <button class="btn nf" data-act="update" data-tip="Перевірити оновлення">&#xF0162;</button>
       <button class="btn nf" data-act="store" data-tip="Магазин програм">&#xF0110;</button>
-      <button class="btn nf" data-act="console" data-tip="Консоль — ігри на весь екран (Win+Shift+G)">&#xF0297;</button>
       <button class="btn nf" data-act="panel" data-tip="Панель і теми">&#xF03D8;</button>
-      <button class="btn nf" data-act="settings" data-tip="Налаштування Windows">&#xF0493;</button>
-      <button class="btn nf" data-act="lock" data-tip="Заблокувати">&#xF033E;</button>
-      <button class="btn nf" data-act="logout" data-tip="Вийти" data-confirm="1">&#xF0343;</button>
-      <button class="btn nf" data-act="sleep" data-tip="Сон">&#xF0904;</button>
-      <button class="btn nf" data-act="restart" data-tip="Перезавантажити" data-confirm="1">&#xF0709;</button>
-      <button class="btn nf" data-act="shutdown" data-tip="Вимкнути" data-confirm="1">&#xF0425;</button>
+      <div class="popw">
+        <button class="btn nf" data-act="more" data-tip="Більше">&#xF01D8;</button>
+        <div class="pop" id="popMore">
+          <button class="btn nf pi" data-act="update" data-tip="Перевірити оновлення">&#xF0162;<span>Перевірити оновлення</span></button>
+          <button class="btn nf pi" data-act="console" data-tip="Консоль — ігри на весь екран (Win+Shift+G)">&#xF0297;<span>Консоль (Win+Shift+G)</span></button>
+          <button class="btn nf pi" data-act="settings" data-tip="Налаштування Windows">&#xF0493;<span>Налаштування Windows</span></button>
+        </div>
+      </div>
+      <div class="popw">
+        <button class="btn nf" data-act="power" data-tip="Живлення">&#xF0425;</button>
+        <div class="pop" id="popPower">
+          <button class="btn nf pi" data-act="lock" data-tip="Заблокувати">&#xF033E;<span>Заблокувати</span></button>
+          <button class="btn nf pi" data-act="sleep" data-tip="Сон">&#xF0904;<span>Сон</span></button>
+          <button class="btn nf pi" data-act="logout" data-tip="Вийти" data-confirm="1">&#xF0343;<span>Вийти</span></button>
+          <button class="btn nf pi" data-act="restart" data-tip="Перезавантажити" data-confirm="1">&#xF0709;<span>Перезавантажити</span></button>
+          <button class="btn nf pi" data-act="shutdown" data-tip="Вимкнути" data-confirm="1">&#xF0425;<span>Вимкнути</span></button>
+        </div>
+      </div>
     </footer>
   </div>
   <div class="tip" id="tip"></div>
@@ -402,6 +420,7 @@
 
     async function close() {
       if (!visible) return;
+      closePops();
       visible = false;
       localStorage.setItem('valo.menuClosed', String(Date.now()));
       $('menu').classList.remove('show');
@@ -1074,6 +1093,7 @@
         btn.textContent = 'Перевірити';
       }
       document.querySelector('[data-act="update"]').classList.toggle('badge', !!upd?.available);
+      document.querySelector('[data-act="more"]').classList.toggle('badge', !!upd?.available);
     }
     function saveUpd() { const { busy, ...keep } = upd || {}; localStorage.setItem('valo.upd', JSON.stringify(keep)); renderUpdate(); }
     const channel = () => localStorage.getItem('valo.channel') || 'stable';
@@ -1342,6 +1362,7 @@
     $('q').addEventListener('input', () => { sel = 0; render(); $('list').scrollTop = 0; });
     document.addEventListener('keydown', e => {
       const shown = $('list')._shown || [];
+      if (e.key === 'Escape' && document.querySelector('.pop.on')) { e.preventDefault(); closePops(); return; }
       if (e.key === 'Escape' && page === 'settings') { e.preventDefault(); showPage('main'); return; }
       if (e.key === 'Escape') { e.preventDefault(); if ($('q').value) { $('q').value = ''; render(); } else close(); }
       else if (e.key === 'Enter') { const it = $('q').value ? shown[sel] : null; if (it?.run) it.run(); }
@@ -1359,15 +1380,19 @@
       shutdown: () => zebar.shellExec('shutdown', ['/s', '/t', '0']),
     };
     const tip = $('tip');
+    function closePops() { for (const p of document.querySelectorAll('.pop.on')) { p.classList.remove('on'); p.previousElementSibling.classList.remove('open'); for (const x of p.querySelectorAll('.arm')) x.classList.remove('arm'); } }
+    document.addEventListener('mousedown', e => { if (!e.target.closest('.popw')) closePops(); });
     for (const b of document.querySelectorAll('.btn')) {
-      b.onmouseenter = () => { tip.textContent = b.dataset.tip; tip.classList.add('on'); };
+      b.onmouseenter = () => { if (b.classList.contains('pi')) return; tip.textContent = b.dataset.tip; tip.classList.add('on'); };
       b.onmouseleave = () => { tip.classList.remove('on'); b.classList.remove('arm'); };
       b.onclick = () => {
+        if (b.dataset.act === 'more' || b.dataset.act === 'power') { const p = b.nextElementSibling, on = !p.classList.contains('on'); closePops(); p.classList.toggle('on', on); b.classList.toggle('open', on); tip.classList.remove('on'); return; }
+        closePops();
         if (b.dataset.act === 'panel') { showPage(page === 'settings' ? 'main' : 'settings'); return; }
         if (b.dataset.act === 'update') { showPage('settings'); showTab('data'); checkUpdate(); setTimeout(() => $('updBtn').scrollIntoView({ block: 'center', behavior: 'smooth' }), 80); return; }
         if (b.dataset.act === 'store') { if (page === 'store') showPage('main'); else openStore(); return; }
         if (b.dataset.act === 'console') { localStorage.setItem('valo.consoleOpen', String(Date.now())); close(); return; }
-        if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; return; }
+        if (b.dataset.confirm && !b.classList.contains('arm')) { b.classList.add('arm'); tip.textContent = b.dataset.tip + ' — натисніть ще раз'; tip.classList.add('on'); return; }
         ACT[b.dataset.act]()?.catch?.(() => {});
         close();
       };
