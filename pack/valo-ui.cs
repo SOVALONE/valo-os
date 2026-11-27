@@ -493,7 +493,7 @@ public class ShotToast : WF.Form {
         timer.Stop(); Hide();
         if (string.IsNullOrEmpty(path)) return;
         try {
-            if (e.Button == WF.MouseButtons.Right) System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + path + "\"");
+            if (e.Button == WF.MouseButtons.Right) ValoFiles.Reveal(path);
             else System.Diagnostics.Process.Start(path);
         } catch { }
     }

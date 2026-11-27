@@ -569,7 +569,7 @@
     window.addEventListener('storage', e => { if (e.key === 'valo.prefs') renderModes(); });
     renderModes();
     $('healthBtn').onclick = () => { localStorage.setItem('valo.menuToggle', 'health:' + Date.now()); close(); };
-    $('dlBtn').onclick = () => { zebar.shellExec('explorer', ['shell:Downloads']).catch(() => {}); close(); };
+    $('dlBtn').onclick = () => { zebar.shellExec('powershell', [...PS, '-Command', "Start-Process -LiteralPath (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path"]).catch(() => {}); close(); };
 
     // ---------- pages: Головне / День / Нотатки / Система
     const PAGES = [['main', 0xF02DC, 'Головне'], ['day', 0xF00ED, 'День'], ['notes', 0xF039A, 'Нотатки'], ['sys', 0xF012A, 'Система']];

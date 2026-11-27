@@ -669,7 +669,30 @@
           const d = evOf('dlsort'); if (d) s.querySelector('.note').textContent = 'останній раз переміщено файлів: ' + d.moved;
         }
       }
+      renderFiles(box);
       renderBackup();
+    }
+    // Files (FilesCommunity.Files) as the default file manager: not a pref — the state lives in the registry (valo-files.ps1)
+    // a folder through the shell's default (Files when it is set as the default, otherwise Explorer)
+    const openFolder = p => zebar.shellExec('powershell', [...PS, '-Command', `Start-Process -LiteralPath '${String(p).replace(/'/g, "''")}'`]).catch(() => {});
+    const filesPs = (...a) => zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-files.ps1', ...a]).then(r => { try { return JSON.parse((r?.stdout || '').trim()); } catch { return null; } }).catch(() => null);
+    let filesSt = null;
+    async function renderFiles(box) {
+      const el = document.createElement('div'); el.className = 'sw' + (filesSt?.default ? ' on' : '');
+      el.innerHTML = '<div class="tx"><span>Files — провідник за замовчуванням</span><small></small></div><i class="tg"></i>';
+      const sub = el.querySelector('small');
+      const show = () => {
+        el.classList.toggle('on', !!filesSt?.default);
+        sub.textContent = !filesSt ? 'перевіряю…' : !filesSt.installed ? 'Files не встановлено — Магазин → Рекомендує valo.os → Files' : 'папки, Win+E і «показати в папці» відкриваються у Files';
+      };
+      show(); box.append(el);
+      el.onclick = async () => {
+        if (!filesSt?.installed) { openStore(); return; }
+        sub.textContent = 'зачекайте…';
+        await filesPs(filesSt.default ? '-Unset' : '-Set');
+        filesSt = await filesPs('-Status'); localStorage.setItem('valo.filesDefault', filesSt?.default ? '1' : '0'); show();
+      };
+      filesSt = await filesPs('-Status'); localStorage.setItem('valo.filesDefault', filesSt?.default ? '1' : '0'); show();
     }
     function renderBackup() {
       const box = $('bkList'); box.innerHTML = '';
@@ -753,7 +776,7 @@
         if (low) { const w = document.createElement('div'); w.className = 'hwarn'; w.textContent = `На ${x.name} мало місця — Windows і програми можуть гальмувати`; d.append(w); }
       }
       const f = box('Що займає місце');
-      for (const x of (h.folders || []).sort((a, b) => b.size - a.size)) row(f, x.name, gb(x.size), () => zebar.shellExec('explorer', [x.path]).catch(() => {}));
+      for (const x of (h.folders || []).sort((a, b) => b.size - a.size)) row(f, x.name, gb(x.size), () => openFolder(x.path));
       const tb = document.createElement('div'); tb.className = 'cbtns'; tb.innerHTML = '<button id="hTemp">Очистити тимчасові файли</button><button id="hStorage">Контроль пам\u2019яті Windows</button>'; f.append(tb);
       tb.querySelector('#hStorage').onclick = () => openTarget('ms-settings:storagesense');
       tb.querySelector('#hTemp').onclick = async e => {
@@ -1330,7 +1353,11 @@
       else zebar.shellExec('powershell', [...PS, '-Command', `Start-Process '${t.replace(/'/g, "''")}'`]).catch(() => {});
       close();
     }
-    function reveal(p) { zebar.shellExec('explorer', ['/select,', p]).catch(() => {}); close(); }
+    function reveal(p) {
+      if (localStorage.getItem('valo.filesDefault') === '1') zebar.shellExec('powershell', [...PS, '-Command', `Start-Process "$env:LOCALAPPDATA\\Microsoft\\WindowsApps\\files-stable.exe" -ArgumentList '-select', ('"' + '${p.replace(/'/g, "''")}' + '"')`]).catch(() => {});
+      else zebar.shellExec('explorer', ['/select,', p]).catch(() => {});
+      close();
+    }
     async function copy(text) {
       try { await navigator.clipboard.writeText(text); }
       catch { await zebar.shellExec('powershell', [...PS, '-Command', `Set-Clipboard -Value '${text.replace(/'/g, "''")}'`]).catch(() => {}); }

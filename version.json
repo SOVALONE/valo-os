@@ -1,8 +1,9 @@
 {
-    "version":  "1.13.2",
+    "version":  "1.14.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "Консоль: вибрана гра піднімається й більше не обрізається згори"
+                  "Files — провідник за замовчуванням: папки, Win+E і «показати в папці» відкриваються у Files (новий valo.os ставить Files сам)",
+                  "Перемикач: меню → Панель і теми → Система → Функції → «Files — провідник за замовчуванням» (вимкнути — знову Провідник Windows)"
               ],
     "files":  [
                   {
@@ -15,7 +16,7 @@
                   },
                   {
                       "path":  "pack/control.html",
-                      "sha256":  "8d24bbe7b22b64107827c4f9959094589439bc0aa927952371aab386bce48ad7"
+                      "sha256":  "3aecf3c19393bf3888be86144eb9898fd3ff28d9ecfaac16cd6e66ea75d00cda"
                   },
                   {
                       "path":  "pack/desk.html",
@@ -35,11 +36,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "48c800e00ec9bb7703afe9aa9879e3c25fc547335db5bb966786d497e7c6c5dc"
+                      "sha256":  "58d15d4a45c31e0bf267623b4d8c8478f6f80212a284e9a9661dba1ef60614c9"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "c75843bad7a9637d89167247fd5e4d62d5fa9baa2f412b75f69eb8b7d2a8af6e"
+                      "sha256":  "2bab6604d78d96ffa0d557797c1c8d60d39437f51544525d8ee0aa3168401f82"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -84,6 +85,10 @@
                   {
                       "path":  "pack/valo-console.ps1",
                       "sha256":  "933eed402ff8e7879b93f7300d3aedfc492d5d0fd0593244e212c871e936acbf"
+                  },
+                  {
+                      "path":  "pack/valo-files.ps1",
+                      "sha256":  "caaab7a5d05b4cee30890d96f46f602190150a7acb87adb84fe80ac5a9759a2f"
                   },
                   {
                       "path":  "pack/valo-game.ps1",
@@ -139,7 +144,7 @@
                   },
                   {
                       "path":  "pack/valo-postupdate.ps1",
-                      "sha256":  "4b387845042595c8c226f9ae7b5010c654f33681bd5fe222ae966748c130225b"
+                      "sha256":  "46642a94a1972faaf8015daebb9e076cb6798fa5e47b4b9e133f820e14dcba27"
                   },
                   {
                       "path":  "pack/valo-power.ps1",
@@ -207,15 +212,15 @@
                   },
                   {
                       "path":  "pack/valo-ui.cs",
-                      "sha256":  "bc20fe4300c0db8725bdb4f00c04947a84fd18178511c1e91e7f208654b6dfd9"
+                      "sha256":  "e3dcb54c3a971504b35b52f01cc24e46d7703d2d0bb321cd09a331446e15e067"
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "12b330f4b8c203431dec7f549c675c160e893a2693171d8adb4bba0e87a6cb07"
+                      "sha256":  "5406531d97dd0bc8a61842589027d18b090d5917fb7a6067b775a1a533270d4a"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
-                      "sha256":  "04dae10d57fc9215587261ae3571d55783c5ebd441d4801720be74c7c4e1afca"
+                      "sha256":  "cbaf8a5e04b7403ee3396604f7d00deed9b8011b98ade4f688f0bb6f3408e864"
                   },
                   {
                       "path":  "pack/valo-update.ps1",
@@ -227,7 +232,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "84fed3e6310e43466571717582185b0300bce46d788ed096794cc77a2f3a996a"
+                      "sha256":  "aae6e21ae17561f66a2a931131e2b5a8b66314a77171856f2788cf43c29f9b75"
                   },
                   {
                       "path":  "pack/weather.js",

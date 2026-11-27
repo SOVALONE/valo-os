@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25); --radius: 12px; --chipRadius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif; color: var(--text); padding: 6px; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+  .w { background: color-mix(in srgb, var(--solid) 62%, transparent); backdrop-filter: blur(14px); border: 1px solid var(--border); border-radius: calc(var(--radius) + 6px); padding: 14px 16px; }
+  .clock b { display: block; font-size: 64px; font-weight: 200; line-height: 1; letter-spacing: -2px; }
+  .clock span { color: var(--muted); font-size: 14px; letter-spacing: 1px; }
+  .wx { display: flex; align-items: center; gap: 12px; }
+  .wx i { font-family: 'JetBrainsMono NF', monospace; font-style: normal; font-size: 34px; color: var(--accent); }
+  .wx b { font-size: 28px; font-weight: 300; }
+  .wx span { color: var(--muted); font-size: 12px; display: block; }
+  h4 { font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .note { white-space: pre-wrap; font-size: 13px; line-height: 1.45; max-height: 140px; overflow: hidden; }
+  .ev { display: flex; gap: 8px; font-size: 13px; padding: 2px 0; }
+  .ev b { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .ev span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <div class="w clock"><b id="t">--:--</b><span id="d"></span></div>
+  <div class="w wx" id="wx" hidden><i id="wi"></i><div><b id="wt"></b><span id="wd"></span></div></div>
+  <div class="w" id="evw" hidden><h4>Найближче</h4><div id="ev"></div></div>
+  <div class="w" id="nw" hidden><h4>Нотатка</h4><div class="note" id="note"></div></div>
+  <script type="module">
+    // valo.os desktop widgets: sit under every window (bottom-most), only on the desktop; switch: «Віджети на робочому столі»
+    import * as zebar from './zebar.js';
+    import './themes.js';
+    import './i18n.js';
+    import { locale } from './i18n.js';
+    import { describe, cached } from './weather.js';
+    const $ = id => document.getElementById(id);
+    const win = zebar.currentWidget().tauriWindow;
+    const prefs = () => { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } };
+    const js = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+    let shown = null;
+    async function vis() {
+      const on = !!prefs().deskWidgets;
+      if (on === shown) return; shown = on;
+      try { on ? await win.show() : await win.hide(); } catch { }
+    }
+    function render() {
+      const n = new Date();
+      $('t').textContent = n.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+      $('d').textContent = n.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+      const w = cached();
+      $('wx').hidden = !w?.cur;
+      if (w?.cur) { const d = describe(w.cur.weather_code, !!w.cur.is_day); $('wi').textContent = d.glyph; $('wt').textContent = Math.round(w.cur.temperature_2m) + '°'; $('wd').textContent = `${w.place || ''} · ${d.text}`; }
+      const now = Date.now();
+      const items = [...(js('valo.reminders') || []).map(r => ({ s: r.at, t: r.text })), ...((js('valo.ics')?.events) || [])].filter(e => e.s >= now - 3600e3).sort((a, b) => a.s - b.s).slice(0, 4);
+      $('evw').hidden = !items.length; $('ev').innerHTML = '';
+      for (const e of items) {
+        const d = new Date(e.s), r = document.createElement('div'); r.className = 'ev'; r.innerHTML = '<b></b><span></span>';
+        r.querySelector('b').textContent = (d.toDateString() === n.toDateString() ? '' : d.toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) + ' ') + d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+        r.querySelector('span').textContent = e.t || ''; $('ev').append(r);
+      }
+      const note = (localStorage.getItem('valo.notes') || '').trim();
+      $('nw').hidden = !note; $('note').textContent = note;
+    }
+    window.addEventListener('storage', e => { if (e.key === 'valo.prefs') vis(); if (/valo\.(weather|notes|reminders|ics)/.test(e.key)) render(); });
+    render(); setInterval(render, 15000); vis();
+  </script>
+</body>
+</html>

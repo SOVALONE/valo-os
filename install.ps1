@@ -25,7 +25,7 @@ if ([Environment]::OSVersion.Version.Build -lt 22000) { Say 'Це не Windows 1
 # ---- 1. apps: Zebar + font
 if (-not $dry) {
     if (-not (Get-Command winget -EA SilentlyContinue)) { throw 'Немає winget. Встановіть «App Installer» з Microsoft Store і запустіть ще раз.' }
-    foreach ($app in @(@('glzr-io.zebar', 'Zebar (панель)'), @('DEVCOM.JetBrainsMonoNerdFont', 'шрифт JetBrainsMono Nerd Font'))) {
+    foreach ($app in @(@('glzr-io.zebar', 'Zebar (панель)'), @('DEVCOM.JetBrainsMonoNerdFont', 'шрифт JetBrainsMono Nerd Font'), @('FilesCommunity.Files', 'Files (провідник з вкладками)'))) {
         $have = (winget list --id $app[0] -e --accept-source-agreements --disable-interactivity 2>$null) -join ' '
         if ($have -match [regex]::Escape($app[0])) { Say "$($app[1]) — уже є"; continue }
         Say "встановлюю $($app[1])… (Windows може попросити дозвіл)"
@@ -79,6 +79,10 @@ New-Item -ItemType Directory -Force (Split-Path $settings) | Out-Null
 $run = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 Set-ItemProperty $run -Name 'valo-bar' -Value "`"$zebarExe`""
 Set-ItemProperty $run -Name 'valo-taskbar' -Value ('conhost.exe --headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + "$pack\valo-shell.ps1" + '" -HideTaskbar')
+
+# ---- Files is the default file manager (folders, Win+E); menu → Панель і теми → Система → Функції switches it back
+$fr = & powershell -NoProfile -ExecutionPolicy Bypass -File "$packalo-files.ps1" -Set
+if ("$fr" -match '"ok":true') { Say 'Files — тепер провідник за замовчуванням' } else { Say 'Files не вдалося зробити провідником за замовчуванням — можна пізніше в меню' 'Yellow' }
 
 # ---- valo Link (phone companion) is optional: menu → Магазин valo → valo Link
 

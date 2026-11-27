@@ -135,6 +135,11 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Магазин valo|valo store|Magazin valo
 Магазин програм|App store|Magazin de aplicații
 Більше|More|Mai mult
+Files — провідник за замовчуванням|Files — default file manager|Files — managerul de fișiere implicit
+Files не встановлено — Магазин → Рекомендує valo.os → Files|Files is not installed — Store → Recommended by valo.os → Files|Files nu este instalat — Magazin → Recomandate de valo.os → Files
+папки, Win+E і «показати в папці» відкриваються у Files|folders, Win+E and “show in folder” open in Files|folderele, Win+E și „arată în folder” se deschid în Files
+перевіряю…|checking…|verific…
+зачекайте…|please wait…|așteptați…
 Мікрофон — Win+Alt+K вмикає / вимикає|Microphone — Win+Alt+K turns it on / off|Microfon — Win+Alt+K îl pornește / oprește
 Вибрати мікрофон|Choose microphone|Alege microfonul
 Мікрофон|Microphone|Microfon

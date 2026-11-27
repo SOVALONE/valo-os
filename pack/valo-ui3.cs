@@ -238,7 +238,7 @@ public static class Recorder {
             }
             string f = file; TimeSpan len = DateTime.Now - started;
             ValoUi.Post(delegate { TextToast.Show_("Запис збережено", System.IO.Path.GetFileName(f) + " · " + ((int)len.TotalMinutes) + ":" + len.Seconds.ToString("00"), "клік — показати в папці", 7000,
-                delegate { try { System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + f + "\""); } catch { } }); });
+                delegate { try { ValoFiles.Reveal(f); } catch { } }); });
         });
         t.IsBackground = true; t.Start();
     }

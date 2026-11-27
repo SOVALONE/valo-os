@@ -7,6 +7,21 @@
 //   Typer      - types text (emoji) into the window that was active before
 // Events go to stdout as JSON lines (Console.Out is synchronized).
 
+// ------------------------------------------------------------------ "show in folder"
+// In Files when it is the default file manager (valo-files.ps1 wrote the per-user Folder\shell\open key), otherwise in Explorer.
+public static class ValoFiles {
+    public static void Reveal(string path) {
+        try {
+            string cmd = null;
+            using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Classes\Folder\shell\open\command"))
+                if (k != null) cmd = k.GetValue("", "", Microsoft.Win32.RegistryValueOptions.DoNotExpandEnvironmentNames) as string;
+            string alias = Environment.ExpandEnvironmentVariables(@"%LOCALAPPDATA%\Microsoft\WindowsApps\files-stable.exe");
+            if (cmd != null && cmd.Contains("Files.App.Launcher.exe") && System.IO.File.Exists(alias)) { System.Diagnostics.Process.Start(alias, "-select \"" + path + "\""); return; }
+        } catch { }
+        try { System.Diagnostics.Process.Start("explorer.exe", "/select,\"" + path + "\""); } catch { }
+    }
+}
+
 // ------------------------------------------------------------------ Windows taskbar guard
 // The Windows taskbar is hidden (and auto-hide); when the cursor touches the screen edge Explorer shows it again.
 // A WinEvent hook hides it the moment it is shown, instead of waiting for the helper's slow loop.
