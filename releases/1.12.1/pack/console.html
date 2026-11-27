@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="uk" data-widget="console">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root { --solid: #1e1a1f; --accent: #f2a7bb; --accent2: #e07a96; --text: #f5e6ea; --muted: #9c8a93; --chip: #2a2329; --hi: #3a2f37; --ink: #1e1a1f; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--solid); color: var(--text);
+    font-family: 'Segoe UI Variable Display', 'Segoe UI', sans-serif; user-select: none; }
+  body.pad { cursor: none; }
+  #bg, #bg2 { position: fixed; inset: 0; background-size: cover; background-position: center 30%; transition: opacity .7s; }
+  #bg2 { opacity: 0; }
+  #shade { position: fixed; inset: 0;
+    background: linear-gradient(90deg, var(--solid) 0%, color-mix(in srgb, var(--solid) 80%, transparent) 38%, color-mix(in srgb, var(--solid) 30%, transparent) 70%, transparent 100%),
+                linear-gradient(0deg, var(--solid) 8%, color-mix(in srgb, var(--solid) 70%, transparent) 42%, transparent 75%); }
+  #glow { position: fixed; inset: -20%; background: radial-gradient(40% 50% at 78% 18%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%),
+                                                   radial-gradient(35% 40% at 12% 90%, color-mix(in srgb, var(--accent2) 18%, transparent), transparent 70%); pointer-events: none; }
+  #app { position: fixed; inset: 0; display: flex; flex-direction: column; padding: 4.2vh 5vw 3.4vh; opacity: 0; transform: scale(1.02); transition: opacity .35s, transform .35s; }
+  #app.show { opacity: 1; transform: none; }
+
+  /* top: mark, tabs, clock */
+  header { display: flex; align-items: center; gap: 3vw; }
+  .mark { display: flex; align-items: center; gap: .8vw; font-weight: 600; font-size: 2.6vh; letter-spacing: .5px; }
+  .mark svg { width: 3.6vh; height: 3.6vh; }
+  .mark small { font-weight: 300; color: var(--muted); letter-spacing: 3px; font-size: 1.6vh; text-transform: uppercase; }
+  nav { display: flex; align-items: center; gap: .6vw; }
+  nav .k { font-size: 1.4vh; color: var(--muted); border: 1px solid color-mix(in srgb, var(--muted) 50%, transparent); border-radius: 6px; padding: .2vh .5vw; }
+  nav button { all: unset; cursor: pointer; font-size: 2.1vh; padding: .9vh 1.4vw; border-radius: 99px; color: var(--muted); transition: background .2s, color .2s; }
+  nav button.on { background: var(--text); color: var(--solid); font-weight: 600; }
+  .grow { flex: 1; }
+  #xClose { all: unset; cursor: pointer; width: 4.4vh; height: 4.4vh; display: grid; place-items: center; border-radius: 50%; font-size: 2vh;
+    background: color-mix(in srgb, var(--text) 14%, transparent); color: var(--text); transition: background .2s; }
+  #xClose:hover { background: #e5534b; color: #fff; }
+  #hints > span { cursor: pointer; }
+  #clock { font-size: 2.6vh; font-weight: 300; font-variant-numeric: tabular-nums; }
+  #padState { font-size: 1.5vh; color: var(--muted); display: flex; align-items: center; gap: .4vw; }
+  #padState i { width: .8vh; height: .8vh; border-radius: 50%; background: var(--muted); display: inline-block; }
+  #padState.on i { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+  section { flex: 1; min-height: 0; display: none; flex-direction: column; }
+  section.on { display: flex; }
+
+  /* library */
+  .hero { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 3.5vh; max-width: 52vw; }
+  .hero .src { font-size: 1.6vh; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 1vh; }
+  .hero h1 { margin: 0; font-size: 7vh; font-weight: 700; line-height: 1.02; letter-spacing: -1px; text-shadow: 0 4px 40px rgba(0,0,0,.35); }
+  .hero .meta { margin-top: 1.4vh; font-size: 1.9vh; color: var(--muted); }
+  .hero .play { margin-top: 2.6vh; display: flex; gap: 1vw; }
+  .btn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: .7vw; padding: 1.3vh 2vw; border-radius: 99px; font-size: 2vh; font-weight: 600;
+    background: var(--accent); color: var(--ink); }
+  .btn.alt { background: color-mix(in srgb, var(--text) 14%, transparent); color: var(--text); font-weight: 500; }
+  .shelf { display: flex; gap: 1.3vw; overflow: hidden; padding: 2.2vh 0.6vw 2.6vh; scroll-behavior: smooth; }
+  .tile { flex: 0 0 auto; width: 13.2vh; aspect-ratio: 2 / 3; border-radius: 1.2vh; background: var(--chip) center / cover no-repeat; position: relative; cursor: pointer;
+    transition: transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s, opacity .22s; box-shadow: 0 8px 24px rgba(0,0,0,.3); opacity: .72; }
+  .tile.sel { transform: scale(1.16) translateY(-.8vh); opacity: 1; box-shadow: 0 0 0 .35vh var(--accent), 0 18px 40px rgba(0,0,0,.45); z-index: 2; }
+  .tile.first { margin-left: 1.2vh; }
+  .tile .nm { position: absolute; inset: auto .8vh 1vh; font-size: 1.5vh; font-weight: 600; line-height: 1.15; }
+  .tile.nocover { background: linear-gradient(160deg, var(--hi), var(--chip)); display: flex; }
+  .tile.nocover .nm { inset: auto 1vh 1.2vh; font-size: 1.9vh; }
+  .tile .badge { position: absolute; top: .8vh; left: .8vh; font-size: 1.1vh; padding: .2vh .5vw; border-radius: 99px; background: rgba(0,0,0,.45); color: #fff; letter-spacing: 1px; }
+  .empty { margin: auto; text-align: center; color: var(--muted); font-size: 2.2vh; line-height: 1.6; }
+
+  /* lists (valo games, system) */
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(36vh, 1fr)); gap: 1.6vh; padding: 4vh .4vw; align-content: start; overflow: hidden; }
+  .card { padding: 2.2vh 1.6vw; border-radius: 1.6vh; background: color-mix(in srgb, var(--chip) 85%, transparent); cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s; min-height: 14vh; display: flex; flex-direction: column; gap: .8vh; }
+  .card b { font-size: 2.4vh; }
+  .card small { color: var(--muted); font-size: 1.6vh; line-height: 1.4; }
+  .card .act { margin-top: auto; font-size: 1.6vh; color: var(--accent); font-weight: 600; }
+  .card.sel { background: var(--hi); transform: scale(1.03); box-shadow: 0 0 0 .3vh var(--accent); }
+  .card .ic { font-size: 3.4vh; line-height: 1; }
+  .card .bar { height: .7vh; border-radius: 99px; background: color-mix(in srgb, var(--text) 15%, transparent); overflow: hidden; margin-top: .6vh; }
+  .card .bar i { display: block; height: 100%; background: var(--accent); }
+
+  footer { display: flex; gap: 2.4vw; font-size: 1.7vh; color: var(--muted); align-items: center; }
+  footer span { display: inline-flex; align-items: center; gap: .5vw; }
+  .g { display: inline-grid; place-items: center; width: 2.6vh; height: 2.6vh; border-radius: 50%; font-size: 1.4vh; font-weight: 700; color: var(--solid); background: var(--text); }
+  .g.a { background: #7ad17a; } .g.b { background: #f07a7a; } .g.x { background: #7aa8f0; } .g.y { background: #f0cf6a; }
+  .g.w { border-radius: 6px; width: auto; padding: 0 .5vw; }
+
+  #toast { position: fixed; left: 50%; bottom: 10vh; transform: translate(-50%, 2vh); background: var(--text); color: var(--solid); padding: 1.4vh 2vw; border-radius: 99px;
+    font-size: 2vh; font-weight: 600; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #launch { position: fixed; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--solid) 88%, transparent); opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #launch.on { opacity: 1; }
+  #launch div { text-align: center; }
+  #launch b { display: block; font-size: 5vh; margin-top: 2vh; }
+  #launch small { color: var(--muted); font-size: 2vh; }
+  .spin { width: 6vh; height: 6vh; border-radius: 50%; border: .5vh solid color-mix(in srgb, var(--accent) 25%, transparent); border-top-color: var(--accent); margin: 0 auto; animation: sp 0.9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  #confirm { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0,0,0,.55); }
+  #confirm.on { display: grid; }
+  #confirm div { background: var(--chip); border-radius: 2vh; padding: 4vh 3vw; text-align: center; min-width: 40vh; }
+  #confirm b { display: block; font-size: 3vh; margin-bottom: 1vh; }
+  #confirm small { color: var(--muted); font-size: 1.8vh; }
+  #confirm p { margin: 3vh 0 0; display: flex; gap: 1vw; justify-content: center; }
+</style>
+</head>
+<body>
+  <div id="bg"></div><div id="bg2"></div><div id="shade"></div><div id="glow"></div>
+  <div id="app">
+    <header>
+      <div class="mark">
+        <svg viewBox="-130 -140 260 260"><g fill="var(--accent)"><path id="pt" d="M0-130C1-62 3-38 23-23 12-30 4-28 0-23-4-28-12-30-23-23-3-38-1-62 0-130Z"/><use href="#pt" transform="rotate(120)"/><use href="#pt" transform="rotate(240)"/><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g></svg>
+        valo <small>консоль</small>
+      </div>
+      <nav><span class="k">LB</span><button data-tab="lib" class="on">Бібліотека</button><button data-tab="vg">Ігри valo</button><button data-tab="sys">Система</button><span class="k">RB</span></nav>
+      <div class="grow"></div>
+      <div id="padState"><i></i><span>геймпад не підключено</span></div>
+      <div id="clock"></div>
+      <button id="xClose" title="Закрити консоль (Esc, B або Win+Shift+G)">✕</button>
+    </header>
+
+    <section id="lib" class="on">
+      <div class="hero">
+        <div class="src" id="hSrc"></div>
+        <h1 id="hName"></h1>
+        <div class="meta" id="hMeta"></div>
+        <div class="play"><span class="btn" id="hPlay"><span class="g a">A</span>Грати</span></div>
+      </div>
+      <div class="shelf" id="shelf"></div>
+    </section>
+    <section id="vg"><div class="list" id="vgList"></div></section>
+    <section id="sys"><div class="list" id="sysList"></div></section>
+
+    <footer id="hints"></footer>
+  </div>
+  <div id="launch"><div><div class="spin"></div><b id="lName"></b><small>запускаю…</small></div></div>
+  <div id="confirm"><div><b id="cT"></b><small id="cS"></small><p><span class="btn"><span class="g a">A</span>Так</span><span class="btn alt"><span class="g b">B</span>Ні</span></p></div></div>
+  <div id="toast"></div>
+
+  <script type="module">
+    // valo.os console: a fullscreen game mode for a gamepad or the TV — the game library (Steam, Epic, GOG, «Ігри valo»),
+    // the valo games catalog and system actions. Opens with Win+Shift+G, the gamepad (View+Menu or the Xbox button) or the menu.
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import { applyTheme } from './themes.js';
+    applyTheme();
+    const $ = id => document.getElementById(id);
+    const widget = zebar.currentWidget();
+    const win = widget.tauriWindow ?? widget.window?.tauri;
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    const ps = (file, ...a) => zebar.shellExec('powershell', [...PS, '-File', dir + '\\' + file, ...a])
+      .then(r => { try { return JSON.parse((r?.stdout || '').trim()); } catch { return null; } }).catch(() => null);
+    const providers = zebar.createProviderGroup({ audio: { type: 'audio' } });
+
+    let volEdit = false, visible = false, tab = 'lib', games = [], sel = 0, vg = null, vsel = 0, ssel = 0, confirmFn = null, session = false, launchedAt = 0;
+    const TABS = ['lib', 'vg', 'sys'];
+    const hidden = () => { try { return JSON.parse(localStorage.getItem('valo.console.hidden') || '[]'); } catch { return []; } };
+    const recent = () => { try { return JSON.parse(localStorage.getItem('valo.console.recent') || '{}'); } catch { return {}; } };
+
+    function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2200); }
+    function ago(sec) {
+      if (!sec) return 'ще не запускали тут';
+      const d = Math.floor((Date.now() / 1000 - sec) / 86400);
+      return d <= 0 ? 'грали сьогодні' : d === 1 ? 'грали вчора' : d < 30 ? `грали ${d} дн. тому` : `грали ${Math.floor(d / 30)} міс. тому`;
+    }
+
+    // ---------- library
+    function sorted() {
+      const h = hidden(), r = recent(), showAll = localStorage.getItem('valo.console.showHidden') === '1';
+      return games.filter(g => showAll || !h.includes(g.key)).map(g => ({ ...g, last: Math.max(g.last || 0, r[g.key] || 0) }))
+        .sort((a, b) => (b.last - a.last) || a.name.localeCompare(b.name));
+    }
+    let view = [];
+    function renderLib() {
+      view = sorted();
+      const sh = $('shelf'); sh.innerHTML = '';
+      if (!view.length) {
+        $('hSrc').textContent = ''; $('hName').textContent = games.length ? 'Усі ігри сховані' : 'Ігор не знайдено';
+        $('hMeta').textContent = 'Steam, Epic, GOG і «Ігри valo» з’являться тут самі'; $('hPlay').hidden = true; setBg(null); return;
+      }
+      $('hPlay').hidden = false;
+      sel = Math.min(sel, view.length - 1);
+      view.forEach((g, i) => {
+        const t = document.createElement('div'); t.className = 'tile' + (i === 0 ? ' first' : '') + (i === sel ? ' sel' : '') + (g.cover ? '' : ' nocover');
+        if (g.cover) t.style.backgroundImage = `url("${g.cover}")`;
+        else { const n = document.createElement('div'); n.className = 'nm'; n.textContent = g.name; t.append(n); }
+        if (hidden().includes(g.key)) { const b = document.createElement('div'); b.className = 'badge'; b.textContent = 'сховано'; t.append(b); }
+        t.onclick = () => { if (sel === i) play(); else { sel = i; focusLib(); } };
+        sh.append(t);
+      });
+      focusLib(true);
+    }
+    const heroCache = new Map();
+    let bgFlip = false, bgKey = '';
+    function setBg(url) {
+      const a = $(bgFlip ? 'bg' : 'bg2'), b = $(bgFlip ? 'bg2' : 'bg');
+      a.style.backgroundImage = url ? `url("${url}")` : 'none'; a.style.opacity = url ? 1 : 0; b.style.opacity = 0; bgFlip = !bgFlip;
+    }
+    function focusLib(nosmooth) {
+      const g = view[sel]; if (!g) return;
+      [...$('shelf').children].forEach((t, i) => t.classList.toggle('sel', i === sel));
+      const t = $('shelf').children[sel];
+      if (t) { const sh = $('shelf'); const x = t.offsetLeft - sh.clientWidth * 0.08; sh.style.scrollBehavior = nosmooth ? 'auto' : 'smooth'; sh.scrollLeft = Math.max(0, x); }
+      $('hSrc').textContent = g.src; $('hName').textContent = g.name; $('hMeta').textContent = ago(g.last);
+      if (bgKey === g.key) return;
+      bgKey = g.key;
+      const k = g.key;
+      if (heroCache.has(k)) { setBg(heroCache.get(k) || g.cover); return; }
+      clearTimeout(focusLib.t);
+      focusLib.t = setTimeout(async () => {
+        const o = k.startsWith('steam:') ? await ps('valo-console.ps1', '-Hero', k) : null;
+        heroCache.set(k, o?.img || null);
+        if (bgKey === k) setBg(o?.img || g.cover);
+      }, 180);
+    }
+    async function loadLib() {
+      const o = await ps('valo-console.ps1', '-List');
+      games = o?.games || [];
+      if (tab === 'lib') renderLib();
+    }
+    async function play() {
+      const g = view[sel]; if (!g) return;
+      $('lName').textContent = g.name; $('launch').classList.add('on');
+      const r = recent(); r[g.key] = Math.floor(Date.now() / 1000); localStorage.setItem('valo.console.recent', JSON.stringify(r));
+      const o = await ps('valo-console.ps1', '-Launch', g.key);
+      if (!o?.ok) { $('launch').classList.remove('on'); toast('Не вдалося запустити'); return; }
+      // the console steps aside while the game runs and comes back when the game closes
+      session = true; launchedAt = Date.now();
+      setTimeout(() => { $('launch').classList.remove('on'); hide(true); }, 2500);
+    }
+    function toggleHide() {
+      const g = view[sel]; if (!g) return;
+      const h = hidden(), on = h.includes(g.key);
+      localStorage.setItem('valo.console.hidden', JSON.stringify(on ? h.filter(x => x !== g.key) : [...h, g.key]));
+      toast(on ? `«${g.name}» знову в бібліотеці` : `«${g.name}» сховано (Система → показати сховані)`);
+      renderLib();
+    }
+
+    // ---------- «Ігри valo»
+    async function loadVg() { vg = await ps('valo-games.ps1', '-List'); if (tab === 'vg') renderVg(); }
+    function renderVg() {
+      const box = $('vgList'); box.innerHTML = '';
+      if (!vg) { box.innerHTML = '<div class="empty">Завантаження…</div>'; return; }
+      if (!vg.games?.length) { box.innerHTML = '<div class="empty">Поки порожньо або немає інтернету</div>'; return; }
+      vsel = Math.min(vsel, vg.games.length - 1);
+      vg.games.forEach((g, i) => {
+        const have = vg.installed.includes(g.id);
+        const c = document.createElement('div'); c.className = 'card' + (i === vsel ? ' sel' : '');
+        c.innerHTML = '<b></b><small class="by"></small><small class="d"></small><div class="act"></div>';
+        c.querySelector('b').textContent = g.name; c.querySelector('.by').textContent = g.by || '';
+        c.querySelector('.d').textContent = g.desc || '';
+        c.querySelector('.act').textContent = g.kind === 'link' ? 'A — відкрити сайт гри' : have ? 'A — грати' : 'A — завантажити';
+        c.onclick = () => { vsel = i; vgAct(); };
+        box.append(c);
+      });
+    }
+    async function vgAct() {
+      const g = vg?.games?.[vsel]; if (!g) return;
+      const have = vg.installed.includes(g.id);
+      if (g.kind === 'link') { await ps('valo-games.ps1', '-Site', g.id); hide(); return; }
+      if (have) { view = [{ key: 'valo:' + g.id, name: g.name }]; sel = 0; return play().then(() => renderLib()); }
+      toast('Завантажую «' + g.name + '»…');
+      const o = await ps('valo-games.ps1', '-Install', g.id);
+      if (o?.ok) { toast('Готово: «' + g.name + '» у бібліотеці'); await loadVg(); loadLib(); } else toast('Не вдалося завантажити');
+    }
+
+    // ---------- system
+    const SYS = [
+      { ic: '🔊', t: 'Гучність', s: '', vol: true },
+      { ic: '🖥', t: 'На робочий стіл', s: 'вийти з консолі', run: () => hide() },
+      { ic: '👁', t: 'Сховані ігри', s: '', run: () => { const v = localStorage.getItem('valo.console.showHidden') === '1'; localStorage.setItem('valo.console.showHidden', v ? '0' : '1'); renderSys(); renderLib(); }, lab: () => localStorage.getItem('valo.console.showHidden') === '1' ? 'показуються (A — сховати)' : 'не показуються (A — показати)' },
+      { ic: '⟳', t: 'Оновити бібліотеку', s: 'знайти нові ігри', run: () => { toast('Шукаю ігри…'); loadLib(); } },
+      { ic: '☾', t: 'Сон', s: '', confirm: 'Перевести ПК у сон?', run: () => zebar.shellExec('rundll32', ['powrprof.dll,SetSuspendState', '0,1,0']).catch(() => {}) },
+      { ic: '↻', t: 'Перезавантажити', s: '', confirm: 'Перезавантажити ПК?', run: () => zebar.shellExec('shutdown', ['/r', '/t', '0']).catch(() => {}) },
+      { ic: '⏻', t: 'Вимкнути', s: '', confirm: 'Вимкнути ПК?', run: () => zebar.shellExec('shutdown', ['/s', '/t', '0']).catch(() => {}) },
+    ];
+    function vol() { return Math.round(providers.outputMap.audio?.defaultPlaybackDevice?.volume ?? 0); }
+    function renderSys() {
+      const box = $('sysList'); box.innerHTML = '';
+      SYS.forEach((x, i) => {
+        const c = document.createElement('div'); c.className = 'card' + (i === ssel ? ' sel' : '');
+        c.innerHTML = '<div class="ic"></div><b></b><small></small>';
+        c.querySelector('.ic').textContent = x.ic; c.querySelector('b').textContent = x.t;
+        c.querySelector('small').textContent = x.vol ? vol() + '%' + (volEdit ? '  ·  ← → змінити, A — готово' : '  ·  A — змінити') : x.lab ? x.lab() : x.s;
+        if (x.vol && volEdit) c.style.boxShadow = '0 0 0 .5vh var(--accent2)';
+        if (x.vol) { const b = document.createElement('div'); b.className = 'bar'; b.innerHTML = `<i style="width:${vol()}%"></i>`; c.append(b); }
+        c.onclick = () => { ssel = i; sysAct(); };
+        box.append(c);
+      });
+    }
+    function sysAct() {
+      const x = SYS[ssel]; if (!x) return;
+      if (x.vol) { volEdit = !volEdit; renderSys(); return; }
+      if (x.confirm) { ask(x.t, x.confirm, x.run); return; }
+      x.run();
+    }
+    function setVol(d) { const v = Math.max(0, Math.min(100, vol() + d)); providers.outputMap.audio?.setVolume(v); setTimeout(renderSys, 80); }
+    function ask(t, s, fn) { $('cT').textContent = t; $('cS').textContent = s; confirmFn = fn; $('confirm').classList.add('on'); }
+
+    // ---------- tabs, hints
+    function setTab(t) {
+      tab = t;
+      for (const b of document.querySelectorAll('nav button')) b.classList.toggle('on', b.dataset.tab === t);
+      for (const s of TABS) $(s).classList.toggle('on', s === t);
+      if (t === 'lib') renderLib(); else if (t === 'vg') { renderVg(); if (!vg) loadVg(); } else renderSys();
+      if (t !== 'lib') setBg(null), bgKey = '';
+      hints();
+    }
+    for (const b of document.querySelectorAll('nav button')) b.onclick = () => setTab(b.dataset.tab);
+    $('xClose').onclick = () => hide();
+    function hints() {
+      const H = { lib: [['a', 'A', 'Грати'], ['y', 'Y', 'Сховати / показати'], ['b', 'B', 'Закрити']], vg: [['a', 'A', 'Вибрати'], ['b', 'B', 'Назад']], sys: [['a', 'A', 'Вибрати'], ['b', 'B', 'Назад']] }[tab];
+      $('hints').innerHTML = '';
+      for (const [c, k, t] of [...H, ['w', 'LB  RB', 'Розділи']]) { const s = document.createElement('span'); s.onclick = () => act(c === 'w' ? 'rb' : c); s.innerHTML = `<span class="g ${c}"></span>`; s.firstChild.textContent = k; s.append(t); $('hints').append(s); }
+    }
+
+    // ---------- input: one set of actions for the gamepad, the keyboard and the mouse
+    function act(a) {
+      if (!visible) return;
+      if ($('confirm').classList.contains('on')) {
+        if (a === 'a') { $('confirm').classList.remove('on'); const f = confirmFn; confirmFn = null; f?.(); }
+        else if (a === 'b') { $('confirm').classList.remove('on'); confirmFn = null; }
+        return;
+      }
+      if (a === 'lb' || a === 'rb') { const i = TABS.indexOf(tab); setTab(TABS[(i + (a === 'rb' ? 1 : TABS.length - 1)) % TABS.length]); return; }
+      if (a === 'b' && volEdit) { volEdit = false; renderSys(); return; }
+      if (a === 'b') { if (tab !== 'lib') setTab('lib'); else hide(); return; }
+      if (tab === 'lib') {
+        if (a === 'left' && sel > 0) { sel--; focusLib(); }
+        else if (a === 'right' && sel < view.length - 1) { sel++; focusLib(); }
+        else if (a === 'a') play();
+        else if (a === 'y') toggleHide();
+      } else {
+        const isVg = tab === 'vg', n = isVg ? (vg?.games?.length || 0) : SYS.length;
+        const cols = Math.max(1, Math.round($(isVg ? 'vgList' : 'sysList').clientWidth / (innerHeight * 0.38)));
+        let i = isVg ? vsel : ssel;
+        if (!isVg && volEdit) { if (a === 'left' || a === 'right') setVol(a === 'left' ? -5 : 5); else if (a === 'a' || a === 'b') { volEdit = false; renderSys(); } return; }
+        if (a === 'left') i--; else if (a === 'right') i++; else if (a === 'up') i -= cols; else if (a === 'down') i += cols;
+        else if (a === 'a') { isVg ? vgAct() : sysAct(); return; }
+        i = Math.max(0, Math.min(n - 1, i));
+        if (isVg) { vsel = i; renderVg(); } else { ssel = i; renderSys(); }
+      }
+    }
+    const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down', Enter: 'a', ' ': 'a', Escape: 'b', Backspace: 'b', y: 'y', Y: 'y', q: 'lb', e: 'rb', Q: 'lb', E: 'rb', PageUp: 'lb', PageDown: 'rb' };
+    window.addEventListener('keydown', e => { const a = KEYS[e.key]; if (a) { e.preventDefault(); document.body.classList.remove('pad'); act(a); } });
+    window.addEventListener('mousemove', () => document.body.classList.remove('pad'));
+    // standard gamepad mapping: 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 12-15 d-pad; left stick = axes 0/1
+    const BTN = { 0: 'a', 1: 'b', 3: 'y', 4: 'lb', 5: 'rb', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
+    const held = {}; let padName = '';
+    function poll() {
+      const pads = [...(navigator.getGamepads?.() || [])].filter(Boolean);
+      const name = pads[0]?.id ? 'геймпад підключено' : 'геймпад не підключено';
+      if (name !== padName) { padName = name; $('padState').classList.toggle('on', !!pads[0]); $('padState').querySelector('span').textContent = name; }
+      if (visible) {
+        const now = performance.now(), state = {};
+        for (const p of pads) {
+          for (const [i, a] of Object.entries(BTN)) if (p.buttons[i]?.pressed) state[a] = 1;
+          const x = p.axes[0] || 0, y = p.axes[1] || 0;
+          if (x < -0.55) state.left = 1; if (x > 0.55) state.right = 1; if (y < -0.55) state.up = 1; if (y > 0.55) state.down = 1;
+        }
+        for (const a of new Set([...Object.keys(state), ...Object.keys(held)])) {
+          if (state[a] && !held[a]) { held[a] = now + 380; document.body.classList.add('pad'); act(a); }
+          else if (state[a] && ['left', 'right', 'up', 'down'].includes(a) && now > held[a]) { held[a] = now + 110; act(a); }
+          else if (!state[a]) delete held[a];
+        }
+      }
+      requestAnimationFrame(poll);
+    }
+    requestAnimationFrame(poll);
+
+    // ---------- clock
+    function tick() { $('clock').textContent = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }); }
+    tick(); setInterval(tick, 10000);
+
+    // ---------- show / hide (toggled through localStorage like the other persistent widgets)
+    async function show() {
+      if (visible) return;
+      visible = true; session = false;
+      try { await win.show(); } catch { }
+      localStorage.setItem('valo.focusWin', 'Zebar - quill / console|' + Date.now());
+      localStorage.setItem('valo.console.open', '1');
+      requestAnimationFrame(() => $('app').classList.add('show'));
+      setTab(tab); loadLib(); if (tab === 'vg') loadVg();
+    }
+    function hide(keepSession) {
+      if (!visible) return;
+      visible = false; if (!keepSession) session = false;
+      $('app').classList.remove('show');
+      if (!keepSession) localStorage.setItem('valo.console.open', '0');
+      // if the window cannot hide, close it (the dock starts it again next time)
+      setTimeout(async () => { try { await win.hide(); } catch { try { await win.close(); } catch { window.close(); } } }, 250);
+    }
+    window.addEventListener('storage', e => {
+      if (e.key === 'valo.consoleToggle' && e.newValue) { localStorage.setItem('valo.consoleAck', e.newValue); visible ? hide() : show(); }
+      // a game started from the console closed (game mode went off) -> back to the console
+      if (e.key === 'valo.ev.game' && e.newValue && session && !visible) {
+        try { const m = JSON.parse(e.newValue); if (!m.on && Date.now() - launchedAt > 8000) show(); } catch { }
+      }
+    });
+    hints();
+    const t0 = +(localStorage.getItem('valo.consoleToggle') || 0);
+    if (Date.now() - t0 < 3000) { localStorage.setItem('valo.consoleAck', String(t0)); show(); }
+    else { try { win.hide(); } catch { } }
+  </script>
+</body>
+</html>

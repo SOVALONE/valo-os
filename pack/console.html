@@ -28,6 +28,10 @@
   nav button { all: unset; cursor: pointer; font-size: 2.1vh; padding: .9vh 1.4vw; border-radius: 99px; color: var(--muted); transition: background .2s, color .2s; }
   nav button.on { background: var(--text); color: var(--solid); font-weight: 600; }
   .grow { flex: 1; }
+  #xClose { all: unset; cursor: pointer; width: 4.4vh; height: 4.4vh; display: grid; place-items: center; border-radius: 50%; font-size: 2vh;
+    background: color-mix(in srgb, var(--text) 14%, transparent); color: var(--text); transition: background .2s; }
+  #xClose:hover { background: #e5534b; color: #fff; }
+  #hints > span { cursor: pointer; }
   #clock { font-size: 2.6vh; font-weight: 300; font-variant-numeric: tabular-nums; }
   #padState { font-size: 1.5vh; color: var(--muted); display: flex; align-items: center; gap: .4vw; }
   #padState i { width: .8vh; height: .8vh; border-radius: 50%; background: var(--muted); display: inline-block; }
@@ -103,6 +107,7 @@
       <div class="grow"></div>
       <div id="padState"><i></i><span>геймпад не підключено</span></div>
       <div id="clock"></div>
+      <button id="xClose" title="Закрити консоль (Esc, B або Win+Shift+G)">✕</button>
     </header>
 
     <section id="lib" class="on">
@@ -132,7 +137,7 @@
     applyTheme();
     const $ = id => document.getElementById(id);
     const widget = zebar.currentWidget();
-    const win = widget.tauriWindow;
+    const win = widget.tauriWindow ?? widget.window?.tauri;
     const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
     const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
     const ps = (file, ...a) => zebar.shellExec('powershell', [...PS, '-File', dir + '\\' + file, ...a])
@@ -294,10 +299,11 @@
       hints();
     }
     for (const b of document.querySelectorAll('nav button')) b.onclick = () => setTab(b.dataset.tab);
+    $('xClose').onclick = () => hide();
     function hints() {
       const H = { lib: [['a', 'A', 'Грати'], ['y', 'Y', 'Сховати / показати'], ['b', 'B', 'Закрити']], vg: [['a', 'A', 'Вибрати'], ['b', 'B', 'Назад']], sys: [['a', 'A', 'Вибрати'], ['b', 'B', 'Назад']] }[tab];
       $('hints').innerHTML = '';
-      for (const [c, k, t] of [...H, ['w', 'LB  RB', 'Розділи']]) { const s = document.createElement('span'); s.innerHTML = `<span class="g ${c}"></span>`; s.firstChild.textContent = k; s.append(t); $('hints').append(s); }
+      for (const [c, k, t] of [...H, ['w', 'LB  RB', 'Розділи']]) { const s = document.createElement('span'); s.onclick = () => act(c === 'w' ? 'rb' : c); s.innerHTML = `<span class="g ${c}"></span>`; s.firstChild.textContent = k; s.append(t); $('hints').append(s); }
     }
 
     // ---------- input: one set of actions for the gamepad, the keyboard and the mouse
@@ -373,7 +379,8 @@
       visible = false; if (!keepSession) session = false;
       $('app').classList.remove('show');
       if (!keepSession) localStorage.setItem('valo.console.open', '0');
-      setTimeout(() => { try { win.hide(); } catch { } }, 250);
+      // if the window cannot hide, close it (the dock starts it again next time)
+      setTimeout(async () => { try { await win.hide(); } catch { try { await win.close(); } catch { window.close(); } } }, 250);
     }
     window.addEventListener('storage', e => {
       if (e.key === 'valo.consoleToggle' && e.newValue) { localStorage.setItem('valo.consoleAck', e.newValue); visible ? hide() : show(); }

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); padding: 10px; }
+  .nf { font-family: 'JetBrainsMono NF', 'JetBrainsMono Nerd Font', monospace; font-style: normal; }
+  .wz { height: 100%; display: flex; flex-direction: column; background: color-mix(in srgb, var(--solid) 97%, transparent); border: 1px solid var(--border);
+    border-radius: calc(var(--radius) + 6px); box-shadow: 0 20px 50px rgba(0,0,0,.45); padding: 28px 32px 22px;
+    opacity: 0; transform: scale(.97); transition: opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1); }
+  .wz.show { opacity: 1; transform: none; }
+  .steps { display: flex; gap: 6px; margin-bottom: 18px; }
+  .steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--hi); transition: background .3s; }
+  .steps i.on { background: var(--accent); }
+  .page { flex: 1; display: none; flex-direction: column; gap: 14px; min-height: 0; overflow-y: auto; }
+  .page.on { display: flex; animation: in .35s ease; }
+  @keyframes in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  h1 { font-family: 'Gabriola', serif; font-weight: 400; font-size: 64px; line-height: .9; color: var(--accent); }
+  h2 { font-size: 22px; font-weight: 600; }
+  p { color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 560px; }
+  .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
+  .hero .mark { width: 96px; height: 96px; border-radius: 22px; background: var(--accent); display: grid; place-items: center; box-shadow: 0 10px 40px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .hero .mark svg { width: 80px; height: 80px; }
+  .themes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .card { cursor: pointer; border-radius: 12px; padding: 10px; background: var(--chip); border: 2px solid transparent; transition: border-color .15s, transform .15s; }
+  .card:hover { transform: translateY(-2px); }
+  .card.on { border-color: var(--accent); }
+  .card .pv { height: 46px; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: flex-end; gap: 4px; padding: 6px; }
+  .card .pv i { display: block; height: 8px; flex: 1; border-radius: 3px; }
+  .card b { font-size: 13px; }
+  label.q { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; margin-top: 4px; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--chip); border-radius: var(--chipRadius); padding: 4px; gap: 4px; }
+  .seg button { all: unset; cursor: pointer; text-align: center; padding: 10px 6px; border-radius: calc(var(--chipRadius) - 2px); color: var(--muted); transition: background .15s, color .15s; }
+  .seg button.on { background: var(--accent); color: var(--ink); font-weight: 600; }
+  .tips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tip { display: flex; gap: 12px; align-items: center; background: var(--chip); border-radius: 12px; padding: 12px 14px; }
+  .tip kbd { font-family: 'JetBrainsMono NF', monospace; font-size: 12px; padding: 4px 8px; border-radius: 6px; background: var(--hi); color: var(--accent); white-space: nowrap; }
+  .tip span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .nav { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+  .nav .sp { flex: 1; }
+  .nav button { all: unset; cursor: pointer; padding: 10px 20px; border-radius: var(--chipRadius); background: var(--chip); color: var(--text); font-weight: 600; }
+  .nav button.go { background: var(--accent); color: var(--ink); }
+  .nav button:hover { filter: brightness(1.08); }
+  .nav button[hidden] { display: none; }
+  .nav small { color: var(--muted); }
+  /* themed scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--chip-hi, var(--hi)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--pink, var(--accent)); }
+</style>
+</head>
+<body>
+  <div class="wz" id="wz">
+    <div class="steps" id="steps"><i></i><i></i><i></i><i></i><i></i></div>
+
+    <div class="page" data-p="0">
+      <div class="hero">
+        <div class="mark"><svg viewBox="-118 -150 236 236"><defs><path id="bl" d="M0 -130 C 1 -62, 3 -38, 23 -23 C 17 -27, 12 -29, 9 -29 A 14 14 0 0 0 0 -23 A 14 14 0 0 0 -9 -29 C -12 -29, -17 -27, -23 -23 C -3 -38, -1 -62, 0 -130 Z"/><g id="lb"><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g></defs><g fill="#1e1a1f" id="mk"><use href="#bl"/><use href="#bl" transform="rotate(120)"/><use href="#bl" transform="rotate(240)"/><use href="#lb"/></g></svg></div>
+        <h1>valo.os</h1>
+        <p>Вітаємо! Налаштуймо систему під вас — тема, панель, док та корисні дрібниці. Це займе хвилину, усе можна змінити пізніше в налаштуваннях панелі.</p>
+      </div>
+    </div>
+
+    <div class="page" data-p="1">
+      <h2>Оберіть тему</h2>
+      <p>Кольори й стиль панелі, меню, доку і центру керування. Живі шпалери підлаштуються під тему.</p>
+      <div class="themes" id="themes"></div>
+    </div>
+
+    <div class="page" data-p="2">
+      <h2>Панель і док</h2>
+      <label class="q">Верхня панель</label>
+      <div class="seg" id="barSeg"><button data-v="0">Плаваюча</button><button data-v="1">Липка до краю</button></div>
+      <label class="q">Док з програмами</label>
+      <div class="seg" id="dockSeg"><button data-v="0">Плаваючий</button><button data-v="1">Липкий</button></div>
+      <div class="seg" id="ovSeg"><button data-v="0">Займає місце</button><button data-v="1">Поверх вікон</button><button data-v="2">Ховається сам</button></div>
+    </div>
+
+    <div class="page" data-p="3">
+      <h2>Дрібниці</h2>
+      <label class="q">Інструменти</label>
+      <div class="seg" id="featSeg"><button data-f="alttab">Свій Alt+Tab</button><button data-f="clip">Історія буфера Win+V</button><button data-f="shot">Знімки PrtSc</button></div>
+      <label class="q">Звуки системи</label>
+      <div class="seg" id="sndSeg"><button data-v="1">Звуки valo.os</button><button data-v="0">Звуки Windows</button></div>
+      <label class="q">Живі шпалери (Lively Wallpaper)</label>
+      <div class="seg" id="wpSeg"><button data-v="1">Змінювати з темою</button><button data-v="0">Не чіпати</button></div>
+    </div>
+
+    <div class="page" data-p="4">
+      <h2>Готово!</h2>
+      <p>Кілька підказок, щоб почати:</p>
+      <div class="tips">
+        <div class="tip"><kbd>Win</kbd><span>меню valo.os: програми, пошук файлів, калькулятор, курси валют</span></div>
+        <div class="tip"><kbd>Alt+Tab</kbd><span>перемикання вікон з мініатюрами</span></div>
+        <div class="tip"><kbd>Win+V</kbd><span>історія буфера обміну, закріплені фрагменти</span></div>
+        <div class="tip"><kbd>PrtSc</kbd><span>знімок області екрана — у «Знімки екрана» і в буфер</span></div>
+        <div class="tip"><kbd>годинник</kbd><span>центр керування: Wi‑Fi, звук, нагадування, нотатки</span></div>
+        <div class="tip"><kbd>ПКМ знак</kbd><span>налаштування панелі, теми, оновлення valo.os</span></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button id="skip">Пропустити</button>
+      <span class="sp"></span>
+      <small id="cnt"></small>
+      <button id="back">Назад</button>
+      <button id="next" class="go">Далі</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import { THEMES, getTheme, saveTheme, customVars, wallOf } from './themes.js';
+
+    const $ = id => document.getElementById(id);
+    const widget = zebar.currentWidget();
+    const dir = widget.htmlPath.replace(/[\\/][^\\/]+$/, '');
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    const win = widget.tauriWindow ?? widget.window?.tauri;
+    const N = 5;
+    let step = 0, visible = true;
+
+    function go(n) {
+      step = Math.max(0, Math.min(N - 1, n));
+      document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', +p.dataset.p === step));
+      document.querySelectorAll('#steps i').forEach((i, k) => i.classList.toggle('on', k <= step));
+      $('back').hidden = step === 0; $('skip').hidden = step === N - 1;
+      $('next').textContent = step === 0 ? 'Почнімо' : step === N - 1 ? 'Почати роботу' : 'Далі';
+      $('cnt').textContent = (step + 1) + ' / ' + N;
+      render();
+    }
+    function seg(id, cur, on) {
+      for (const b of $(id).querySelectorAll('button')) { b.classList.toggle('on', b.dataset.v === String(cur)); b.onclick = () => { on(b.dataset.v); render(); }; }
+    }
+    function render() {
+      const t = getTheme();
+      const box = $('themes'); box.innerHTML = '';
+      for (const [id, th] of [...Object.entries(THEMES), ['custom', { name: 'Своя', vars: customVars(t.custom) }]]) {
+        const v = th.vars, c = document.createElement('div');
+        c.className = 'card' + (t.id === id ? ' on' : '');
+        c.innerHTML = `<div class="pv" style="background:${v.solid};border:1px solid ${v.border}"><i style="background:${v.accent}"></i><i style="background:${v.chip}"></i><i style="background:${v.accent2}"></i></div><b></b>`;
+        c.querySelector('b').textContent = th.name;
+        c.onclick = () => { saveTheme({ id }); wallpaper(); render(); };
+        box.append(c);
+      }
+      document.getElementById('mk').setAttribute('fill', getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1e1a1f');
+      seg('barSeg', t.sticky ? 1 : 0, v => saveTheme({ sticky: v === '1' }));
+      seg('dockSeg', t.dockSticky ? 1 : 0, v => saveTheme({ dockSticky: v === '1' }));
+      seg('ovSeg', !t.dockOverlap ? 0 : t.dockHide ? 2 : 1, v => saveTheme({ dockOverlap: v !== '0', dockHide: v === '2' }));
+      seg('wpSeg', t.wallSync === false ? 0 : 1, v => { saveTheme({ wallSync: v === '1' }); wallpaper(); });
+      seg('sndSeg', localStorage.getItem('valo.sounds') === '1' ? 1 : 0, v => {
+        localStorage.setItem('valo.sounds', v);
+        zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-sounds.ps1', v === '1' ? '-Enable' : '-Disable']).catch(() => {});
+      });
+      let f = {}; try { f = JSON.parse(localStorage.getItem('valo.features') || '{}') || {}; } catch { }
+      for (const b of $('featSeg').querySelectorAll('button')) {
+        b.classList.toggle('on', f[b.dataset.f] !== false);
+        b.onclick = () => { f[b.dataset.f] = f[b.dataset.f] === false; localStorage.setItem('valo.features', JSON.stringify(f)); render(); };
+      }
+    }
+    function wallpaper() {
+      const t = getTheme();
+      if (t.wallSync === false || t.id === 'custom') return;
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', wallOf(t.id)]).catch(() => {});
+    }
+
+    async function show() {
+      visible = true; go(0);
+      try { await win.show(); } catch { }
+      localStorage.setItem('valo.focusWin', 'Zebar - quill / welcome|' + Date.now());
+      requestAnimationFrame(() => $('wz').classList.add('show'));
+    }
+    async function hide() {
+      visible = false; $('wz').classList.remove('show');
+      localStorage.setItem('valo.welcomeDone', '1');
+      setTimeout(() => { try { win.hide(); } catch { } }, 250);
+    }
+    $('next').onclick = () => step === N - 1 ? hide() : go(step + 1);
+    $('back').onclick = () => go(step - 1);
+    $('skip').onclick = hide;
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+    window.addEventListener('storage', e => {
+      if (e.key === 'valo.welcomeToggle' && e.newValue) { localStorage.setItem('valo.welcomeAck', e.newValue); visible ? hide() : show(); }
+      if (e.key === 'valo.theme') render();
+    });
+
+    // first start of a fresh system (no settings yet) or opened from the menu just now -> show, otherwise stay hidden
+    const asked = Date.now() - (+localStorage.getItem('valo.welcomeToggle') || 0) < 3000;
+    if (asked) localStorage.setItem('valo.welcomeAck', localStorage.getItem('valo.welcomeToggle'));
+    if (asked || (!localStorage.getItem('valo.welcomeDone') && !localStorage.getItem('valo.theme'))) show();
+    else { visible = false; try { win.hide(); } catch { } }
+  </script>
+</body>
+</html>
