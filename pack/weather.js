@@ -33,7 +33,7 @@ export async function refresh(force = false) {
     const p = await place();
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
       '&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,relative_humidity_2m' +
-      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5';
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=auto&forecast_days=5';
     const j = await (await fetch(url)).json();
     if (!j.current) throw new Error('no data');
     const out = { at: Date.now(), place: p.name, cur: j.current, daily: j.daily };

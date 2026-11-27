@@ -137,6 +137,8 @@
   .auto select, .auto input[type=time] { background: var(--hi); color: var(--text); border: none; border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 12px; color-scheme: dark; }
   .light .auto select, .light .auto input[type=time] { color-scheme: light; }
   .auto select { flex: 1; }
+  .aAt:not([hidden]) { display: flex; align-items: center; gap: 8px; }
+  .aAt[hidden], #aSun[hidden] { display: none !important; }
   .seg.multi button.on { background: var(--pink); }
   .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--chip); border-radius: var(--chipRadius); padding: 4px; flex: none; }
   .tabs button { all: unset; cursor: pointer; text-align: center; padding: 7px 4px; border-radius: calc(var(--chipRadius) - 2px); color: var(--muted); font-weight: 600; font-size: 12px; }
@@ -257,8 +259,10 @@
       <h3>Тема за часом доби</h3>
       <div class="seg" id="autoSeg"><button data-auto="0">Вимкнено</button><button data-auto="1">Увімкнено</button></div>
       <div class="auto" id="autoWrap" hidden>
-        <label>Вдень <select id="aDay"></select> з <input type="time" id="aDayAt" /></label>
-        <label>Увечері <select id="aNight"></select> з <input type="time" id="aNightAt" /></label>
+        <div class="seg" id="autoBy"><button data-by="sun">За сонцем</button><button data-by="time">За часом</button></div>
+        <label>Вдень <select id="aDay"></select><span class="aAt"> з <input type="time" id="aDayAt" /></span></label>
+        <label>Увечері <select id="aNight"></select><span class="aAt"> з <input type="time" id="aNightAt" /></span></label>
+        <div class="hint" id="aSun"></div>
       </div>
       <h3>Стиль панелі</h3>
       <div class="seg" id="seg"><button data-sticky="0">Плаваюча</button><button data-sticky="1">Липка</button></div>
@@ -956,7 +960,17 @@
 
     // ---------- theme by time of day (the menu runs all the time, so it keeps the schedule)
     const themeOptions = () => [...Object.entries(THEMES).map(([id, t]) => [id, t.name]), ['custom', 'Своя']];
-    function autoCfg() { return { on: false, day: 'latte', night: 'sakura', dayAt: '07:00', nightAt: '20:00', ...(getTheme().auto || {}) }; }
+    function autoCfg() { return { on: false, by: 'time', day: 'aluminium', night: 'space', dayAt: '07:00', nightAt: '20:00', ...(getTheme().auto || {}) }; }
+    // sunrise / sunset of the weather place (valo.weather, refreshed by the bar), as "HH:MM"; null without weather data
+    function sunTimes() {
+      try {
+        const d = JSON.parse(localStorage.getItem('valo.weather') || 'null')?.daily;
+        const today = new Date().toISOString().slice(0, 10);
+        let i = (d?.time || []).indexOf(today); if (i < 0) i = 0;
+        const rise = d?.sunrise?.[i], set = d?.sunset?.[i];
+        return rise && set ? { rise: rise.slice(11, 16), set: set.slice(11, 16) } : null;
+      } catch { return null; }
+    }
     function renderAuto(cur) {
       const a = autoCfg();
       for (const b of $('autoSeg').querySelectorAll('button')) {
@@ -964,6 +978,14 @@
         b.onclick = () => { saveTheme({ auto: { ...autoCfg(), on: b.dataset.auto === '1' } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); renderSettings(); };
       }
       $('autoWrap').hidden = !a.on;
+      for (const b of $('autoBy').querySelectorAll('button')) {
+        b.classList.toggle('on', b.dataset.by === a.by);
+        b.onclick = () => { saveTheme({ auto: { ...autoCfg(), by: b.dataset.by } }); localStorage.removeItem('valo.autoPeriod'); autoTheme(); renderSettings(); };
+      }
+      for (const e of document.querySelectorAll('.aAt')) e.hidden = a.by === 'sun';
+      const st = sunTimes(), place = (() => { try { return JSON.parse(localStorage.getItem('valo.weather') || 'null')?.place; } catch { return null; } })();
+      $('aSun').hidden = a.by !== 'sun';
+      $('aSun').textContent = st ? `Сьогодні${place ? ' (' + place + ')' : ''}: світанок ${st.rise}, захід ${st.set}. Місто — як для погоди.` : 'Ще немає даних погоди: поки що 07:00 і 20:00.';
       for (const [sid, key] of [['aDay', 'day'], ['aNight', 'night']]) {
         const sel = $(sid); sel.innerHTML = '';
         for (const [id, name] of themeOptions()) { const o = document.createElement('option'); o.value = id; o.textContent = name; sel.append(o); }
@@ -979,9 +1001,12 @@
       if (!a.on) return;
       const now = new Date(), m = now.getHours() * 60 + now.getMinutes();
       const toM = s => { const [h, mm] = String(s).split(':').map(Number); return (h || 0) * 60 + (mm || 0); };
-      const d = toM(a.dayAt), n = toM(a.nightAt);
+      const st = a.by === 'sun' ? sunTimes() : null;
+      const d = toM(st ? st.rise : a.dayAt), n = toM(st ? st.set : a.nightAt);
       const isDay = d < n ? (m >= d && m < n) : !(m >= n && m < d);
-      const period = (isDay ? 'day' : 'night') + ':' + now.toDateString();
+      // a night that started yesterday evening is the same period after midnight (a manual pick is not undone at 00:00)
+      const start = new Date(now); if (!isDay && d < n && m < d) start.setDate(start.getDate() - 1);
+      const period = (isDay ? 'day' : 'night') + ':' + start.toDateString();
       if (localStorage.getItem('valo.autoPeriod') === period) return;    // switch only when the period starts, manual picks stay
       localStorage.setItem('valo.autoPeriod', period);
       const want = isDay ? a.day : a.night;

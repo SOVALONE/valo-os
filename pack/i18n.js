@@ -37,6 +37,8 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Космос|Space|Spațiu
 темний алюміній, синій акцент|dark aluminium, blue accent|aluminiu închis, accent albastru
 Скло|Glass|Sticlă
+За сонцем|By the sun|După soare
+За часом|By time|După oră
 матове скло, світлі краї|frosted glass, light edges|sticlă mată, margini luminoase
 Своя|Custom|Personalizată
 рожевий на темному, м’які кути|pink on dark, soft corners|roz pe închis, colțuri moi
