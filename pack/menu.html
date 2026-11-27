@@ -47,6 +47,9 @@
   .card span { font-size: 11px; color: var(--muted); }
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--chip); border-radius: var(--chipRadius); padding: 4px; gap: 4px; }
   .seg button { all: unset; cursor: pointer; text-align: center; padding: 9px 4px; border-radius: calc(var(--chipRadius) - 2px); color: var(--muted); transition: background .15s, color .15s; }
+  .seg.wpgrid { grid-template-columns: 1fr 1fr 1fr; }
+  .seg.wpgrid button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 7px 4px; font-size: 11px; }
+  .seg.wpgrid button i { width: 100%; height: 34px; border-radius: 6px; background-size: cover; background-position: center; }
   .seg button.on { background: var(--pink); color: var(--ink); font-weight: 600; }
   .seg.three { grid-template-columns: 1fr 1fr 1fr; }
   #sizeWrap { display: flex; flex-direction: column; gap: 12px; }
@@ -314,6 +317,7 @@
       <div class="seg" id="sndSeg"><button data-snd="1">Звуки valo.os</button><button data-snd="0">Звуки Windows</button></div>
       <h3>Живі шпалери</h3>
       <div class="seg" id="wpSeg"><button data-wp="1">Змінювати з темою</button><button data-wp="0">Не чіпати</button></div>
+      <div class="seg wpgrid" id="wpPick"></div>
       <div class="hint" id="wpHint">Потрібен Lively Wallpaper. Кожна тема має свої анімовані шпалери, що реагують на музику.</div>
       <div class="seg" id="lockSeg"><button data-lock="1">Екран блокування під тему</button><button data-lock="0">Не чіпати</button></div>
       <h3>Погода</h3>
@@ -539,6 +543,16 @@
       for (const b of $('wpSeg').querySelectorAll('button')) {
         b.classList.toggle('on', (b.dataset.wp === '1') === (cur.wallSync !== false));
         b.onclick = () => { saveTheme({ wallSync: b.dataset.wp === '1' }); renderSettings(); syncWallpaper(); };
+      }
+      // every valo live wallpaper: pick one by hand (then the theme no longer changes it)
+      const pick = $('wpPick'); pick.innerHTML = '';
+      for (const w of ['sakura', 'night', 'matcha', 'latte', 'graphite', 'sunset']) {
+        const b = document.createElement('button'); b.innerHTML = '<i></i><span></span>';
+        b.querySelector('i').style.background = `linear-gradient(135deg, ${THEMES[w]?.vars?.accent || '#888'}, ${THEMES[w]?.vars?.solid || '#222'})`;
+        b.querySelector('span').textContent = THEMES[w]?.name || w;
+        b.classList.toggle('on', cur.wallSync === false && cur.wallPick === w);
+        b.onclick = () => { saveTheme({ wallSync: false, wallPick: w }); renderSettings(); setLive(w); };
+        pick.append(b);
       }
       for (const b of $('lockSeg').querySelectorAll('button')) {
         b.classList.toggle('on', (b.dataset.lock === '1') === !!cur.lockSync);
@@ -1087,6 +1101,17 @@
     };
 
     // ---------- live wallpaper per theme (Lively Wallpaper, valo-wallpaper.ps1)
+    function setLive(w) {
+      zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Theme', w]).then(r => {
+        let o = null; try { o = JSON.parse((r.stdout || '').trim()); } catch { }
+        $('wpHint').textContent = o?.ok ? 'Живі шпалери «' + (THEMES[w]?.name || w) + '» увімкнено.' : (o?.error || 'Не вдалося змінити шпалери') + '.';
+      }).catch(() => {});
+    }
+    // all valo live wallpapers into Lively's library (new ones after an update), then the current theme's one once
+    zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-wallpaper.ps1', '-Library']).then(r => {
+      let o = null; try { o = JSON.parse((r.stdout || '').trim()); } catch { }
+      if (o?.ok && o.added > 0) { const t = getTheme(); if (t.wallSync === false && t.wallPick) setLive(t.wallPick); else syncWallpaper(); }
+    }).catch(() => {});
     function syncWallpaper() {
       const t = getTheme();
       if (t.id === 'custom') return;

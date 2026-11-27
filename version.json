@@ -1,9 +1,9 @@
 {
-    "version":  "1.15.0",
+    "version":  "1.15.1",
     "date":  "2026-11-27",
     "notes":  [
-                  "Чистий робочий стіл: значки програм і файлів на робочому столі сховані",
-                  "Повернути: меню → Панель і теми → Система → Функції → «Значки на робочому столі»"
+                  "Усі 6 живих шпалер valo тепер у бібліотеці Lively поруч з його власними",
+                  "Меню → Панель і теми → Вигляд → «Живі шпалери»: вибір будь-яких шпалер (Сакура, Нічне місто, Матча, Латте, Графіт, Захід) або «Змінювати з темою»"
               ],
     "files":  [
                   {
@@ -36,11 +36,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "ba3b46f025cc5c47c1b3da929e8ccbddbe76a100a8895b1329dfc6db9ade7ec9"
+                      "sha256":  "439323bd293fb489a4c3fdc7bdcedda5fb774aff18dcda33274f89e41b90e91e"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "3858c3d0ccd8bc6a62ae8a283057c7f04fc34b09c4b1b6567757c274afa39a28"
+                      "sha256":  "68e7fe252cb3c47bab08b85497cd7658c7246ab574fd3bf46d2f9b67df7307b2"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -228,11 +228,11 @@
                   },
                   {
                       "path":  "pack/valo-wallpaper.ps1",
-                      "sha256":  "de68794adeeb77c8c545b9e66af406e1c401ef4453cb82e6ec2890d26100d8c2"
+                      "sha256":  "d917d80a5f67e5c87f756838afcbc625d08a2ab0bef6f58744e8fc5e1457117f"
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "ad2bdba7dd6fcb3211131041f86ae2f8754b25267b3265264120a3383f1a6228"
+                      "sha256":  "4b22809fbd21fe3526ec44a8c55f5a3bd0df0eea684d6a33a7f1372cfc3e36c9"
                   },
                   {
                       "path":  "pack/weather.js",

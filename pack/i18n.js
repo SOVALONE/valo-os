@@ -135,6 +135,8 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Магазин valo|valo store|Magazin valo
 Магазин програм|App store|Magazin de aplicații
 Більше|More|Mai mult
+Живі шпалери «|Live wallpaper «|Imaginea de fundal animată «
+» увімкнено.|» is on.|» este activată.
 Значки на робочому столі|Desktop icons|Pictograme pe desktop
 ярлики програм і файли поверх шпалер (вимкнено — чистий стіл)|app shortcuts and files over the wallpaper (off — a clean desktop)|scurtături și fișiere peste imaginea de fundal (oprit — desktop curat)
 Files — провідник за замовчуванням|Files — default file manager|Files — managerul de fișiere implicit

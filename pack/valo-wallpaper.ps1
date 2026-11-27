@@ -1,9 +1,37 @@
 ﻿# valo.os: put the live wallpaper of a theme on the desktop through Lively Wallpaper (if it is installed).
 #   -Theme sakura|night|matcha|latte|graphite|sunset      -> {"ok":true} / {"ok":false,"error":..}
-param([string]$Theme = 'sakura', [switch]$Lock)   # -Lock: only set the Windows lock screen picture of the theme
+#   -Library    -> copy every valo live wallpaper into Lively's library (they show up in Lively next to its own) -> {"ok":true,"added":N}
+param([string]$Theme = 'sakura', [switch]$Lock, [switch]$Library)   # -Lock: only set the Windows lock screen picture of the theme
 $ErrorActionPreference = 'SilentlyContinue'
 [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
 function Out-Json($o) { [Console]::Out.Write(($o | ConvertTo-Json -Compress)) }
+$lib = Join-Path $env:LOCALAPPDATA 'Lively Wallpaper\Library\wallpapers'
+# valo-<theme> folders -> Lively library (refreshed when valo ships a newer version); returns how many are new there
+function Sync-Library {
+    if (-not (Test-Path $lib)) { return -1 }
+    $added = 0
+    foreach ($src in Get-ChildItem (Join-Path $env:LOCALAPPDATA 'valo\wallpapers') -Directory -Filter 'valo-*') {
+        if (-not (Test-Path "$($src.FullName)\LivelyInfo.json")) { continue }
+        $dst = Join-Path $lib $src.Name
+        if (-not (Test-Path $dst)) { $added++ }
+        elseif ((Get-Item "$dst\LivelyInfo.json").LastWriteTime -ge (Get-Item "$($src.FullName)\LivelyInfo.json").LastWriteTime -and
+                (Get-ChildItem $dst -Recurse -File).Count -ge (Get-ChildItem $src.FullName -Recurse -File).Count) { continue }
+        New-Item -ItemType Directory -Force $dst | Out-Null
+        Copy-Item "$($src.FullName)\*" $dst -Recurse -Force
+    }
+    $added
+}
+if ($Library) {
+    $n = Sync-Library
+    if ($n -lt 0) { Out-Json @{ ok = $false; error = 'Lively Wallpaper не встановлено' }; return }
+    # Lively reads its library when it starts: restart it so the new ones appear
+    if ($n -gt 0 -and (Get-Process Lively -EA SilentlyContinue)) {
+        $exe = (Get-Process Lively | Select-Object -First 1).Path
+        Get-Process Lively, Lively.UI.WinUI -EA SilentlyContinue | Stop-Process -Force; Start-Sleep 2
+        if ($exe) { Start-Process $exe }
+    }
+    Out-Json @{ ok = $true; added = $n }; return
+}
 
 if ($Theme -notmatch '^[a-z]+$') { Out-Json @{ ok = $false; error = 'bad theme' }; return }
 $wp = Join-Path $env:LOCALAPPDATA "valo\wallpapers\valo-$Theme"
@@ -37,6 +65,7 @@ if (-not (Get-Process Lively -EA SilentlyContinue)) {
     $app = Join-Path (Split-Path $cli) 'Lively.exe'
     if (Test-Path $app) { Start-Process $app; Start-Sleep -Seconds 4 }
 }
+if ((Sync-Library) -ge 0 -and (Test-Path (Join-Path $lib "valo-$Theme\LivelyInfo.json"))) { $wp = Join-Path $lib "valo-$Theme" }   # the library copy: Lively then shows it as the current one
 & $cli setwp --file "$wp" | Out-Null
 Add-Content -LiteralPath "$env:TEMP\valo-wallpaper.log" -Value ((Get-Date -f s) + " setwp $Theme via $cli exit $LASTEXITCODE")
 Out-Json @{ ok = $true; cli = $cli }
