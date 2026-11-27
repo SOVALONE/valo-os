@@ -206,8 +206,14 @@ public static class ValoShell {
             if (CaptureWin) {
                 bool isWin = vk == 0x5B || vk == 0x5C;
                 if (isWin && !injected) {
-                    if (down && !winDown) { winDown = true; otherKey = false; keybd_event(0xE8, 0, 0, UIntPtr.Zero); keybd_event(0xE8, 0, 2, UIntPtr.Zero); }
-                    else if (!down) { if (winDown && !otherKey) Events.Enqueue("win"); winDown = false; }
+                    // a lone Win press must not open Windows Start: a dummy key (0xE8) between Win down and Win up makes Windows
+                    // treat it as a Win+key shortcut. It goes out on release (Windows has seen Win down by then) — sent on press,
+                    // it reached the system before the Win key itself and Start still opened.
+                    if (down && !winDown) { winDown = true; otherKey = false; }
+                    else if (!down) {
+                        if (winDown && !otherKey) { keybd_event(0xE8, 0, 0, UIntPtr.Zero); keybd_event(0xE8, 0, 2, UIntPtr.Zero); Events.Enqueue("win"); }
+                        winDown = false;
+                    }
                 } else if (down && winDown && !injected) {
                     otherKey = true;
                     if (vk == 0x56 && ValoUi.ClipOn && ClipForm.Inst != null) { vSwallow = true; ValoUi.Post(delegate { ClipForm.Inst.Toggle(); }); return new IntPtr(1); }

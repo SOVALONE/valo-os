@@ -1,9 +1,8 @@
 {
-    "version":  "1.14.1",
+    "version":  "1.14.2",
     "date":  "2026-11-27",
     "notes":  [
-                  "Win+E відкриває Files (Windows 11 26H2 перестав слухатися налаштування Files для Win+E)",
-                  "Значок «Провідник» у доку й меню відкриває Files, коли він провідник за замовчуванням"
+                  "Кнопка Windows знову відкриває лише меню valo, без стандартного «Пуску»"
               ],
     "files":  [
                   {
@@ -156,7 +155,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "10f6ee0512403f0e2664502cb57b68680b22d36049529739a959d30b29e5b316"
+                      "sha256":  "6848a847185a7bbeb995e24e49a90fc978b1d3d318e9d1dc0431a314115cb5de"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -232,7 +231,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "668876490b3859ceb593a3b1902f89e1686e6138ce7d07766603a77d70cb4e73"
+                      "sha256":  "5962dacf3af798d38940ae79d1aa39bee4d1801ed96861c5063bb3a1cf9f6ca2"
                   },
                   {
                       "path":  "pack/weather.js",

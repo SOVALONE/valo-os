@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: rgba(30,26,31,.92); --solid: #1e1a1f; --chip: #2a2329; --hi: #3a2f37; --accent: #f2a7bb; --accent2: #e07a96;
+    --text: #f5e6ea; --muted: #9c8a93; --ink: #1e1a1f; --border: rgba(242,167,187,.25);
+    --radius: 12px; --chipRadius: 8px; --shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: transparent; overflow: hidden; height: 100%; user-select: none; }
+  body { font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); padding: 6px; }
+  .em { height: 100%; display: flex; flex-direction: column; gap: 10px; padding: 12px; background: color-mix(in srgb, var(--solid) 97%, transparent);
+    border: 1px solid var(--border); border-radius: calc(var(--radius) + 4px); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    opacity: 0; transform: translateY(10px); transition: opacity .15s, transform .2s cubic-bezier(.2,.8,.2,1); }
+  .em.show { opacity: 1; transform: none; }
+  .sticky body { padding: 0; } .sticky .em { border-radius: 0; }
+  input { all: unset; box-sizing: border-box; width: 100%; padding: 8px 12px; border-radius: var(--chipRadius); background: var(--chip); color: var(--text); user-select: text; }
+  .cats { display: flex; gap: 2px; }
+  .cats button { all: unset; cursor: pointer; flex: 1; text-align: center; padding: 4px 0; border-radius: 6px; font-family: 'Segoe UI Emoji'; font-size: 16px; filter: grayscale(.7); opacity: .7; }
+  .cats button.on, .cats button:hover { filter: none; opacity: 1; background: var(--chip); }
+  h4 { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+  .grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; align-content: start; }
+  .grid::-webkit-scrollbar { width: 0; }
+  .grid button { all: unset; cursor: pointer; text-align: center; font-family: 'Segoe UI Emoji'; font-size: 22px; line-height: 38px; border-radius: 8px; }
+  .grid button:hover, .grid button.sel { background: var(--hi); }
+  .grid .t { grid-column: 1 / -1; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); padding: 6px 2px 2px; }
+  .foot { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <div class="em" id="em">
+    <input id="q" placeholder="Пошук емодзі: серце, кава, україна…" />
+    <div class="cats" id="cats"></div>
+    <div class="grid" id="grid"></div>
+    <div class="foot">Клік — вставити · Shift+клік — вставити й не закривати · Esc — закрити</div>
+  </div>
+  <script type="module">
+    import * as zebar from './zebar.js';
+    import './i18n.js';
+    import './themes.js';
+    import { CATS, EMOJI } from './emoji.js';
+
+    const $ = id => document.getElementById(id);
+    const widget = zebar.currentWidget();
+    const win = widget.tauriWindow;
+    const PS = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden'];
+    let visible = true, cat = null, sel = 0, shown = [];
+
+    const recent = () => { try { return JSON.parse(localStorage.getItem('valo.emojiRecent') || '[]') || []; } catch { return []; } };
+    function pick(e, keep) {
+      localStorage.setItem('valo.emojiRecent', JSON.stringify([e, ...recent().filter(x => x !== e)].slice(0, 18)));
+      if (!keep) close();
+      // the helper (through the dock) puts focus back on the window you were typing in and types the emoji
+      setTimeout(() => localStorage.setItem('valo.helperCmd', JSON.stringify({ cmd: 'type ' + e, ts: Date.now() + Math.random() })), keep ? 0 : 120);
+    }
+    function render() {
+      const q = $('q').value.trim().toLowerCase();
+      const g = $('grid'); g.innerHTML = ''; shown = [];
+      const add = (title, list) => {
+        if (!list.length) return;
+        const t = document.createElement('div'); t.className = 't'; t.textContent = title; g.append(t);
+        for (const e of list) {
+          const b = document.createElement('button'); b.textContent = e; b.title = (EMOJI.find(x => x.e === e)?.k || '').split(' ').slice(0, 3).join(', ');
+          const idx = shown.length; shown.push(e);
+          if (idx === sel && q) b.className = 'sel';
+          b.onclick = ev => pick(e, ev.shiftKey);
+          g.append(b);
+        }
+      };
+      if (q) add('Результати', EMOJI.filter(x => x.k.split(' ').some(w => w.startsWith(q)) || x.k.includes(q)).map(x => x.e));
+      else {
+        add('Нещодавні', recent());
+        for (const [id, , name] of CATS) if (!cat || cat === id) add(name, EMOJI.filter(x => x.cat === id).map(x => x.e));
+      }
+      const cb = $('cats'); cb.innerHTML = '';
+      for (const [id, ic, name] of CATS) {
+        const b = document.createElement('button'); b.textContent = ic; b.title = name; b.className = cat === id ? 'on' : '';
+        b.onclick = () => { cat = cat === id ? null : id; $('q').value = ''; render(); $('grid').scrollTop = 0; };
+        cb.append(b);
+      }
+    }
+    $('q').addEventListener('input', () => { sel = 0; render(); });
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'Enter' && shown[sel]) { e.preventDefault(); pick(shown[sel], e.shiftKey); }
+      else if (e.key === 'ArrowRight') { sel = Math.min(sel + 1, shown.length - 1); render(); }
+      else if (e.key === 'ArrowLeft') { sel = Math.max(sel - 1, 0); render(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 9, shown.length - 1); render(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 9, 0); render(); }
+    });
+
+    async function open() {
+      if (visible) return;
+      visible = true; $('q').value = ''; sel = 0; cat = null; render();
+      try { await win.show(); } catch { }
+      localStorage.setItem('valo.focusWin', 'Zebar - quill / emoji|' + Date.now());
+      requestAnimationFrame(() => $('em').classList.add('show'));
+      setTimeout(() => $('q').focus(), 80);
+    }
+    function close() {
+      if (!visible) return;
+      visible = false; $('em').classList.remove('show');
+      localStorage.setItem('valo.emojiClosed', String(Date.now()));
+      setTimeout(() => { try { win.hide(); } catch { } }, 120);
+    }
+    window.addEventListener('blur', () => setTimeout(() => { if (visible && !document.hasFocus()) close(); }, 120));
+    window.addEventListener('storage', e => {
+      if (e.key !== 'valo.emojiToggle' || !e.newValue) return;
+      localStorage.setItem('valo.emojiAck', e.newValue);
+      visible ? close() : open();
+    });
+    render();
+    const t0 = +(localStorage.getItem('valo.emojiToggle') || 0);
+    if (Date.now() - t0 < 3000) { localStorage.setItem('valo.emojiAck', String(t0)); visible = false; open(); }
+    else { visible = true; close(); }
+  </script>
+</body>
+</html>

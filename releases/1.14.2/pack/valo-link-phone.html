@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#1e1a1f" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/icon.png" />
+<link rel="apple-touch-icon" href="/icon.png" />
+<title>valo Link</title>
+<style>
+  :root { --bg: #1e1a1f; --fg: #f5e6ea; --accent: #f2a7bb; --muted: #9c8a93; --chip: color-mix(in srgb, var(--bg) 88%, var(--fg)); --hi: color-mix(in srgb, var(--bg) 78%, var(--fg)); }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font: 15px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; padding: env(safe-area-inset-top) 0 0; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 18px 8px; }
+  header .mk { width: 38px; height: 38px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; }
+  header .mk svg { width: 30px; height: 30px; }
+  header h1 { font-family: Gabriola, Georgia, serif; font-weight: 400; font-size: 34px; color: var(--accent); line-height: 1; }
+  header .st { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); }
+  header .st b { display: block; color: var(--fg); font-size: 14px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: var(--muted); margin-right: 5px; }
+  .dot.on { background: #7ed69a; }
+  main { flex: 1; overflow-y: auto; padding: 8px 16px 16px; }
+  section { display: none; flex-direction: column; gap: 12px; }
+  section.on { display: flex; }
+  .card { background: var(--chip); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card h3 { font-size: 12px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+  button, .btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; padding: 13px 14px; border-radius: 12px; background: var(--hi); color: var(--fg); font-weight: 600; }
+  button.go { background: var(--accent); color: var(--bg); }
+  button:active { transform: scale(.97); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  input, textarea { all: unset; box-sizing: border-box; width: 100%; padding: 13px 14px; border-radius: 12px; background: var(--hi); color: var(--fg); user-select: text; -webkit-user-select: text; }
+  textarea { min-height: 110px; white-space: pre-wrap; }
+  .code { font-size: 30px; letter-spacing: 8px; text-align: center; font-weight: 700; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--hi); color: var(--fg); text-decoration: none; }
+  .file span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file small { color: var(--muted); }
+  .bar { height: 6px; border-radius: 3px; background: var(--hi); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  #pad { height: 52vh; border-radius: 18px; background: var(--chip); touch-action: none; display: grid; place-items: center; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+  .media { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 10px; }
+  .media button { font-size: 26px; padding: 18px 0; }
+  nav { display: grid; grid-template-columns: repeat(6, 1fr); background: var(--chip); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); }
+  nav button { background: none; padding: 8px 0; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  nav button b { font-size: 20px; font-weight: 400; }
+  nav button.on { color: var(--accent); }
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 86vw; text-align: center; }
+  .toast.on { opacity: 1; }
+  [hidden] { display: none !important; }
+  /* scanner */
+  #scanEdit { position: relative; touch-action: none; border-radius: 14px; overflow: hidden; background: #000; }
+  #scanEdit canvas { display: block; width: 100%; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--hi); border-radius: 12px; padding: 4px; }
+  .seg button { padding: 9px 4px; font-size: 13px; background: none; color: var(--muted); }
+  .seg button.on { background: var(--accent); color: var(--bg); }
+  .pages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pages div { position: relative; aspect-ratio: 3/4; border-radius: 8px; overflow: hidden; background: var(--hi); }
+  .pages img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pages b { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--bg); color: var(--fg); font-size: 13px; display: grid; place-items: center; }
+  .pages i { position: absolute; left: 4px; bottom: 3px; font-style: normal; font-size: 11px; font-weight: 700; color: var(--bg); background: var(--accent); border-radius: 6px; padding: 0 5px; }
+  #ring { position: fixed; inset: 0; background: var(--accent); color: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; font-size: 28px; font-weight: 700; z-index: 9; }
+  #ring.on { display: flex; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="mk"><svg viewBox="-118 -150 236 236"><defs><path id="bl" d="M0 -130 C 1 -62, 3 -38, 23 -23 C 17 -27, 12 -29, 9 -29 A 14 14 0 0 0 0 -23 A 14 14 0 0 0 -9 -29 C -12 -29, -17 -27, -23 -23 C -3 -38, -1 -62, 0 -130 Z"/><g id="lb"><circle cx="0" cy="12" r="12.5"/><circle cx="10.4" cy="-6" r="12.5"/><circle cx="-10.4" cy="-6" r="12.5"/></g></defs><g id="mkf" fill="#1e1a1f"><use href="#bl"/><use href="#bl" transform="rotate(120)"/><use href="#bl" transform="rotate(240)"/><use href="#lb"/></g></svg></div>
+    <h1>valo Link</h1>
+    <div class="st"><b id="pc">—</b><span><i class="dot" id="dot"></i><span id="conn">не підключено</span></span></div>
+  </header>
+  <main>
+    <section id="s-pair">
+      <div class="card">
+        <h3>Підключення до ПК</h3>
+        <div class="muted">На комп'ютері відкрийте valo Link (меню valo.os або значок у треї) і введіть код з вікна.</div>
+        <input id="code" class="code" inputmode="numeric" maxlength="7" placeholder="000 000" />
+        <input id="dname" placeholder="Назва цього телефона" />
+        <button class="go" id="pairBtn">Підключити</button>
+        <div class="muted" id="pairMsg"></div>
+      </div>
+      <div class="card" id="appCard" hidden><h3>Застосунок valo Link</h3>
+        <div id="appOpts"></div>
+        <button id="appNotif">Доступ до сповіщень…</button>
+        <button id="appPc">Змінити комп'ютер</button>
+        <div class="muted">Кожну функцію можна вимкнути. Сповіщення й батарея надсилаються лише на ваш ПК у цій мережі.</div>
+      </div>
+      <div class="card" id="apkCard" hidden><h3>Застосунок для Android</h3>
+        <div class="muted">Працює у фоні: сповіщення телефона на ПК, «Поділитися → valo Link» з будь-якої програми, гучний пошук телефона, батарея.</div>
+        <a class="btn" href="https://sovalone.github.io/valo-os/valo-link.apk">Завантажити APK</a>
+      </div>
+    </section>
+
+    <section id="s-home">
+      <div class="card"><h3>Швидкі дії</h3>
+        <div class="grid2"><button id="qClipSend">Буфер → ПК</button><button id="qClipGet">Буфер ← ПК</button><button id="qLock">Заблокувати ПК</button><button id="qDesk">Робочий стіл</button></div>
+      </div>
+      <div class="card"><h3>Музика на ПК</h3>
+        <div class="media"><button data-m="prev">⏮</button><button data-m="play" class="go">⏯</button><button data-m="next">⏭</button></div>
+        <div class="grid3"><button data-m="down">🔉</button><button data-m="mute">🔇</button><button data-m="up">🔊</button></div>
+      </div>
+      <div class="card"><h3>Живлення</h3><button id="qSleep">Сон комп'ютера</button><div class="muted">Сон чи блокування — двічі натиснути.</div></div>
+    </section>
+
+    <section id="s-files">
+      <div class="card"><h3>Надіслати на ПК</h3>
+        <button class="go" id="pick">Обрати файли або фото</button>
+        <input type="file" id="fileIn" multiple hidden />
+        <div class="bar"><i id="prog"></i></div><div class="muted" id="upMsg">Файли з'являться в «Завантаження\valo Link».</div>
+      </div>
+      <div class="card"><h3>Від комп'ютера</h3><div id="offers" class="muted">Перетягніть файли у вікно valo Link на ПК.</div></div>
+    </section>
+
+    <section id="s-clip">
+      <div class="card"><h3>Буфер обміну</h3>
+        <textarea id="clip" placeholder="Текст для ПК або отриманий з ПК"></textarea>
+        <div class="grid2"><button class="go" id="clipSend">Надіслати на ПК</button><button id="clipGet">Взяти з ПК</button></div>
+        <button id="clipCopy">Скопіювати на телефоні</button>
+      </div>
+    </section>
+
+    <section id="s-scan">
+      <div class="card" id="scanStart"><h3>Сканер документів</h3>
+        <div class="muted">Сфотографуйте сторінку — valo Link знайде краї, вирівняє її і надішле на ПК як PDF.</div>
+        <button class="go" id="scanShot">Сфотографувати сторінку</button>
+        <button id="scanPick">Обрати з галереї</button>
+        <input type="file" id="scanCam" accept="image/*" capture="environment" hidden />
+        <input type="file" id="scanFile" accept="image/*" multiple hidden />
+      </div>
+      <div class="card" id="scanCrop" hidden><h3>Краї сторінки</h3>
+        <div id="scanEdit"><canvas id="scanCv"></canvas></div>
+        <div class="muted">Потягніть кути, якщо рамка лягла неточно.</div>
+        <div class="grid3"><button id="scanRot">↻ Повернути</button><button id="scanFull">Усе фото</button><button id="scanCancel">Скасувати</button></div>
+        <button class="go" id="scanOk">Готово</button>
+      </div>
+      <div class="card" id="scanPages" hidden><h3>Сторінки</h3>
+        <div class="seg" id="scanMode"><button data-f="doc" class="on">Документ</button><button data-f="gray">Сірий</button><button data-f="color">Кольоровий</button></div>
+        <div class="pages" id="scanList"></div>
+        <input id="scanName" placeholder="Назва файла" />
+        <div class="grid2"><button id="scanMore">+ Ще сторінка</button><button id="scanClear">Очистити</button></div>
+        <button class="go" id="scanSend">Надіслати PDF на ПК</button>
+        <div class="bar"><i id="scanProg"></i></div><div class="muted" id="scanMsg"></div>
+      </div>
+    </section>
+
+    <section id="s-pad">
+      <div id="pad">Тачпад: веди пальцем — курсор, дотик — клік, два пальці — прокрутка або правий клік, утримання — перетягування</div>
+      <input id="kb" placeholder="Друкувати на ПК…" autocomplete="off" autocapitalize="off" />
+      <div class="grid3">
+        <button data-k="Enter">Enter</button><button data-k="Backspace">⌫</button><button data-k="Escape">Esc</button>
+        <button data-k="ArrowLeft">←</button><button data-k="ArrowRight">→</button><button data-k="AltTab">Alt+Tab</button>
+        <button data-k="Copy">Копіювати</button><button data-k="Paste">Вставити</button><button data-k="Win">Win</button>
+      </div>
+    </section>
+  </main>
+  <nav id="nav">
+    <button data-s="home" class="on"><b>⌂</b>Головна</button><button data-s="files"><b>⇅</b>Файли</button><button data-s="clip"><b>⧉</b>Буфер</button>
+    <button data-s="scan"><b>▣</b>Скан</button><button data-s="pad"><b>◉</b>Тачпад</button><button data-s="pair"><b>⚙</b>ПК</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <div id="ring">📳 valo Link<span style="font-size:16px;font-weight:600">Комп'ютер шукає цей телефон</span><button id="ringOff">Знайшовся!</button></div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let token = localStorage.getItem('valoLink.token'), ws = null, wsOk = false;
+  const App = window.ValoApp || null;
+  const copyText = t => App ? Promise.resolve(App.copy(t)) : (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject());
+  const readText = () => App ? Promise.resolve(App.paste()) : navigator.clipboard.readText();
+  const toast = t => { $('toast').textContent = t; $('toast').classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => $('toast').classList.remove('on'), 2200); };
+  const api = (path, opt = {}) => fetch(path, { ...opt, headers: { ...(opt.headers || {}), 'X-Valo-Token': token || '' } })
+    .then(async r => { const j = await r.json().catch(() => ({})); if (r.status === 401 && path !== '/api/pair') unpair(); if (!r.ok) throw new Error(j.error || r.status); return j; });
+
+  function show(s) {
+    for (const x of document.querySelectorAll('section')) x.classList.toggle('on', x.id === 's-' + s);
+    for (const b of $('nav').children) b.classList.toggle('on', b.dataset.s === s);
+    if (s === 'files') loadState();
+  }
+  for (const b of $('nav').children) b.onclick = () => show(token || b.dataset.s === 'pair' ? b.dataset.s : 'pair');
+  function unpair() { token = null; localStorage.removeItem('valoLink.token'); App?.setToken(''); setConn(false); show('pair'); }
+  function setConn(on) { $('dot').classList.toggle('on', on); $('conn').textContent = on ? 'на зв’язку' : token ? 'підключення…' : 'не підключено'; }
+  function theme(t) {
+    if (!t) return;
+    const r = document.documentElement.style;
+    r.setProperty('--bg', t.bg); r.setProperty('--fg', t.fg); r.setProperty('--accent', t.accent); r.setProperty('--muted', t.muted);
+    document.querySelector('meta[name=theme-color]').content = t.bg; $('mkf').setAttribute('fill', t.bg);
+  }
+
+  // ---------- pairing
+  $('dname').value = localStorage.getItem('valoLink.name') || (/iPhone/.test(navigator.userAgent) ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'Android' : 'Телефон');
+  $('pairBtn').onclick = async () => {
+    const code = $('code').value.replace(/\D/g, '');
+    if (code.length !== 6) { $('pairMsg').textContent = 'Код — 6 цифр'; return; }
+    localStorage.setItem('valoLink.name', $('dname').value.trim());
+    try {
+      const r = await fetch('/api/pair', { method: 'POST', body: JSON.stringify({ code, name: $('dname').value.trim() || 'Телефон' }) });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error);
+      token = j.token; localStorage.setItem('valoLink.token', token); App?.setToken(token);
+      $('pairMsg').textContent = ''; toast('Підключено до ' + j.pc); start();
+    } catch (e) { $('pairMsg').textContent = e.message || 'Не вдалося'; }
+  };
+
+  // ---------- state, websocket
+  async function loadState() {
+    try {
+      const s = await api('/api/state');
+      $('pc').textContent = s.pc; theme(s.theme);
+      const box = $('offers'); box.innerHTML = '';
+      if (!s.offers.length) { box.textContent = 'Перетягніть файли у вікно valo Link на ПК.'; box.className = 'muted'; }
+      else { box.className = ''; for (const f of s.offers) { const a = document.createElement('a'); a.className = 'file'; a.href = '/api/files/' + f.id + '?token=' + token; a.download = f.name; a.innerHTML = '<b>⬇</b><span></span><small></small>'; a.querySelector('span').textContent = f.name; a.querySelector('small').textContent = size(f.size); box.append(a); } }
+    } catch { }
+  }
+  const size = n => n > 1e9 ? (n / 1e9).toFixed(1) + ' ГБ' : n > 1e6 ? (n / 1e6).toFixed(1) + ' МБ' : Math.max(1, Math.round(n / 1e3)) + ' КБ';
+  function connect() {
+    if (!token) return;
+    try { ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws?token=' + token); } catch { return; }
+    ws.onopen = () => { wsOk = true; setConn(true); ws.send(JSON.stringify({ t: 'hello' })); };
+    ws.onclose = () => { wsOk = false; setConn(false); setTimeout(connect, 3000); };
+    ws.onmessage = e => {
+      let m; try { m = JSON.parse(e.data); } catch { return; }
+      if (m.t === 'ring') ring(true);
+      else if (m.t === 'files') { loadState(); toast('Нові файли з ПК'); }
+      else if (m.t === 'clip') { $('clip').value = m.v; copyText(m.v).catch(() => {}); toast('Буфер з ПК отримано'); }
+    };
+  }
+  const wsend = o => { if (wsOk) ws.send(JSON.stringify(o)); };
+
+  // ---------- battery
+  async function battery() {
+    if (App) return;
+    try { const b = await navigator.getBattery?.(); if (b) { const s = () => api('/api/battery?level=' + Math.round(b.level * 100) + '&charging=' + (b.charging ? 1 : 0), { method: 'POST' }).catch(() => {}); s(); b.onlevelchange = s; b.onchargingchange = s; } } catch { }
+  }
+
+  // ---------- home
+  const twice = (btn, fn) => { let t = 0; btn.onclick = () => { if (Date.now() - t < 2500) { t = 0; fn(); } else { t = Date.now(); toast('Натисніть ще раз'); } }; };
+  for (const b of document.querySelectorAll('[data-m]')) b.onclick = () => api('/api/media?a=' + b.dataset.m, { method: 'POST' }).catch(e => toast(e.message));
+  twice($('qLock'), () => api('/api/cmd?a=lock', { method: 'POST' }).then(() => toast('ПК заблоковано')));
+  twice($('qSleep'), () => api('/api/cmd?a=sleep', { method: 'POST' }).then(() => toast('ПК засинає')));
+  $('qDesk').onclick = () => api('/api/cmd?a=desktop', { method: 'POST' });
+  $('qClipSend').onclick = async () => { try { const t = await readText(); await api('/api/clip', { method: 'POST', body: t }); toast('Надіслано на ПК'); } catch { show('clip'); toast('Вставте текст і натисніть «Надіслати»'); } };
+  $('qClipGet').onclick = async () => { try { const j = await api('/api/clip'); $('clip').value = j.text; await copyText(j.text).catch(() => {}); toast('Буфер ПК скопійовано'); } catch (e) { toast(e.message); } };
+
+  // ---------- clipboard page
+  $('clipSend').onclick = () => api('/api/clip', { method: 'POST', body: $('clip').value }).then(() => toast('Надіслано на ПК')).catch(e => toast(e.message));
+  $('clipGet').onclick = () => api('/api/clip').then(j => { $('clip').value = j.text; toast('Отримано з ПК'); }).catch(e => toast(e.message));
+  $('clipCopy').onclick = () => { $('clip').select(); copyText($('clip').value).then(() => toast('Скопійовано'), () => { document.execCommand('copy'); toast('Скопійовано'); }); };
+
+  // ---------- files
+  $('pick').onclick = () => $('fileIn').click();
+  $('fileIn').onchange = async () => {
+    const files = [...$('fileIn').files]; let done = 0;
+    for (const f of files) {
+      $('upMsg').textContent = `Надсилаю ${f.name}…`;
+      await new Promise(res => {
+        const x = new XMLHttpRequest();
+        x.open('POST', '/api/upload?name=' + encodeURIComponent(f.name)); x.setRequestHeader('X-Valo-Token', token);
+        x.upload.onprogress = e => { if (e.lengthComputable) $('prog').style.width = ((done + e.loaded / e.total) / files.length * 100) + '%'; };
+        x.onload = x.onerror = () => { done++; res(); };
+        x.send(f);
+      });
+    }
+    $('prog').style.width = '100%'; $('upMsg').textContent = `Надіслано: ${done} — у «Завантаження\\valo Link» на ПК`; $('fileIn').value = '';
+    setTimeout(() => $('prog').style.width = '0', 1500);
+  };
+
+  // ---------- touchpad
+  const pad = $('pad'); let last = null, moved = 0, t0 = 0, fingers = 0, dragging = false, holdT = null, sy = 0;
+  pad.addEventListener('touchstart', e => {
+    e.preventDefault(); fingers = e.touches.length; t0 = Date.now(); moved = 0;
+    const t = e.touches[0]; last = { x: t.clientX, y: t.clientY }; sy = e.touches[0].clientY;
+    clearTimeout(holdT);
+    if (fingers === 1) holdT = setTimeout(() => { if (moved < 8) { dragging = true; wsend({ t: 'c', b: 'd' }); navigator.vibrate?.(30); } }, 450);
+  }, { passive: false });
+  pad.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0]; const dx = t.clientX - last.x, dy = t.clientY - last.y; last = { x: t.clientX, y: t.clientY };
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (e.touches.length >= 2) { const d = t.clientY - sy; if (Math.abs(d) > 6) { wsend({ t: 's', y: Math.round(-d * 3) }); sy = t.clientY; } return; }
+    const k = 1.6 + Math.min(2.4, (Math.abs(dx) + Math.abs(dy)) / 12);    // accelerate fast moves
+    wsend({ t: 'm', x: Math.round(dx * k), y: Math.round(dy * k) });
+  }, { passive: false });
+  pad.addEventListener('touchend', e => {
+    e.preventDefault(); clearTimeout(holdT);
+    if (e.touches.length) return;
+    if (dragging) { dragging = false; wsend({ t: 'c', b: 'u' }); return; }
+    if (Date.now() - t0 < 250 && moved < 10) wsend({ t: 'c', b: fingers >= 2 ? 'r' : 'l' });
+  }, { passive: false });
+  $('kb').addEventListener('input', e => { const v = $('kb').value; if (v) { wsend({ t: 'txt', v }); $('kb').value = ''; } });
+  $('kb').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); wsend({ t: 'k', v: 'Enter' }); } else if (e.key === 'Backspace' && !$('kb').value) wsend({ t: 'k', v: 'Backspace' }); });
+  for (const b of document.querySelectorAll('[data-k]')) b.onclick = () => wsend({ t: 'k', v: b.dataset.k });
+
+  // ---------- find my phone
+  let ringCtx = null;
+  function ring(on) {
+    $('ring').classList.toggle('on', on);
+    let appRings = false; try { const f = JSON.parse(App?.get() || '{}'); appRings = !!App && f.ring !== false && f.service !== false; } catch { }
+    if (!on) App?.stopRing();
+    if (on && appRings) return;          // the Android app rings loudly on the alarm stream itself
+    if (on) {
+      navigator.vibrate?.([400, 200, 400, 200, 400, 200, 400]);
+      try {
+        ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ringCtx.createOscillator(), g = ringCtx.createGain(); o.type = 'square'; o.connect(g); g.connect(ringCtx.destination);
+        const t = ringCtx.currentTime; for (let i = 0; i < 16; i++) { o.frequency.setValueAtTime(i % 2 ? 1320 : 990, t + i * .25); g.gain.setValueAtTime(i % 4 === 3 ? 0 : .3, t + i * .25); }
+        o.start(); o.stop(t + 4);
+      } catch { }
+    } else { try { ringCtx?.close(); } catch { } navigator.vibrate?.(0); }
+  }
+  $('ringOff').onclick = () => ring(false);
+
+  // ---------- Android app: settings card (each feature can be switched off)
+  if (App) {
+    $('appCard').hidden = false;
+    const OPTS = [['service', 'Працювати у фоні (значок у сповіщеннях)'], ['notify', 'Надсилати сповіщення телефона на ПК'], ['battery', 'Показувати батарею на ПК'], ['ring', 'Пошук телефона — гучно навіть у беззвучному'], ['clip', 'Приймати буфер з ПК у фоні']];
+    const box = $('appOpts'); let cur = {}; try { cur = JSON.parse(App.get()); } catch { }
+    for (const [k, label] of OPTS) {
+      const l = document.createElement('label'); l.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 0';
+      const c = document.createElement('input'); c.type = 'checkbox'; c.checked = cur[k] !== false; c.style.cssText = 'all:revert;width:20px;height:20px;accent-color:var(--accent)';
+      c.onchange = () => App.set(k, c.checked);
+      l.append(c, document.createTextNode(label)); box.append(l);
+    }
+    $('appNotif').onclick = () => App.notificationAccess();
+    const na = () => { $('appNotif').textContent = App.hasNotificationAccess() ? 'Доступ до сповіщень: надано ✓' : 'Дати доступ до сповіщень…'; };
+    na(); document.addEventListener('visibilitychange', na);
+    $('appPc').onclick = () => App.changePc();
+    if (token) App.setToken(token);
+  } else if (/Android/.test(navigator.userAgent)) $('apkCard').hidden = false;
+  if (location.hash === '#code' && !token) setTimeout(() => $('code').focus(), 300);
+
+  // ---------- document scanner: photo -> find page edges -> perspective fix -> filter -> PDF -> PC
+  const scan = { img: null, quad: null, rot: 0, pages: [], filter: 'doc' };
+  $('scanShot').onclick = () => $('scanCam').click();
+  $('scanPick').onclick = () => $('scanFile').click();
+  $('scanMore').onclick = () => $('scanCam').click();
+  $('scanCam').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanLoad(f); };
+  $('scanFile').onchange = async e => { const fs = [...e.target.files]; e.target.value = ''; scan.queue = fs.slice(1); if (fs[0]) scanLoad(fs[0]); };
+  async function scanLoad(file) {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => null);
+    if (!bmp) { toast('Не вдалося відкрити фото'); return; }
+    const k = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); bmp.close?.();
+    scan.img = c; scan.rot = 0; scan.quad = detectQuad(c) || inset(c);
+    $('scanStart').hidden = true; $('scanCrop').hidden = false; drawEdit();
+  }
+  const inset = c => { const w = c.width, h = c.height, m = .06; return [[w * m, h * m], [w * (1 - m), h * m], [w * (1 - m), h * (1 - m)], [w * m, h * (1 - m)]]; };
+  // page = the largest bright region (Otsu threshold on a small copy); corners = extreme points of x+y and x-y
+  function detectQuad(src) {
+    const k = 320 / Math.max(src.width, src.height), w = Math.round(src.width * k), h = Math.round(src.height * k);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+    g.filter = 'blur(2px)'; g.drawImage(src, 0, 0, w, h);
+    const d = g.getImageData(0, 0, w, h).data, gray = new Uint8Array(w * h), hist = new Array(256).fill(0);
+    for (let i = 0; i < w * h; i++) { const v = (d[i * 4] * 77 + d[i * 4 + 1] * 150 + d[i * 4 + 2] * 29) >> 8; gray[i] = v; hist[v]++; }
+    let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sB = 0, wB = 0, best = 0, th = 128;
+    for (let t = 0; t < 256; t++) { wB += hist[t]; if (!wB) continue; const wF = w * h - wB; if (!wF) break; sB += t * hist[t]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; th = t; } }
+    const lab = new Int32Array(w * h).fill(-1); let bestN = 0, bestId = -1, id = 0; const stack = [];
+    for (let i = 0; i < w * h; i++) {
+      if (lab[i] !== -1 || gray[i] <= th) continue;
+      let n = 0; stack.push(i); lab[i] = id;
+      while (stack.length) { const p = stack.pop(); n++; const x = p % w, y = (p / w) | 0;
+        for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]) if (q >= 0 && lab[q] === -1 && gray[q] > th) { lab[q] = id; stack.push(q); } }
+      if (n > bestN) { bestN = n; bestId = id; } id++;
+    }
+    if (bestN < w * h * .12 || bestN > w * h * .97) return null;
+    let tl = [0, 0, 1e9], tr = [0, 0, -1e9], br = [0, 0, -1e9], bl = [0, 0, 1e9];
+    for (let i = 0; i < w * h; i++) {
+      if (lab[i] !== bestId) continue; const x = i % w, y = (i / w) | 0;
+      if (x + y < tl[2]) tl = [x, y, x + y]; if (x + y > br[2]) br = [x, y, x + y];
+      if (x - y > tr[2]) tr = [x, y, x - y]; if (x - y < bl[2]) bl = [x, y, x - y];
+    }
+    const quad = [tl, tr, br, bl].map(p => [p[0] / k, p[1] / k]);
+    const area = Math.abs(quad.reduce((a, p, i) => { const q = quad[(i + 1) % 4]; return a + p[0] * q[1] - q[0] * p[1]; }, 0)) / 2;
+    return area > src.width * src.height * .1 ? quad : null;
+  }
+  // editor: image + draggable corners
+  const cv = $('scanCv'); let drag = -1, view = 1;
+  function drawEdit() {
+    const im = scan.img, W = $('scanEdit').clientWidth || 340; view = W / im.width;
+    cv.width = Math.round(im.width * view * devicePixelRatio); cv.height = Math.round(im.height * view * devicePixelRatio);
+    cv.style.height = (im.height * view) + 'px';
+    const g = cv.getContext('2d'), s2 = view * devicePixelRatio; g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(im, 0, 0, cv.width, cv.height); g.setTransform(s2, 0, 0, s2, 0, 0);
+    const q = scan.quad, acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#f2a7bb';
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.rect(0, 0, im.width, im.height); g.moveTo(...q[0]); for (const p of [q[3], q[2], q[1]]) g.lineTo(...p); g.closePath(); g.fill();
+    g.strokeStyle = acc; g.lineWidth = 3 / view; g.beginPath(); g.moveTo(...q[0]); for (const p of q.slice(1)) g.lineTo(...p); g.closePath(); g.stroke();
+    for (const p of q) { g.beginPath(); g.arc(p[0], p[1], 13 / view, 0, 7); g.fillStyle = acc; g.fill(); g.lineWidth = 2 / view; g.strokeStyle = '#fff'; g.stroke(); }
+  }
+  const at = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / view, (e.clientY - r.top) / view]; };
+  cv.addEventListener('pointerdown', e => { const p = at(e); let bd = 1e9; scan.quad.forEach((q, i) => { const d = Math.hypot(q[0] - p[0], q[1] - p[1]); if (d < bd) { bd = d; drag = i; } }); if (bd * view > 48) drag = -1; else cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if (drag < 0) return; const p = at(e); scan.quad[drag] = [Math.max(0, Math.min(scan.img.width, p[0])), Math.max(0, Math.min(scan.img.height, p[1]))]; drawEdit(); });
+  cv.addEventListener('pointerup', () => drag = -1); cv.addEventListener('pointercancel', () => drag = -1);
+  $('scanFull').onclick = () => { const w = scan.img.width, h = scan.img.height; scan.quad = [[0, 0], [w, 0], [w, h], [0, h]]; drawEdit(); };
+  $('scanRot').onclick = () => {
+    const s0 = scan.img, c = document.createElement('canvas'); c.width = s0.height; c.height = s0.width;
+    const g = c.getContext('2d'); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(s0, 0, 0);
+    scan.quad = scan.quad.map(([x, y]) => [s0.height - y, x]); scan.quad = [scan.quad[3], scan.quad[0], scan.quad[1], scan.quad[2]];
+    scan.img = c; drawEdit();
+  };
+  $('scanCancel').onclick = () => { scan.img = null; $('scanCrop').hidden = true; (scan.pages.length ? $('scanPages') : $('scanStart')).hidden = false; };
+  $('scanOk').onclick = () => {
+    const page = warp(scan.img, scan.quad); scan.pages.push(page); scan.img = null;
+    $('scanCrop').hidden = true; renderPages();
+    const next = scan.queue?.shift(); if (next) scanLoad(next);
+  };
+  // perspective: unit square -> quad (Heckbert), sampled bilinearly
+  function warp(src, q) {
+    const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    let W = Math.round(Math.max(dist(q[0], q[1]), dist(q[3], q[2]))), H = Math.round(Math.max(dist(q[0], q[3]), dist(q[1], q[2])));
+    const lim = Math.min(1, 2200 / Math.max(W, H)); W = Math.max(50, Math.round(W * lim)); H = Math.max(50, Math.round(H * lim));
+    const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+    const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+    let gg = 0, hh = 0; const den = dx1 * dy2 - dx2 * dy1;
+    if (Math.abs(den) > 1e-9 && (Math.abs(dx3) > 1e-9 || Math.abs(dy3) > 1e-9)) { gg = (dx3 * dy2 - dx2 * dy3) / den; hh = (dx1 * dy3 - dx3 * dy1) / den; }
+    const a = x1 - x0 + gg * x1, b = x3 - x0 + hh * x3, c = x0, d = y1 - y0 + gg * y1, e = y3 - y0 + hh * y3, f = y0;
+    const sw = src.width, sh = src.height, sd = src.getContext('2d').getImageData(0, 0, sw, sh).data;
+    const out = document.createElement('canvas'); out.width = W; out.height = H;
+    const og = out.getContext('2d'), od = og.createImageData(W, H), o = od.data;
+    for (let y = 0; y < H; y++) {
+      const v = (y + .5) / H;
+      for (let x = 0; x < W; x++) {
+        const u = (x + .5) / W, z = gg * u + hh * v + 1, sx = (a * u + b * v + c) / z - .5, sy = (d * u + e * v + f) / z - .5;
+        const ix = Math.max(0, Math.min(sw - 2, sx | 0)), iy = Math.max(0, Math.min(sh - 2, sy | 0)), fx = Math.min(1, Math.max(0, sx - ix)), fy = Math.min(1, Math.max(0, sy - iy));
+        const p = (iy * sw + ix) * 4, p2 = p + sw * 4, k = (y * W + x) * 4;
+        for (let ch = 0; ch < 3; ch++) {
+          const t = sd[p + ch] + (sd[p + 4 + ch] - sd[p + ch]) * fx, bt = sd[p2 + ch] + (sd[p2 + 4 + ch] - sd[p2 + ch]) * fx;
+          o[k + ch] = t + (bt - t) * fy;
+        }
+        o[k + 3] = 255;
+      }
+    }
+    og.putImageData(od, 0, 0); return out;
+  }
+  // filters: "document" removes uneven light (divide by a blurred background) and lifts contrast
+  function filtered(page, mode) {
+    const W = page.width, H = page.height, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d'); g.drawImage(page, 0, 0);
+    if (mode === 'color') return c;
+    const id = g.getImageData(0, 0, W, H), p = id.data;
+    if (mode === 'gray') { for (let i = 0; i < p.length; i += 4) { const v = (p[i] * 77 + p[i + 1] * 150 + p[i + 2] * 29) >> 8; p[i] = p[i + 1] = p[i + 2] = v; } g.putImageData(id, 0, 0); return c; }
+    const bw = Math.max(8, Math.round(W / 24)), bh = Math.max(8, Math.round(H / 24)), bc = document.createElement('canvas'); bc.width = bw; bc.height = bh;
+    const bg = bc.getContext('2d', { willReadFrequently: true }); bg.filter = 'blur(1.5px)'; bg.drawImage(page, 0, 0, bw, bh);
+    const big = document.createElement('canvas'); big.width = W; big.height = H; const gg = big.getContext('2d'); gg.imageSmoothingQuality = 'high'; gg.drawImage(bc, 0, 0, W, H);
+    const b = gg.getImageData(0, 0, W, H).data;
+    for (let i = 0; i < p.length; i += 4) {
+      const v = (p[i] * 77 + p[i + 1] * 150 + p[i + 2] * 29) >> 8, bv = Math.max(40, (b[i] * 77 + b[i + 1] * 150 + b[i + 2] * 29) >> 8);
+      let t = Math.min(1, v / bv); t = Math.max(0, Math.min(1, (t - .38) / .5)); t = t * t * (3 - 2 * t);
+      p[i] = p[i + 1] = p[i + 2] = Math.round(t * 255);
+    }
+    g.putImageData(id, 0, 0); return c;
+  }
+  function renderPages() {
+    const box = $('scanList'); box.innerHTML = '';
+    $('scanPages').hidden = !scan.pages.length; $('scanStart').hidden = !!scan.pages.length;
+    if (!$('scanName').value) { const d = new Date(), z = n => String(n).padStart(2, '0'); $('scanName').value = `Скан ${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}-${z(d.getMinutes())}`; }
+    scan.pages.forEach((pg, i) => {
+      const d = document.createElement('div'), im = document.createElement('img'), x = document.createElement('b'), n = document.createElement('i');
+      im.src = filtered(pg, scan.filter).toDataURL('image/jpeg', .6); x.textContent = '✕'; n.textContent = i + 1;
+      x.onclick = () => { scan.pages.splice(i, 1); renderPages(); }; d.append(im, x, n); box.append(d);
+    });
+  }
+  for (const b of $('scanMode').children) b.onclick = () => { scan.filter = b.dataset.f; for (const x of $('scanMode').children) x.classList.toggle('on', x === b); renderPages(); };
+  $('scanClear').onclick = () => { scan.pages = []; $('scanName').value = ''; renderPages(); };
+  // minimal PDF: one JPEG (DCTDecode) per page, page width 595 pt (A4 width), height by aspect
+  async function makePdf(pages) {
+    const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+    const push = x => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+    const obj = (n, body) => { offs[n] = len; push(n + ' 0 obj\n'); for (const b of [].concat(body)) push(b); push('\nendobj\n'); };
+    push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    const n = pages.length, kids = pages.map((_, i) => (3 + i * 3) + ' 0 R').join(' ');
+    obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+    obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${n} >>`);
+    for (let i = 0; i < n; i++) {
+      const c = pages[i], jpg = new Uint8Array(await (await new Promise(r => c.toBlob(r, 'image/jpeg', .85))).arrayBuffer());
+      const pw = 595, ph = Math.round(595 * c.height / c.width), base = 3 + i * 3, content = `q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+      obj(base, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${base + 2} 0 R >> >> /Contents ${base + 1} 0 R >>`);
+      obj(base + 1, [`<< /Length ${content.length} >>\nstream\n`, content, '\nendstream']);
+      obj(base + 2, [`<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`, jpg, '\nendstream']);
+    }
+    const total = 3 + n * 3, xref = len;
+    let x = `xref\n0 ${total}\n0000000000 65535 f \n`; for (let i = 1; i < total; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+    push(x + `trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+    return new Blob(parts, { type: 'application/pdf' });
+  }
+  $('scanSend').onclick = async () => {
+    if (!scan.pages.length) return;
+    $('scanMsg').textContent = 'Готую PDF…';
+    const pdf = await makePdf(scan.pages.map(p => filtered(p, scan.filter)));
+    const name = ($('scanName').value.trim() || 'Скан').replace(/[\\/:*?"<>|]/g, '-') + '.pdf';
+    const x = new XMLHttpRequest(); x.open('POST', '/api/upload?name=' + encodeURIComponent(name)); x.setRequestHeader('X-Valo-Token', token);
+    x.upload.onprogress = e => { if (e.lengthComputable) $('scanProg').style.width = (e.loaded / e.total * 100) + '%'; };
+    x.onload = () => { $('scanProg').style.width = '0'; if (x.status === 200) { toast('PDF на ПК'); $('scanMsg').textContent = `Надіслано «${name}» (${size(pdf.size)}) у «Завантаження\\valo Link»`; scan.pages = []; $('scanName').value = ''; renderPages(); } else $('scanMsg').textContent = 'Не вдалося надіслати'; };
+    x.onerror = () => { $('scanProg').style.width = '0'; $('scanMsg').textContent = 'Немає зв’язку з ПК'; };
+    x.send(pdf);
+  };
+  window.addEventListener('resize', () => { if (scan.img) drawEdit(); });
+
+  function start() { setConn(false); loadState(); connect(); battery(); show('home'); }
+  if (token) start(); else show('pair');
+</script>
+</body>
+</html>
