@@ -697,7 +697,7 @@ Log 'hook...'; [ValoShell]::StartKeyHook(); Log 'hook ok'
 [PreviewForm]::Start(); Log 'preview ok'
 [ValoShell]::StartStdinReader()
 [ValoShell]::StartDockWatch()
-[ValoWatch]::Start(); [ValoShell]::StartSysMon(); [Watch3]::Start(); [PadWatch]::Start()
+[ValoWatch]::Start(); [ValoShell]::StartSysMon(); [Watch3]::Start(); [PadWatch]::Start(); [TrayGuard]::Start()
 $last = ''
 $iconsSent = @{}
 $tick = 0
@@ -714,9 +714,9 @@ while ($true) {
             'min'           { [ValoShell]::Minimize([long]$parts[1]) }
             'close'         { [ValoShell]::Close([long]$parts[1]) }
             'activatetitle' { [ValoShell]::ActivateTitle($parts[1]) }
-            'taskbar'       { $hideTaskbar = $parts[1] -eq 'hide'; if ($hideTaskbar) { [ValoShell]::HideTaskbar() } else { [ValoShell]::ShowTaskbar() } }
+            'taskbar'       { $hideTaskbar = $parts[1] -eq 'hide'; [TrayGuard]::On = $hideTaskbar; if ($hideTaskbar) { [ValoShell]::HideTaskbar() } else { [ValoShell]::ShowTaskbar() } }
             'wincapture'    { [ValoShell]::CaptureWin = $parts[1] -eq 'on' }
-            'quit'          { [ValoShell]::ShowTaskbar(); exit }
+            'quit'          { [TrayGuard]::On = $false; [ValoShell]::ShowTaskbar(); exit }
             'parent-gone'   { $gone = $true }
             'popups'        { $r = [ValoShell]::EnsurePopups(); Log ("bar sticky=$([ValoShell]::BarSticky) $r") }
             'dockchanged'   { $r = [ValoShell]::EnsureDock(); Log ("dock mode overlap=$([ValoShell]::Overlap) hide=$([ValoShell]::DockHide) fit=$([ValoShell]::FitW) $r") }

@@ -1,9 +1,8 @@
 {
-    "version":  "1.13.0",
+    "version":  "1.13.1",
     "date":  "2026-11-27",
     "notes":  [
-                  "Мікрофон у центрі керування: гучність, вимкнути / увімкнути, вибір мікрофона, посилання на налаштування Windows",
-                  "Win+Alt+K — вимкнути / увімкнути мікрофон будь-де; коли мікрофон вимкнено, на панелі видно закреслений мікрофон (клік — увімкнути)"
+                  "Панель задач Windows більше не вискакує, коли мишка торкається низу екрана: valo ховає її одразу, а не через секунду-дві"
               ],
     "files":  [
                   {
@@ -152,7 +151,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "81ed9428b2d395fdddb58477dc74b6ed032802e799db05831c503bc1cc687129"
+                      "sha256":  "1d5257f94e0baab9db8d208decd006c1a797dd07f29b24f7ceefde6316b01e7c"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -212,7 +211,7 @@
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "0fdd9119fe545efa68c2d68749b143f0754061f04ba752fadea12dbd77a4c208"
+                      "sha256":  "12b330f4b8c203431dec7f549c675c160e893a2693171d8adb4bba0e87a6cb07"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
@@ -228,7 +227,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "56ed52ec0a649983c41adf4d2dce762f52579965a1467eba95a1ca8be2e6c6a7"
+                      "sha256":  "a9bcdb6759d036bae8a69d9cf6a49c61637ca2e5da5723753f7bd649943c5515"
                   },
                   {
                       "path":  "pack/weather.js",

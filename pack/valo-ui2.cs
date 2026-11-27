@@ -7,6 +7,34 @@
 //   Typer      - types text (emoji) into the window that was active before
 // Events go to stdout as JSON lines (Console.Out is synchronized).
 
+// ------------------------------------------------------------------ Windows taskbar guard
+// The Windows taskbar is hidden (and auto-hide); when the cursor touches the screen edge Explorer shows it again.
+// A WinEvent hook hides it the moment it is shown, instead of waiting for the helper's slow loop.
+public static class TrayGuard {
+    delegate void WinEventProc(IntPtr hook, uint ev, IntPtr hwnd, int obj, int child, uint thread, uint time);
+    [DllImport("user32.dll")] static extern IntPtr SetWinEventHook(uint min, uint max, IntPtr mod, WinEventProc proc, uint pid, uint tid, uint flags);
+    [DllImport("user32.dll")] static extern int GetMessage(out MSG m, IntPtr h, uint a, uint b);
+    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr h, int cmd);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+    [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr h; public uint msg; public IntPtr w, l; public uint time; public int x, y; }
+    public static volatile bool On = true;
+    static WinEventProc proc;
+    static bool IsTray(IntPtr h) {
+        StringBuilder c = new StringBuilder(64); GetClassName(h, c, 64); string n = c.ToString();
+        return n == "Shell_TrayWnd" || n == "Shell_SecondaryTrayWnd";
+    }
+    public static void Start() {
+        Thread t = new Thread(delegate () {
+            proc = delegate (IntPtr hook, uint ev, IntPtr hwnd, int obj, int child, uint thread, uint time) {
+                if (On && obj == 0 && hwnd != IntPtr.Zero && IsTray(hwnd)) ShowWindow(hwnd, 0);
+            };
+            SetWinEventHook(0x8002, 0x8002, IntPtr.Zero, proc, 0, 0, 0);   // EVENT_OBJECT_SHOW, out of context
+            MSG m; while (GetMessage(out m, IntPtr.Zero, 0, 0) > 0) { }
+        });
+        t.IsBackground = true; t.Start();
+    }
+}
+
 public static class Emit {
     public static void Line(string json) { try { Console.Out.WriteLine(json); Console.Out.Flush(); } catch { } }
     public static string Q(string s) {

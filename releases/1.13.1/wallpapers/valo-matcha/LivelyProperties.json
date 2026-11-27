@@ -1,0 +1,51 @@
+{
+    "theme":  {
+                  "type":  "dropdown",
+                  "value":  2,
+                  "text":  "Тема",
+                  "items":  [
+                                "Сакура",
+                                "Нічне місто",
+                                "Матча",
+                                "Латте",
+                                "Графіт",
+                                "Захід"
+                            ]
+              },
+    "speed":  {
+                  "max":  200,
+                  "min":  10,
+                  "step":  1,
+                  "text":  "Швидкість анімації",
+                  "type":  "slider",
+                  "value":  100
+              },
+    "density":  {
+                    "max":  200,
+                    "min":  20,
+                    "step":  1,
+                    "text":  "Кількість частинок",
+                    "type":  "slider",
+                    "value":  100
+                },
+    "mark":  {
+                 "type":  "checkbox",
+                 "value":  true,
+                 "text":  "Знак valo.os"
+             },
+    "clock":  {
+                  "type":  "checkbox",
+                  "value":  false,
+                  "text":  "Годинник і дата"
+              },
+    "parallax":  {
+                     "type":  "checkbox",
+                     "value":  true,
+                     "text":  "Реакція на курсор"
+                 },
+    "audio":  {
+                  "type":  "checkbox",
+                  "value":  true,
+                  "text":  "Реакція на музику"
+              }
+}
