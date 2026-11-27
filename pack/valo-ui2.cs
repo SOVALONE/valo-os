@@ -33,6 +33,30 @@ public static class ValoFiles {
     }
 }
 
+// ------------------------------------------------------------------ desktop icons on / off
+// Same as right-click on the desktop → View → Show desktop icons: the registry value plus the desktop's own toggle command.
+public static class DeskIcons {
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string c, string t);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr p, IntPtr after, string c, string t);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+    [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+    static IntPtr DefView() {
+        IntPtr v = FindWindowEx(FindWindow("Progman", null), IntPtr.Zero, "SHELLDLL_DefView", null);
+        IntPtr w = IntPtr.Zero;
+        while (v == IntPtr.Zero && (w = FindWindowEx(IntPtr.Zero, w, "WorkerW", null)) != IntPtr.Zero) v = FindWindowEx(w, IntPtr.Zero, "SHELLDLL_DefView", null);
+        return v;
+    }
+    public static void Set(bool show) {
+        try {
+            using (Microsoft.Win32.RegistryKey k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"))
+                k.SetValue("HideIcons", show ? 0 : 1, Microsoft.Win32.RegistryValueKind.DWord);
+            IntPtr v = DefView(); if (v == IntPtr.Zero) return;
+            IntPtr list = FindWindowEx(v, IntPtr.Zero, "SysListView32", null);
+            if (list != IntPtr.Zero && IsWindowVisible(list) != show) SendMessage(v, 0x0111, new IntPtr(0x7402), IntPtr.Zero);   // WM_COMMAND: toggle desktop icons
+        } catch { }
+    }
+}
+
 // ------------------------------------------------------------------ Windows taskbar guard
 // The Windows taskbar is hidden (and auto-hide); when the cursor touches the screen edge Explorer shows it again.
 // A WinEvent hook hides it the moment it is shown, instead of waiting for the helper's slow loop.

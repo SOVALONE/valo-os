@@ -1,8 +1,9 @@
 {
-    "version":  "1.14.2",
+    "version":  "1.15.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "Кнопка Windows знову відкриває лише меню valo, без стандартного «Пуску»"
+                  "Чистий робочий стіл: значки програм і файлів на робочому столі сховані",
+                  "Повернути: меню → Панель і теми → Система → Функції → «Значки на робочому столі»"
               ],
     "files":  [
                   {
@@ -23,7 +24,7 @@
                   },
                   {
                       "path":  "pack/dock.html",
-                      "sha256":  "4bfee4295d76a75b1aa5cc3c24c91414f90bc2775caa65a4bda5919b05aa710e"
+                      "sha256":  "a7e0fa94d160ae32515d5e87888fcdbafa18e4cb8d9f9e2c852aafa1a37f3b87"
                   },
                   {
                       "path":  "pack/emoji.html",
@@ -35,11 +36,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "58d15d4a45c31e0bf267623b4d8c8478f6f80212a284e9a9661dba1ef60614c9"
+                      "sha256":  "ba3b46f025cc5c47c1b3da929e8ccbddbe76a100a8895b1329dfc6db9ade7ec9"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "6cbe55ff1b7e40baa51e857414e4c42caa6f582ffe4bfb612f02f214fff30f09"
+                      "sha256":  "3858c3d0ccd8bc6a62ae8a283057c7f04fc34b09c4b1b6567757c274afa39a28"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -155,7 +156,7 @@
                   },
                   {
                       "path":  "pack/valo-shell.ps1",
-                      "sha256":  "6848a847185a7bbeb995e24e49a90fc978b1d3d318e9d1dc0431a314115cb5de"
+                      "sha256":  "287aae26173f4b654e574c7399679c5cd056eb1cc53747c07c167eb7c78cc272"
                   },
                   {
                       "path":  "pack/valo-snd-connect.wav",
@@ -215,7 +216,7 @@
                   },
                   {
                       "path":  "pack/valo-ui2.cs",
-                      "sha256":  "8f2953a547bb6bfcd7fde7780f63b113b13a2b660b3a417a18a3028ef6dc05f1"
+                      "sha256":  "54de0416d8d9c98aef066c7959841e1e194d47e7c6a6246d0e47aabc77cc7915"
                   },
                   {
                       "path":  "pack/valo-ui3.cs",
@@ -231,7 +232,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "5962dacf3af798d38940ae79d1aa39bee4d1801ed96861c5063bb3a1cf9f6ca2"
+                      "sha256":  "ad2bdba7dd6fcb3211131041f86ae2f8754b25267b3265264120a3383f1a6228"
                   },
                   {
                       "path":  "pack/weather.js",

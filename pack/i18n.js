@@ -135,6 +135,8 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Магазин valo|valo store|Magazin valo
 Магазин програм|App store|Magazin de aplicații
 Більше|More|Mai mult
+Значки на робочому столі|Desktop icons|Pictograme pe desktop
+ярлики програм і файли поверх шпалер (вимкнено — чистий стіл)|app shortcuts and files over the wallpaper (off — a clean desktop)|scurtături și fișiere peste imaginea de fundal (oprit — desktop curat)
 Files — провідник за замовчуванням|Files — default file manager|Files — managerul de fișiere implicit
 Files не встановлено — Магазин → Рекомендує valo.os → Files|Files is not installed — Store → Recommended by valo.os → Files|Files nu este instalat — Magazin → Recomandate de valo.os → Files
 папки, Win+E і «показати в папці» відкриваються у Files|folders, Win+E and “show in folder” open in Files|folderele, Win+E și „arată în folder” se deschid în Files

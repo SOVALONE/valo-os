@@ -157,7 +157,7 @@
     function prefs() { try { return JSON.parse(localStorage.getItem('valo.prefs') || '{}') || {}; } catch { return {}; } }
     function syncPrefs() {
       const p = prefs(), c = p.corners || ['menu', 'none', 'none', 'desktop'];
-      const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves')];
+      const lines = ['corners ' + c.join(' '), 'gameauto ' + (p.gameAuto === false ? 0 : 1), 'saver ' + (+p.saverMin || 0), 'zones ' + (p.zones || 'halves'), 'deskicons ' + (p.deskIcons ? 1 : 0)];
       // part 3 switches (each feature can be turned off in the settings)
       const on = (k, def) => (p[k] ?? def) ? 1 : 0;
       lines.push(`feat2 lang=${on('langChip', true)} privacy=${on('privacy', true)} net=${on('netChip', false)} ocr=${on('ocr', true)} tr=${on('translate', true)} rec=${on('rec', true)} dlsort=${on('dlSort', false)} dlclean=${on('dlClean', false)} console=${on('console', true)}`);

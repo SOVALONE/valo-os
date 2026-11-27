@@ -427,6 +427,7 @@ public static class ValoShell {
                         if (c.StartsWith("gameauto ")) { ValoWatch.GameAuto = c.EndsWith("1"); continue; }
                         if (c.StartsWith("saver ")) { int m; if (int.TryParse(c.Substring(6), out m)) ValoWatch.SaverMin = m; continue; }
                         if (c.StartsWith("zones ")) { ZoneForm.ZoneLayout = c.Substring(6).Trim(); continue; }
+                        if (c.StartsWith("deskicons ")) { bool show = c.EndsWith("1"); ValoUi.Post(delegate { DeskIcons.Set(show); }); continue; }
                         if (c.StartsWith("desk ")) { int d; if (int.TryParse(c.Substring(5), out d)) ValoWatch.GoDesk(d); continue; }
                         if (c == "desknew") { ValoWatch.NewDesk(); continue; }
                         if (c == "bt") { Emit.Line(BtBattery.List()); continue; }

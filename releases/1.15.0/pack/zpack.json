@@ -1,0 +1,604 @@
+{
+  "$schema": "https://github.com/glzr-io/zebar/raw/v3.0.0/resources/zpack-schema.json",
+  "name": "quill",
+  "version": "1.0.0",
+  "description": "valo Sakura top bar.",
+  "tags": [
+    "topbar"
+  ],
+  "previewImages": [],
+  "repositoryUrl": "",
+  "widgets": [
+    {
+      "name": "bar",
+      "htmlPath": "./bar.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": false,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "defaultDuration": 604800,
+        "rules": []
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "44px",
+          "monitorSelection": {
+            "type": "all"
+          },
+          "dockToEdge": {
+            "enabled": false,
+            "edge": null,
+            "windowMargin": "0px"
+          }
+        },
+        {
+          "name": "default75",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "33px",
+          "monitorSelection": {
+            "type": "all"
+          },
+          "dockToEdge": {
+            "enabled": false,
+            "edge": null,
+            "windowMargin": "0px"
+          }
+        },
+        {
+          "name": "default50",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "22px",
+          "monitorSelection": {
+            "type": "all"
+          },
+          "dockToEdge": {
+            "enabled": false,
+            "edge": null,
+            "windowMargin": "0px"
+          }
+        },
+        {
+          "name": "host",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "44px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "enabled": true,
+            "edge": "top",
+            "windowMargin": "0px"
+          }
+        },
+        {
+          "name": "host75",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "33px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "enabled": true,
+            "edge": "top",
+            "windowMargin": "0px"
+          }
+        },
+        {
+          "name": "host50",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "22px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "enabled": true,
+            "edge": "top",
+            "windowMargin": "0px"
+          }
+        }
+      ]
+    },
+    {
+      "name": "menu",
+      "htmlPath": "./menu.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": true,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_left",
+          "offsetX": "14px",
+          "offsetY": "50px",
+          "width": "440px",
+          "height": "600px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "dock",
+      "htmlPath": "./dock.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": false,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "bottom_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "62px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": "bottom",
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        },
+        {
+          "name": "host",
+          "anchor": "bottom_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "62px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": "bottom",
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "control",
+      "htmlPath": "./control.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": true,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_right",
+          "offsetX": "-14px",
+          "offsetY": "50px",
+          "width": "380px",
+          "height": "620px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "welcome",
+      "htmlPath": "./welcome.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": true,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "center",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "820px",
+          "height": "600px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "emoji",
+      "htmlPath": "./emoji.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": true,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "bottom_center",
+          "offsetX": "0px",
+          "offsetY": "-90px",
+          "width": "420px",
+          "height": "420px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "saver",
+      "htmlPath": "./saver.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": false,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "100%",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "desk",
+      "htmlPath": "./desk.html",
+      "zOrder": "bottom_most",
+      "shownInTaskbar": false,
+      "focused": false,
+      "resizable": false,
+      "transparent": true,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_right",
+          "offsetX": "-30px",
+          "offsetY": "70px",
+          "width": "340px",
+          "height": "560px",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "console",
+      "htmlPath": "./console.html",
+      "zOrder": "top_most",
+      "shownInTaskbar": false,
+      "focused": true,
+      "resizable": false,
+      "transparent": false,
+      "includeFiles": [
+        "*.html",
+        "*.js"
+      ],
+      "caching": {
+        "rules": [],
+        "defaultDuration": 604800
+      },
+      "privileges": {
+        "shellCommands": [
+          {
+            "program": "powershell",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "explorer",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "rundll32",
+            "argsRegex": ".*"
+          },
+          {
+            "program": "shutdown",
+            "argsRegex": ".*"
+          }
+        ]
+      },
+      "presets": [
+        {
+          "name": "default",
+          "anchor": "top_left",
+          "offsetX": "0px",
+          "offsetY": "0px",
+          "width": "100%",
+          "height": "100%",
+          "monitorSelection": {
+            "type": "primary"
+          },
+          "dockToEdge": {
+            "edge": null,
+            "windowMargin": "0px",
+            "enabled": false
+          }
+        }
+      ]
+    }
+  ]
+}
