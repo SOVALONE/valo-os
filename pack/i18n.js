@@ -146,6 +146,14 @@ Enter — скопіювати|Enter — copy|Enter — copiază
 Утиліти|Utilities|Utilitare
 Рекомендує valo.os|Recommended by valo.os|Recomandat de valo.os
 Ігри|Games|Jocuri
+Ігрові магазини|Game stores|Magazine de jocuri
+Ігри valo|valo games|Jocuri valo
+Завантажити|Download|Descarcă
+Завантажую…|Downloading…|Descarc…
+Грати|Play|Joacă
+Торент|Torrent|Torrent
+Сайт гри|Game website|Site-ul jocului
+Сайт|Website|Site
 Гра з друзями|Play with friends|Joacă cu prietenii
 Для геймера|For gamers|Pentru gameri
 Wi‑Fi|Wi‑Fi|Wi‑Fi

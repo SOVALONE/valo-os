@@ -1,9 +1,9 @@
 {
-    "version":  "1.8.0",
+    "version":  "1.9.0",
     "date":  "2026-11-27",
     "notes":  [
-                  "valo Link тепер необов\u0027язковий: встановлюється й видаляється в Магазині valo (на нових ПК не ставиться сам)",
-                  "Магазин: Radmin VPN, ZeroTier і Parsec (розділ «Гра з друзями»), EA app, Ubisoft Connect, Battle.net, Playnite, MSI Afterburner"
+                  "Магазин: розділ «Ігри valo» — наші ігри, ігри друзів і дозволені до поширення з репозиторію SOVALONE/valo-games (завантаження з GitHub з перевіркою SHA-256 або торентом на вибір, ярлик у меню, «Грати» і «Видалити»; платні ігри — посиланням на офіційний сайт)",
+                  "Колишній розділ «Ігри» тепер «Ігрові магазини»"
               ],
     "files":  [
                   {
@@ -32,11 +32,11 @@
                   },
                   {
                       "path":  "pack/i18n.js",
-                      "sha256":  "ff7ae580de0db37bf3990eb5b8c814ca8efab7c51e6fafd3797a5f067f0f5ca6"
+                      "sha256":  "4fecf0fe85a0d77d095d7393985a58c6a136aa3e51e294ef8788b574bfc820cf"
                   },
                   {
                       "path":  "pack/menu.html",
-                      "sha256":  "19b176746b43ddfc0ee753ebde48e8abf6ea9d15f3c18c8496fdeb5becfdcd06"
+                      "sha256":  "771afcf174c519cc742f858ae3064cb8da17f634612b2adf2a7d14001248fd8e"
                   },
                   {
                       "path":  "pack/profiles.js",
@@ -81,6 +81,10 @@
                   {
                       "path":  "pack/valo-game.ps1",
                       "sha256":  "ccd930ff171b7dc12ef6cf65fa7eeadce7e3991a7f589582544e8390e8b28987"
+                  },
+                  {
+                      "path":  "pack/valo-games.ps1",
+                      "sha256":  "e45f0ab48c878f88215e62da2d95e2e52a345267c64eebd9ec84351a81b92a5d"
                   },
                   {
                       "path":  "pack/valo-health.ps1",
@@ -216,7 +220,7 @@
                   },
                   {
                       "path":  "pack/version.json",
-                      "sha256":  "35678898273f2f01343ef5516137de28669b68425cb9ea2d4ae3dce64838e6c0"
+                      "sha256":  "ce053122fa9da1454f804091d36d2448b5a775f05653b4d792419f01ef77cdb7"
                   },
                   {
                       "path":  "pack/weather.js",

@@ -151,6 +151,12 @@
   .slist .it button { all: unset; cursor: pointer; padding: 5px 12px; border-radius: 7px; background: var(--pink); color: var(--ink); font-size: 12px; font-weight: 600; }
   .slist .it button.done { background: var(--chip); color: var(--muted); pointer-events: none; }
   .slist .it button.busy { opacity: .6; pointer-events: none; }
+  .slist .it.game { align-items: flex-start; }
+  .slist .it.game .tx small { white-space: normal; }
+  .slist .it.game .tx em { font-style: normal; color: var(--muted); font-size: 11px; }
+  .slist .it .acts { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+  .slist .it .acts button.alt { background: var(--chip); color: var(--text); font-weight: 500; text-align: center; }
+  .slist .note { color: var(--muted); font-size: 11px; padding: 2px 8px 6px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .row2 label, .rowf label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
   .row2 select, .rowf select, .rowf input, .row2 input { background: var(--chip); color: var(--text); border: none; border-radius: 6px; padding: 6px 8px; font: inherit; font-size: 12px; color-scheme: dark; }
@@ -822,13 +828,14 @@
       ['Робота', [['Obsidian', 'Obsidian.Obsidian', 'нотатки й знання'], ['LibreOffice', 'TheDocumentFoundation.LibreOffice', 'офісний пакет'], ['Notion', 'Notion.Notion', 'нотатки й проєкти']]],
       ['Розробка', [['VS Code', 'Microsoft.VisualStudioCode', 'редактор коду'], ['Git', 'Git.Git', 'контроль версій'], ['GitHub CLI', 'GitHub.cli', 'потрібен для синхронізації'], ['Node.js LTS', 'OpenJS.NodeJS.LTS', 'JavaScript'], ['Python 3.12', 'Python.Python.3.12', 'Python']]],
       ['Утиліти', [['PowerToys', 'Microsoft.PowerToys', 'корисні інструменти Microsoft'], ['Everything', 'voidtools.Everything', 'миттєвий пошук файлів'], ['ShareX', 'ShareX.ShareX', 'знімки й запис екрана'], ['7-Zip', '7zip.7zip', 'архіви'], ['FFmpeg', 'Gyan.FFmpeg', 'потрібен для запису екрана'], ['Lively Wallpaper', 'rocksdanister.LivelyWallpaper', 'живі шпалери valo']]],
-      ['Ігри', [['Steam', 'Valve.Steam', 'ігри'], ['Epic Games', 'EpicGames.EpicGamesLauncher', 'ігри'], ['GOG Galaxy', 'GOG.Galaxy', 'ігри без DRM'], ['EA app', 'ElectronicArts.EADesktop', 'ігри EA'], ['Ubisoft Connect', 'Ubisoft.Connect', 'ігри Ubisoft'], ['Battle.net', 'Blizzard.BattleNet', 'ігри Blizzard'], ['Playnite', 'Playnite.Playnite', 'усі ігри з усіх магазинів в одному місці']]],
+      ['Ігрові магазини', [['Steam', 'Valve.Steam', 'ігри'], ['Epic Games', 'EpicGames.EpicGamesLauncher', 'ігри'], ['GOG Galaxy', 'GOG.Galaxy', 'ігри без DRM'], ['EA app', 'ElectronicArts.EADesktop', 'ігри EA'], ['Ubisoft Connect', 'Ubisoft.Connect', 'ігри Ubisoft'], ['Battle.net', 'Blizzard.BattleNet', 'ігри Blizzard'], ['Playnite', 'Playnite.Playnite', 'усі ігри з усіх магазинів в одному місці']]],
       ['Гра з друзями', [['Radmin VPN', 'Famatech.RadminVPN', 'спільна локальна мережа для гри з друзями'], ['ZeroTier', 'ZeroTier.ZeroTierOne', 'віртуальна мережа, як Radmin VPN'], ['Parsec', 'Parsec.Parsec', 'гра на чужому ПК через інтернет']]],
       ['Для геймера', [['MSI Afterburner', 'Guru3D.Afterburner', 'FPS, температура й розгін відеокарти']]],
     ];
     let storeHave = null;
     function renderStore() {
       const box = $('storeList'); box.innerHTML = '';
+      renderGames(box);
       for (const [cat, items] of STORE) {
         const h = document.createElement('div'); h.className = 'cat'; h.textContent = cat; box.append(h);
         for (const [n, id, d] of items) {
@@ -862,8 +869,52 @@
         }
       }
     }
+    // ---------- "Ігри valo": games from the catalog SOVALONE/valo-games (own, friends', shareable; paid ones only as a link)
+    let games = null;   // {games:[...], installed:[...]}
+    const gamesPs = (...a) => zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-games.ps1', ...a]).then(r => { try { return JSON.parse((r?.stdout || '').trim()); } catch { return null; } }).catch(() => null);
+    const mb = n => n >= 1073741824 ? (n / 1073741824).toFixed(1) + ' ГБ' : Math.max(1, Math.round(n / 1048576)) + ' МБ';
+    function renderGames(box) {
+      const h = document.createElement('div'); h.className = 'cat'; h.textContent = 'Ігри valo'; box.append(h);
+      if (!games) { const n = document.createElement('div'); n.className = 'note'; n.textContent = '…'; box.append(n); return; }
+      if (!games.games.length) { const n = document.createElement('div'); n.className = 'note'; n.textContent = 'Поки порожньо або немає інтернету'; box.append(n); return; }
+      for (const g of games.games) {
+        const have = games.installed.includes(g.id);
+        const it = document.createElement('div'); it.className = 'it game';
+        it.innerHTML = '<div class="tx"><span></span><em></em><small></small></div><div class="acts"></div>';
+        it.querySelector('span').textContent = g.name;
+        it.querySelector('em').textContent = [g.by, g.version && g.kind !== 'link' ? 'v' + g.version : '', g.size ? mb(g.size) : ''].filter(Boolean).join(' · ');
+        it.querySelector('small').textContent = g.desc || '';
+        const acts = it.querySelector('.acts');
+        const btn = (text, alt, fn) => {
+          const b = document.createElement('button'); b.textContent = text; if (alt) b.className = 'alt';
+          b.onclick = async () => { const t = b.textContent; b.classList.add('busy'); const ok = await fn(b); b.classList.remove('busy'); if (ok === false) b.textContent = 'Помилка — ще раз'; else if (ok !== 'keep') b.textContent = t; };
+          acts.append(b); return b;
+        };
+        if (g.kind === 'link') btn('Сайт гри', false, async () => (await gamesPs('-Site', g.id))?.ok ? true : false);
+        else if (have && g.kind !== 'installer') btn('Грати', false, async () => (await gamesPs('-Play', g.id))?.ok ? true : false);
+        else if (!have) btn('Завантажити', false, async b => {
+          b.textContent = 'Завантажую…';
+          const o = await gamesPs('-Install', g.id);
+          if (!o?.ok) return false;
+          games.installed.push(g.id); localStorage.setItem('valo.appsAt', '0'); renderStore(); return 'keep';
+        });
+        if (g.torrent && !have) btn('Торент', true, async b => {
+          const o = await gamesPs('-Torrent', g.id);
+          if (o?.error === 'notorrent') { b.textContent = 'Немає торент-програми'; return 'keep'; }
+          return o?.ok ? true : false;
+        });
+        if (g.site && g.kind !== 'link') btn('Сайт', true, async () => (await gamesPs('-Site', g.id))?.ok ? true : false);
+        if (have) btn(g.kind === 'installer' ? 'Видалити…' : 'Видалити', true, async () => {
+          const o = await gamesPs('-Remove', g.id);
+          if (!o?.ok) return false;
+          games.installed = games.installed.filter(x => x !== g.id); renderStore(); return 'keep';
+        });
+        box.append(it);
+      }
+    }
     async function openStore() {
       showPage('store'); renderStore();
+      gamesPs('-List').then(o => { games = o ? { games: o.games || [], installed: o.installed || [] } : { games: [], installed: [] }; renderStore(); });
       if (storeHave) return;
       const ids = STORE.flatMap(([, it]) => it.map(x => x[1])).join(',');
       const r = await zebar.shellExec('powershell', [...PS, '-File', dir + '\\valo-store.ps1', '-List', ids]).catch(() => null);
